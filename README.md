@@ -1,3 +1,4 @@
+# CSC450-group-project
 ## Setup Vue.js & Spring Boot
 
 ### Prerequisites
@@ -51,3 +52,4 @@ Run the app with `mvn --projects backend spring-boot:run`
 
 ### User Creation
 Navigate to http://localhost:8080/ in your browser. it should redirect you to http://localhost:8080/login. From there you can click on the link to sign up, enter the info and click sign up. if you get riderected to the home page, your user has been created and you have been logged in
+
