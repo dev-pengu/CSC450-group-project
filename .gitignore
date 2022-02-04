@@ -1,3 +1,4 @@
+# LaTeX output files
 **/*.aux
 **/*.fdb_latexmk
 **/*.fls
@@ -8,3 +9,75 @@
 **/*.toc
 
 **/.DS_Store
+
+# vue files to ignore
+**/node_modules
+**/dist
+
+**/tests/e2e/videos/
+**/tests/e2e/screenshots/
+
+
+# local env files
+**/.env.local
+**/.env.*.local
+
+# Log files
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+**/pnpm-debug.log*
+
+# Editor directories and files
+**/.idea
+**/.vscode
+**/*.suo
+**/*.ntvs*
+**/*.njsproj
+**/*.sln
+**/*.sw?
+
+
+#spring boot
+**/*#
+**/*.iml
+**/*.ipr
+**/*.iws
+**/*.jar
+**/*.sw?
+**/*~
+**/.#*
+**/.*.md.html
+**/.DS_Store
+**/.attach_pid*
+**/.classpath
+**/.factorypath
+**/.gradle
+**/.idea
+**/.metadata
+**/.project
+**/.recommenders
+**/.settings
+**/.springBeans
+**/.vscode
+**//code
+**/MANIFEST.MF
+**/_site/
+**/activemq-data
+**/bin
+**/build
+!/**/src/**/bin
+!/**/src/**/build
+**/build.log
+**/dependency-reduced-pom.xml
+**/dump.rdb
+**/interpolated*.xml
+**/lib/
+**/manifest.yml
+**/out
+**/overridedb.*
+**/target
+**/.flattened-pom.xml
+**/secrets.yml
+**/.gradletasknamecache
+**/.sts4-cache
