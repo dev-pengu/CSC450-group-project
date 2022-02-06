@@ -1,9 +1,7 @@
 <template>
-  <div>
+  <div id="app">
     <div v-if="this.$store && this.$store.getters.isLoggedIn">
-      <div id="nav">
-        <router-link to="/">Home</router-link> |
-      </div>
+      <NavBar />
       <router-view/>
     </div>
     <div v-else>
@@ -12,6 +10,15 @@
   </div>
 </template>
 
+<script>
+import NavBar from '@/components/NavBar.vue';
+
+export default {
+  components: {
+    NavBar,
+  },
+};
+</script>
 <style>
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;

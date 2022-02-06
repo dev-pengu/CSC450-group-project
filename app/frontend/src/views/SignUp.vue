@@ -2,12 +2,13 @@
     <div class="signup">
         <img alt="Logo" src="../assets/logo.png">
         <form @submit.prevent="signUp()">
-            <input v-model="username" placeholder="Username"/>
-            <input v-model="email" placeholder="Email" type="email"/>
-            <input v-model="firstName" placeholder="First Name" />
-            <input v-model="lastName" placeholder="Last Name" />
-            <input v-model="password" type="password" placeholder="Password"/>
-            <input v-model="confirmPassword" type="password" placeholder="Confirm Password"/>
+            <input v-model="formData.username" placeholder="Username"/>
+            <input v-model="formData.email" placeholder="Email" type="email"/>
+            <input v-model="formData.firstName" placeholder="First Name" />
+            <input v-model="formData.lastName" placeholder="Last Name" />
+            <input v-model="formData.password" type="password" placeholder="Password"/>
+            <input v-model="formData.confirmPassword" type="password"
+              placeholder="Confirm Password"/>
             <button type="submit">Sign Up</button>
             <p v-if="error" class="error" v-text="errors.join('<br/>')"></p>
         </form>
@@ -15,42 +16,38 @@
 </template>
 
 <script>
-import { defineComponent } from 'vue';
+import { mapActions } from 'vuex';
 import { setCookie } from '@/util/CookieUtil';
+import api from '../api';
 
-export default defineComponent({
-  name: 'Sign Up',
+export default {
+  name: 'SignUp',
   data: () => ({
-    username: '',
-    password: '',
-    confirmPassword: '',
-    email: '',
-    firstName: '',
-    lastName: '',
+    formData: {
+      username: '',
+      password: '',
+      confirmPassword: '',
+      email: '',
+      firstName: '',
+      lastName: '',
+    },
     error: false,
     errors: [],
   }),
   methods: {
+    ...mapActions(['login']),
     async signUp() {
       this.errors = [];
+      this.error = false;
       if (this.password !== this.confirmPassword) {
         this.errors.push('Passwords do not match');
         this.error = true;
         return;
       }
       try {
-        const res = await this.$store.dispatch('signUp', {
-          username: this.username,
-          password: this.password,
-          email: this.email,
-          firstName: this.firstName,
-          lastName: this.lastName,
-        });
+        const res = await api.createUser(this.formData);
         if (res.status === 201) {
-          const loginRes = await this.$store.dispatch('login', {
-            username: this.username,
-            password: this.password,
-          });
+          const loginRes = await this.login(this.formData);
           if (loginRes.status === 200) {
             const { data } = res;
             setCookie('Authorization', data.token, data.expires);
@@ -63,12 +60,17 @@ export default defineComponent({
           this.error = true;
         }
       } catch (err) {
-        this.errors.push(err);
+        const error = { err };
+        if (error.err.isAxiosError) {
+          this.errors.push(error.err.response.data);
+        } else {
+          this.errors.push(err);
+        }
         this.error = true;
       }
     },
   },
-});
+};
 </script>
 
 <style>

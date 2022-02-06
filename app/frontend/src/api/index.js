@@ -11,10 +11,10 @@ const http = axios.create({
 });
 
 export default {
-  login(username, password) {
+  login(formData) {
     return http.post('/auth/login', {
-      username,
-      password,
+      username: formData.username,
+      password: formData.password,
     }, {
       // eslint-disable-next-line object-shorthand
       validateStatus: function (status) {
@@ -29,13 +29,13 @@ export default {
       },
     });
   },
-  createUser(username, email, firstName, lastName, password) {
+  createUser(formData) {
     return http.post('/auth', {
-      username,
-      firstName,
-      lastName,
-      email,
-      password,
+      username: formData.username,
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      email: formData.email,
+      password: formData.password,
     });
   },
 };
