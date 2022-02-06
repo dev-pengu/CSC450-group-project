@@ -3,12 +3,8 @@
 
 ### Prerequisites
 #### Install Java
-feel free to use these links or anything else. Project is set up with JDK11.
-##### Windows
-https://www.codejava.net/java-se/download-and-install-java-11-openjdk-and-oracle-jdk
-
-##### Mac
-https://medium.com/@mdchandhyd/install-java-11-in-mac-6adff940b73e
+feel free to use these links or anything else. Project is set up with JDK 17.
+https://www.codejava.net/java-se/download-and-install-openjdk-17
 
 #### Install Maven
 Project is set up with Maven 3.8.4
