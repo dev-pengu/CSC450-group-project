@@ -12,10 +12,16 @@
 
 <script>
 import NavBar from '@/components/NavBar.vue';
+import api from './api';
 
 export default {
   components: {
     NavBar,
+  },
+  mounted: () => {
+    window.onunload = () => {
+      api.logout();
+    };
   },
 };
 </script>

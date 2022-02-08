@@ -1,5 +1,7 @@
 package com.familyorg.familyorganizationapp.controller;
 
+import javax.servlet.http.HttpSession;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -18,7 +20,9 @@ public class DashboardController {
 	
 	@GetMapping()
 	@Secured("ROLE_USER")
-	public ResponseEntity<String> getDashboardData() {
+	public ResponseEntity<String> getDashboardData(HttpSession session) {
+		LOG.error(session.getId());
+		LOG.error(Integer.toString(session.getMaxInactiveInterval()));
 		return new ResponseEntity<>("Hello", HttpStatus.OK);
 	}
 }

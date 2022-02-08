@@ -42,7 +42,10 @@ export default {
       });
     },
     logout({ commit }) {
-      commit('logout_success');
+      api.logout()
+        .then(() => {
+          commit('logout_success');
+        });
     },
   },
   getters: {

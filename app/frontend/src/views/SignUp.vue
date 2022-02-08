@@ -17,7 +17,6 @@
 
 <script>
 import { mapActions } from 'vuex';
-import { setCookie } from '@/util/CookieUtil';
 import api from '../api';
 
 export default {
@@ -49,8 +48,6 @@ export default {
         if (res.status === 201) {
           const loginRes = await this.login(this.formData);
           if (loginRes.status === 200) {
-            const { data } = res;
-            setCookie('Authorization', data.token, data.expires);
             this.$router.push('/');
           } else {
             this.$router.push('/login');
