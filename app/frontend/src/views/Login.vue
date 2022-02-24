@@ -13,7 +13,6 @@
 
 <script>
 import { mapActions } from 'vuex';
-import { setCookie } from '@/util/CookieUtil';
 
 export default {
   name: 'Login',
@@ -37,8 +36,6 @@ export default {
       try {
         const res = await this.login(this.formData);
         if (res.status === 200) {
-          const { data } = res;
-          setCookie('Authorization', data.token, data.expires);
           this.$router.push('/');
         } else {
           this.errors.push('Error with credentials');

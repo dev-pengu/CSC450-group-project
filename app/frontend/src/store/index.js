@@ -11,6 +11,6 @@ export default new Vuex.Store({
     auth,
   },
   plugins: [
-    createPersistedState(),
+    createPersistedState({ key: 'appStore', storage: window.sessionStorage }),
   ],
 });

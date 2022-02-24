@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { getCookie } from '../util/CookieUtil';
 
 const http = axios.create({
   baseURL: '/api/services',
@@ -22,12 +21,11 @@ export default {
       },
     });
   },
+  logout() {
+    return http.post('/auth/logout');
+  },
   getDashboardData() {
-    return http.get('/dashboard', {
-      headers: {
-        Authorization: `Bearer ${getCookie('Authorization')}`,
-      },
-    });
+    return http.get('/dashboard');
   },
   createUser(formData) {
     return http.post('/auth', {
