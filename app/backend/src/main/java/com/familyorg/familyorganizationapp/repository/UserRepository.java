@@ -6,7 +6,7 @@ import org.springframework.data.repository.query.Param;
 import com.familyorg.familyorganizationapp.domain.User;
 
 
-public interface UserRepo extends CrudRepository<User, Long> {
+public interface UserRepository extends CrudRepository<User, Long> {
 	User findByUsername(@Param("username") String username);
 	User findByEmail(@Param("email") String email);
 }
