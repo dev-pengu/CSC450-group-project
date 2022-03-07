@@ -1,15 +1,24 @@
 package com.familyorg.familyorganizationapp.domain;
 
+import java.io.Serializable;
+import java.util.Objects;
+import java.util.Set;
+
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 @Entity
 @Table(name="users")
-public class User {
+public class User implements Serializable {
+
+	private static final long serialVersionUID = -4364743442691665173L;
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
@@ -30,6 +39,35 @@ public class User {
 	@Column(name="email", columnDefinition="VARCHAR(70)", nullable=false, unique=true)
 	private String email;
 	
+	@OneToMany(mappedBy="user", fetch = FetchType.LAZY, orphanRemoval = true, cascade = CascadeType.ALL)
+	private Set<FamilyMembers> families;
+	
+	
+	
+	public User() {}
+	
+	
+	public User(Long id, String firstName, String lastName, String username, String password, String email,
+			Set<FamilyMembers> families) {
+		this.id = id;
+		this.firstName = firstName;
+		this.lastName = lastName;
+		this.username = username;
+		this.password = password;
+		this.email = email;
+		this.families = families;
+	}
+
+	public User(String firstName, String lastName, String username, String password, String email,
+				Set<FamilyMembers> families) {
+		this.firstName = firstName;
+		this.lastName = lastName;
+		this.username = username;
+		this.password = password;
+		this.email = email;
+		this.families = families;
+	}
+
 	public Long getId() {
 		return id;
 	}
@@ -67,11 +105,36 @@ public class User {
 	public void setEmail(String email) {
 		this.email = email;
 	}
+	public Set<FamilyMembers> getFamilies() {
+		return families;
+	}
+	public void setFamilies(Set<FamilyMembers> families) {
+		this.families = families;
+	}
 	@Override
 	public String toString() {
 		return "User [id=" + id + ", firstName=" + firstName + ", lastName=" + lastName + ", username=" + username
 				+ ", email=" + email + "]";
 	}
+	@Override
+	public int hashCode() {
+		return Objects.hash(email, firstName, id, lastName, username);
+	}
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		User other = (User) obj;
+		return Objects.equals(email, other.email)
+				&& Objects.equals(firstName, other.firstName) && Objects.equals(id, other.id)
+				&& Objects.equals(lastName, other.lastName) && Objects.equals(password, other.password)
+				&& Objects.equals(username, other.username);
+	}
+	
 	
 	
 }

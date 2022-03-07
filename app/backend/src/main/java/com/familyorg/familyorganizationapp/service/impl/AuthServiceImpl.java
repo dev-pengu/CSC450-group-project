@@ -14,21 +14,18 @@ import org.springframework.transaction.annotation.Transactional;
 import com.familyorg.familyorganizationapp.Exception.ExistingUserException;
 import com.familyorg.familyorganizationapp.Exception.UserNotFoundException;
 import com.familyorg.familyorganizationapp.domain.User;
-import com.familyorg.familyorganizationapp.repository.UserRepo;
+import com.familyorg.familyorganizationapp.repository.UserRepository;
 import com.familyorg.familyorganizationapp.service.UserService;
 
 @Service
-public class AuthServiceImpl implements UserDetailsService, UserService {
+public class AuthServiceImpl implements UserDetailsService {
 
 	@Autowired
-	UserRepo userRepo;
-	
-	@Autowired
-	BCryptPasswordEncoder bCryptPasswordEncoder;
+	UserRepository userRepository;
 	
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UserNotFoundException {
-		User user = userRepo.findByUsername(username);
+		User user = userRepository.findByUsername(username);
 		if (user == null) {
 			throw new UserNotFoundException("Username not found");
 		}
@@ -38,20 +35,5 @@ public class AuthServiceImpl implements UserDetailsService, UserService {
 		}
 		String password = user.getPassword();
 		return new org.springframework.security.core.userdetails.User(username, password, auth);
-	}
-	
-	@Override
-	@Transactional(rollbackFor = Exception.class)
-	public String createUser(User user) {
-		User existingUser = userRepo.findByUsername(user.getUsername());
-		if (existingUser != null) {
-			throw new ExistingUserException("Username already in use.");
-		}
-		existingUser = userRepo.findByEmail(user.getEmail());
-		if (existingUser != null) {
-			throw new ExistingUserException("Email already in use.");
-		}
-		user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
-		return userRepo.save(user).getId().toString();	
 	}
 }
