@@ -37,10 +37,10 @@ public class FamilyServiceImpl implements FamilyService {
 
 	@Autowired
 	FamilyRepository familyRepository;
-	
+
 	@Autowired
 	FamilyMemberRepository familyMemberRepository;
-	
+
 	@Autowired
 	UserService userService;
 
@@ -106,11 +106,11 @@ public class FamilyServiceImpl implements FamilyService {
 	public FamilyDto getFamily(FamilyDto familyRequest)
 			throws FamilyNotFoundException {
 		Optional<Family> family = familyRepository.findById(familyRequest.getId());
-		
-		
+
+
 		if (family.isEmpty()) {
 			throw new FamilyNotFoundException("Family not found");
-		} 
+		}
 		User requestingUser = null;
 		if (familyRequest.getRequestingUser().getId() == null) {
 			if (familyRequest.getRequestingUser().getUsername() != null) {
@@ -120,7 +120,7 @@ public class FamilyServiceImpl implements FamilyService {
 				requestingUser = userService.getUserByEmail(
 						familyRequest.getRequestingUser().getEmail());
 			}
-		} 
+		}
 		if (requestingUser == null) {
 			requestingUser = userService.getUserById(familyRequest.getRequestingUser().getId());
 		}
@@ -130,7 +130,7 @@ public class FamilyServiceImpl implements FamilyService {
 		}
 		final Long requestingUserId = requestingUser.getId();
 		family.get().getMembers().stream()
-				.filter(familyMember -> 
+				.filter(familyMember ->
 					familyMember.getUser().getId().equals(
 							requestingUserId))
 				.findAny()
@@ -149,16 +149,16 @@ public class FamilyServiceImpl implements FamilyService {
 		if (families == null) {
 			return Collections.emptyList();
 		}
-		
+
 		return families.stream()
-				.map(family -> 
+				.map(family ->
 					buildFamilyDto(family, user))
 				.collect(Collectors.toList());
 	}
 
 	@Override
 	@Transactional
-	public FamilyDto updateFamily(FamilyDto familyRequest) 
+	public FamilyDto updateFamily(FamilyDto familyRequest)
 			throws FamilyNotFoundException, AuthorizationException, UserNotFoundException {
 		User user = userService.getUserByUsername(familyRequest.getRequestingUser().getUsername());
 		if (user == null) {
@@ -170,7 +170,7 @@ public class FamilyServiceImpl implements FamilyService {
 		if (user == null) {
 			throw new UserNotFoundException("User not found");
 		}
-		
+
 		Optional<Family> family = familyRepository.findById(familyRequest.getId());
 		if (family.isEmpty()) {
 			throw new FamilyNotFoundException("Unable to find family with given id");
@@ -188,7 +188,7 @@ public class FamilyServiceImpl implements FamilyService {
 			family.get().setEventColor(familyRequest.getEventColor());
 		}
 
-		Optional<FamilyMembers> familyRelation = 
+		Optional<FamilyMembers> familyRelation =
 				familyMemberRepository.findById(
 						new FamilyMemberId(user.getId(), family.get().getId()));
 		if (familyRelation.isEmpty()) {
@@ -211,7 +211,7 @@ public class FamilyServiceImpl implements FamilyService {
 		if (user == null) {
 			throw new UserNotFoundException("User not found");
 		}
-		Optional<FamilyMembers> familyRelation = 
+		Optional<FamilyMembers> familyRelation =
 				familyMemberRepository.findById(
 						new FamilyMemberId(user.getId(), id));
 		if (familyRelation.isEmpty()) {
@@ -230,7 +230,7 @@ public class FamilyServiceImpl implements FamilyService {
 		// TODO FR.9
 		return null;
 	}
-	
+
 	private FamilyDto buildFamilyDto(Family family, User requestingUser) {
 		FamilyDtoBuilder builder = new FamilyDtoBuilder();
 		builder.setId(family.getId());
@@ -240,7 +240,7 @@ public class FamilyServiceImpl implements FamilyService {
 				family.getMembers()
 					.stream()
 					.map(familyMember -> {
-						FamilyMemberDto memberDto 
+						FamilyMemberDto memberDto
 							= FamilyMemberDto.fromFamilyMemberObj(familyMember);
 						if (memberDto.getRole().equals(Role.OWNER)) {
 							builder.setOwner(memberDto);
@@ -251,7 +251,7 @@ public class FamilyServiceImpl implements FamilyService {
 		builder.setName(family.getName());
 		builder.setTimezone(family.getTimezone());
 		builder.setRequestingUser(UserDto.fromUserObj(requestingUser));
-		
+
 		return builder.build();
 	}
 
@@ -266,6 +266,6 @@ public class FamilyServiceImpl implements FamilyService {
 	void setUserService(UserService userService) {
 		this.userService = userService;
 	}
-	
-	
+
+
 }

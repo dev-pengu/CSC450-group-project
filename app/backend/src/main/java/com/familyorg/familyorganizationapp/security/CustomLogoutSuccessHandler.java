@@ -19,7 +19,7 @@ public class CustomLogoutSuccessHandler implements LogoutSuccessHandler, Seriali
 
 	private static final long serialVersionUID = -1862221542887044893L;
 	private Logger LOG = LoggerFactory.getLogger(CustomLogoutSuccessHandler.class);
-	
+
 	@Override
 	public void onLogoutSuccess(HttpServletRequest request, HttpServletResponse response,
 			Authentication authentication) throws IOException, ServletException {

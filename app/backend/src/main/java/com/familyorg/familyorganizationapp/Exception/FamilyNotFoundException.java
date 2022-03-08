@@ -11,11 +11,11 @@ public class FamilyNotFoundException extends RuntimeException {
 	public FamilyNotFoundException() {
 		super();
 	}
-	
+
 	public FamilyNotFoundException(String message) {
 		super(message);
 	}
-	
+
 	public FamilyNotFoundException(String message, Throwable cause) {
 		super(message, cause);
 	}

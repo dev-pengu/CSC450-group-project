@@ -12,8 +12,8 @@ public class FamilyDto {
 	private Set<FamilyMemberDto> members;
 	private FamilyMemberDto owner;
 	private UserDto requestingUser;
-	
-	public FamilyDto(Long id, String name, String eventColor, String timezone, String inviteCode, 
+
+	public FamilyDto(Long id, String name, String eventColor, String timezone, String inviteCode,
 			FamilyMemberDto owner, Set<FamilyMemberDto> members, UserDto requestingUser) {
 		super();
 		this.id = id;
@@ -45,7 +45,7 @@ public class FamilyDto {
 	public Set<FamilyMemberDto> getMembers() {
 		return members;
 	}
-	
+
 	public FamilyMemberDto getOwner() {
 		return owner;
 	}
@@ -53,7 +53,7 @@ public class FamilyDto {
 	public String getTimezone() {
 		return timezone;
 	}
-	
+
 	public UserDto getRequestingUser() {
 		return requestingUser;
 	}
@@ -83,6 +83,6 @@ public class FamilyDto {
 				&& Objects.equals(name, other.name) && Objects.equals(timezone, other.timezone)
 				&& Objects.equals(requestingUser, other.requestingUser);
 	}
-	
-	
+
+
 }

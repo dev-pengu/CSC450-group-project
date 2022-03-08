@@ -23,30 +23,30 @@ public class User implements Serializable {
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
-	
+
 	@Column(name="first_name", columnDefinition="VARCHAR(50)", nullable=false)
 	private String firstName;
-	
+
 	@Column(name="last_name", columnDefinition="VARCHAR(50)", nullable=false)
 	private String lastName;
-	
+
 	@Column(name="username", columnDefinition="VARCHAR(50)", nullable=false, unique=true)
 	private String username;
-	
+
 	@Column(name="password", columnDefinition="VARCHAR(64)", nullable=false)
 	private String password;
-	
+
 	@Column(name="email", columnDefinition="VARCHAR(70)", nullable=false, unique=true)
 	private String email;
-	
+
 	@OneToMany(mappedBy="user", fetch = FetchType.LAZY, orphanRemoval = true, cascade = CascadeType.ALL)
 	private Set<FamilyMembers> families;
-	
-	
-	
+
+
+
 	public User() {}
-	
-	
+
+
 	public User(Long id, String firstName, String lastName, String username, String password, String email,
 			Set<FamilyMembers> families) {
 		this.id = id;
@@ -86,7 +86,7 @@ public class User implements Serializable {
 	public void setLastName(String lastName) {
 		this.lastName = lastName;
 	}
-	
+
 	public String getUsername() {
 		return username;
 	}
@@ -134,7 +134,7 @@ public class User implements Serializable {
 				&& Objects.equals(lastName, other.lastName) && Objects.equals(password, other.password)
 				&& Objects.equals(username, other.username);
 	}
-	
-	
-	
+
+
+
 }

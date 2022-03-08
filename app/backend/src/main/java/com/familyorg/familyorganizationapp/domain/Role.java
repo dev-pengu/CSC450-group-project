@@ -5,13 +5,13 @@ public enum Role {
 	ADULT(1),
 	ADMIN(2),
 	OWNER(3);
-	
+
 	private int level;
-	
+
 	Role(int level) {
 		this.level = level;
 	}
-	
+
 	public int getLevel() {
 		return this.level;
 	}

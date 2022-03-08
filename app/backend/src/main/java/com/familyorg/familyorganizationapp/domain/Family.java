@@ -17,28 +17,28 @@ import javax.persistence.Table;
 @Entity
 @Table(name="family")
 public class Family implements Serializable {
-	
+
 	private static final long serialVersionUID = 6681350428367318335L;
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
-	
+
 	@Column(name="name", columnDefinition="VARCHAR(50)", nullable=false)
 	private String name;
-	
+
 	@Column(name="event_color", columnDefinition="VARCHAR(6)", nullable=false)
 	private String eventColor;
-	
+
 	@Column(name="timezone", columnDefinition="VARCHAR(32)", nullable=false)
 	private String timezone;
-	
+
 	@Column(name="invite_code", columnDefinition="VARCHAR(36)")
 	private String inviteCode;
-	
+
 	@OneToMany(mappedBy="family", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
 	private Set<FamilyMembers> members;
-	
+
 	public Family() {
 		super();
 	}
@@ -136,6 +136,6 @@ public class Family implements Serializable {
 				&& Objects.equals(inviteCode, other.inviteCode)
 				&& Objects.equals(name, other.name) && Objects.equals(timezone, other.timezone);
 	}
-	
-	
+
+
 }

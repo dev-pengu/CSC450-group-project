@@ -18,42 +18,42 @@ public class FamilyDtoBuilder {
 	private Set<FamilyMemberDto> members;
 	private FamilyMemberDto owner;
 	private UserDto requestingUser;
-	
+
 	public FamilyDtoBuilder withId(Long id) {
 		this.id = id;
 		return this;
 	}
-	
+
 	public FamilyDtoBuilder withName(String name) {
 		this.name = name;
 		return this;
 	}
-	
+
 	public FamilyDtoBuilder withEventColor(String eventColor) {
 		this.eventColor = eventColor;
 		return this;
 	}
-	
+
 	public FamilyDtoBuilder withTimezone(String timezone) {
 		this.timezone = timezone;
 		return this;
 	}
-	
+
 	public FamilyDtoBuilder withInviteCode(String inviteCode) {
 		this.inviteCode = inviteCode;
 		return this;
 	}
-	
+
 	public FamilyDtoBuilder withOwner(FamilyMemberDto owner) {
 		this.owner = owner;
 		return this;
 	}
-	
+
 	public FamilyDtoBuilder withRequestingUser(UserDto requestingUser) {
 		this.requestingUser = requestingUser;
 		return this;
 	}
-	
+
 	public FamilyDtoBuilder withMembers(Set<FamilyMemberDto> members) {
 		for(FamilyMemberDto member : members) {
 			if (member.getRole().equals(Role.OWNER) && this.owner == null) {
@@ -64,7 +64,7 @@ public class FamilyDtoBuilder {
 		this.members = members;
 		return this;
 	}
-	
+
 	public FamilyDtoBuilder addMember(FamilyMemberDto member) {
 		if (this.members == null) {
 			this.members = new HashSet<>();
@@ -72,12 +72,12 @@ public class FamilyDtoBuilder {
 		if (member.getRole().equals(Role.OWNER) && this.owner == null) {
 			this.owner = member;
 		}
-			
+
 		this.members.add(member);
 		return this;
 	}
-	
-	
+
+
 	public void setId(Long id) {
 		this.id = id;
 	}
@@ -108,7 +108,7 @@ public class FamilyDtoBuilder {
 	public void setRequestingUser(UserDto user) {
 		this.requestingUser = user;
 	}
-	
+
 	public void addMember(FamilyMembers member) {
 		if (this.members == null) {
 			this.members = new HashSet<>();
@@ -120,16 +120,16 @@ public class FamilyDtoBuilder {
 				member.getUser().getEmail(),
 				member.getUser().getUsername());
 		FamilyMemberDto memberDto = new FamilyMemberDto(
-				user, 
+				user,
 				member.getEventColor(),
-				member.getFamily().getId(), 
+				member.getFamily().getId(),
 				member.getRole());
 		this.members.add(memberDto);
 		if (member.getRole().equals(Role.OWNER)) {
 			this.owner = memberDto;
 		}
 	}
-	
+
 	public FamilyDto build() {
 		return new FamilyDto(
 				this.id,

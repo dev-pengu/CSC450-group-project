@@ -21,18 +21,18 @@ public class FamilyMembers implements Serializable {
 	@Id
 	@ManyToOne
 	private User user;
-	
+
 	@Id
 	@ManyToOne
 	private Family family;
-	
+
 	@Column(name="role", columnDefinition="VARCHAR(10)", nullable=false)
 	private Role role;
-	
+
 	@Column(name="event_color", columnDefinition="VARCHAR(6)", nullable=false)
 	private String eventColor;
-	
-	
+
+
 
 	public FamilyMembers() {
 		super();
@@ -101,6 +101,6 @@ public class FamilyMembers implements Serializable {
 		return Objects.equals(eventColor, other.eventColor) && Objects.equals(family, other.family)
 				&& role == other.role && Objects.equals(user, other.user);
 	}
-	
-	
+
+
 }

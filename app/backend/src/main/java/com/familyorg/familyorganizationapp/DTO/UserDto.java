@@ -55,7 +55,7 @@ public class UserDto {
 				&& Objects.equals(id, other.id) && Objects.equals(lastName, other.lastName)
 				&& Objects.equals(username, other.username);
 	}
-	
+
 	public static UserDto fromUserObj(User user) {
 		return new UserDto(
 				user.getId(),
@@ -64,5 +64,5 @@ public class UserDto {
 				user.getEmail(),
 				user.getUsername());
 	}
-	
+
 }
