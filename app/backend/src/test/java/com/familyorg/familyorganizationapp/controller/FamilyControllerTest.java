@@ -316,12 +316,12 @@ public class FamilyControllerTest {
 
   @Test
   public void deleteFamily_success() {
-    doNothing().when(familyService).deleteFamily(any(Long.class), any(String.class));
+    doNothing().when(familyService).deleteFamily(any(Long.class));
     Long familyId = 1l;
     String username = "testuser";
 
     /* When */
-    ResponseEntity<?> response = familyController.deleteFamily(familyId, username);
+    ResponseEntity<?> response = familyController.deleteFamily(familyId);
 
     /* Then */
     assertNotNull(response);
@@ -330,12 +330,12 @@ public class FamilyControllerTest {
 
   @Test
   public void when_delete_family_and_user_doesnt_exist_then_404_returned() {
-    doThrow(UserNotFoundException.class).when(familyService).deleteFamily(any(Long.class), any(String.class));
+    doThrow(UserNotFoundException.class).when(familyService).deleteFamily(any(Long.class));
     Long familyId = 1l;
     String username = "testuser";
 
     /* When */
-    ResponseEntity<?> response = familyController.deleteFamily(familyId, username);
+    ResponseEntity<?> response = familyController.deleteFamily(familyId);
 
     /* Then */
     assertNotNull(response);
@@ -344,12 +344,12 @@ public class FamilyControllerTest {
 
   @Test
   public void when_delete_family_and_family_doesnt_exist_then_404_returned() {
-    doThrow(FamilyNotFoundException.class).when(familyService).deleteFamily(any(Long.class), any(String.class));
+    doThrow(FamilyNotFoundException.class).when(familyService).deleteFamily(any(Long.class));
     Long familyId = 1l;
     String username = "testuser";
 
     /* When */
-    ResponseEntity<?> response = familyController.deleteFamily(familyId, username);
+    ResponseEntity<?> response = familyController.deleteFamily(familyId);
 
     /* Then */
     assertNotNull(response);
@@ -358,12 +358,12 @@ public class FamilyControllerTest {
 
   @Test
   public void when_delete_family_and_user_unauthorized_then_401_returned() {
-    doThrow(AuthorizationException.class).when(familyService).deleteFamily(any(Long.class), any(String.class));
+    doThrow(AuthorizationException.class).when(familyService).deleteFamily(any(Long.class));
     Long familyId = 1l;
     String username = "testuser";
 
     /* When */
-    ResponseEntity<?> response = familyController.deleteFamily(familyId, username);
+    ResponseEntity<?> response = familyController.deleteFamily(familyId);
 
     /* Then */
     assertNotNull(response);

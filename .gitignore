@@ -83,3 +83,6 @@
 **/.sts4-cache
 **/node
 **/node/node
+
+**/backend/src/main/resources/public/static
+**/backend/src/main/resources/public/index.html

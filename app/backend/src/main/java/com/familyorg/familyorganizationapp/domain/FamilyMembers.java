@@ -1,9 +1,10 @@
 package com.familyorg.familyorganizationapp.domain;
 
+import com.familyorg.familyorganizationapp.domain.id.FamilyMemberId;
+
 import java.io.Serializable;
 import java.util.Objects;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;

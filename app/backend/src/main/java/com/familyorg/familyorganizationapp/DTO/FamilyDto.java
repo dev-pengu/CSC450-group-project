@@ -1,7 +1,13 @@
 package com.familyorg.familyorganizationapp.DTO;
 
+import com.familyorg.familyorganizationapp.DTO.builder.FamilyDtoBuilder;
+import com.familyorg.familyorganizationapp.domain.Family;
+import com.familyorg.familyorganizationapp.domain.Role;
+import com.familyorg.familyorganizationapp.domain.User;
+
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class FamilyDto {
 	private Long id;
@@ -56,6 +62,26 @@ public class FamilyDto {
 
 	public UserDto getRequestingUser() {
 		return requestingUser;
+	}
+
+	public static FamilyDto fromFamilyObj(Family family, User requestingUser) {
+		return new FamilyDtoBuilder()
+				.withId(family.getId())
+				.withEventColor(family.getEventColor())
+				.withMembers(
+						family.getMembers()
+						.stream()
+						.map(familyMember -> {
+							FamilyMemberDto memberDto
+									= FamilyMemberDto.fromFamilyMemberObj(familyMember);
+							return memberDto;
+						})
+						.collect(Collectors.toSet()))
+				.withName(family.getName())
+				.withTimezone(family.getTimezone())
+				.withRequestingUser(UserDto.fromUserObj(requestingUser))
+				.withInviteCode(family.getInviteCodeObj().getInviteCodeString())
+				.build();
 	}
 
 	@Override

@@ -91,7 +91,7 @@ public class FamilyDtoBuilder {
 		this.timezone = timezone;
 	}
 	public void setInviteCode(String inviteCode) {
-		this.inviteCode = inviteCode;
+		this.inviteCode = "PRS-" + inviteCode;
 	}
 	public void setMembers(Set<FamilyMemberDto> members) {
 		for(FamilyMemberDto member : members) {

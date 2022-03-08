@@ -1,5 +1,6 @@
 package com.familyorg.familyorganizationapp.domain;
 
+import com.familyorg.familyorganizationapp.domain.id.FamilyMemberId;
 import com.familyorg.familyorganizationapp.util.HibernateUtil;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -63,8 +64,8 @@ public class FamilyMemberTest {
 
         /* Then */
         assertNotNull(id);
-        assertEquals(familyId, id.family);
-        assertEquals(userId, id.user);
+        assertEquals(familyId, id.getFamily());
+        assertEquals(userId, id.getUser());
     }
 
     @Test
