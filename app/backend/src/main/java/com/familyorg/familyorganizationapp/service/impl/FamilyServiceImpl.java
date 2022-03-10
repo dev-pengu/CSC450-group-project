@@ -7,9 +7,13 @@ import java.util.stream.Collectors;
 
 import javax.transaction.Transactional;
 
+import com.familyorg.familyorganizationapp.domain.MemberInvite;
+import com.familyorg.familyorganizationapp.service.AuthService;
+import com.familyorg.familyorganizationapp.service.InviteService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.dao.DataIntegrityViolationException;
 
@@ -22,7 +26,7 @@ import com.familyorg.familyorganizationapp.Exception.BadRequestException;
 import com.familyorg.familyorganizationapp.Exception.FamilyNotFoundException;
 import com.familyorg.familyorganizationapp.Exception.UserNotFoundException;
 import com.familyorg.familyorganizationapp.domain.Family;
-import com.familyorg.familyorganizationapp.domain.FamilyMemberId;
+import com.familyorg.familyorganizationapp.domain.id.FamilyMemberId;
 import com.familyorg.familyorganizationapp.domain.FamilyMembers;
 import com.familyorg.familyorganizationapp.domain.Role;
 import com.familyorg.familyorganizationapp.domain.User;
@@ -37,12 +41,12 @@ public class FamilyServiceImpl implements FamilyService {
 
 	@Autowired
 	FamilyRepository familyRepository;
-
 	@Autowired
 	FamilyMemberRepository familyMemberRepository;
-
 	@Autowired
 	UserService userService;
+	@Autowired
+	AuthService authService;
 
 	@Override
 	@Transactional
@@ -79,27 +83,8 @@ public class FamilyServiceImpl implements FamilyService {
 		ownerRelation.setRole(Role.OWNER);
 		ownerRelation.setUser(ownerData);
 		familyMemberRepository.save(ownerRelation);
-		FamilyDtoBuilder builder = new FamilyDtoBuilder();
-		builder.setId(savedFamily.getId());
-		builder.setEventColor(savedFamily.getEventColor());
-		builder.setInviteCode(savedFamily.getInviteCode());
-		builder.addMember(ownerRelation);
-		builder.setName(savedFamily.getName());
-		builder.setTimezone(savedFamily.getTimezone());
-		builder.setRequestingUser(UserDto.fromUserObj(ownerData));
-		return builder.build();
-	}
-
-	@Override
-	public String generatePermanentFamilyInvite(Long id) {
-		// TODO FR.5, FR.7
-		return null;
-	}
-
-	@Override
-	public String generateFamilyInvite(Long id, String recipient) {
-		// TODO FR.6, FR.5, FR.7
-		return null;
+		savedFamily.addMember(ownerRelation);
+		return FamilyDto.fromFamilyObj(savedFamily, ownerData);
 	}
 
 	@Override
@@ -111,19 +96,11 @@ public class FamilyServiceImpl implements FamilyService {
 		if (family.isEmpty()) {
 			throw new FamilyNotFoundException("Family not found");
 		}
-		User requestingUser = null;
-		if (familyRequest.getRequestingUser().getId() == null) {
-			if (familyRequest.getRequestingUser().getUsername() != null) {
-				requestingUser = userService.getUserByUsername(
-						familyRequest.getRequestingUser().getUsername());
-			} else if (familyRequest.getRequestingUser().getEmail() != null) {
-				requestingUser = userService.getUserByEmail(
-						familyRequest.getRequestingUser().getEmail());
-			}
+		UserDetails userDetails = authService.getSessionUserDetails();
+		if (userDetails == null) {
+			throw new AuthorizationException("No authenticated user found");
 		}
-		if (requestingUser == null) {
-			requestingUser = userService.getUserById(familyRequest.getRequestingUser().getId());
-		}
+		User requestingUser = userService.getUserByUsername(userDetails.getUsername());
 
 		if (requestingUser == null) {
 			throw new UserNotFoundException("User not found");
@@ -136,7 +113,12 @@ public class FamilyServiceImpl implements FamilyService {
 				.findAny()
 				.orElseThrow(AuthorizationException::new);
 		Family familyObj = family.get();
-		return buildFamilyDto(familyObj, requestingUser);
+		return FamilyDto.fromFamilyObj(familyObj, requestingUser);
+	}
+
+	@Override
+	public Optional<Family> getFamilyById(Long id) {
+		return familyRepository.findById(id);
 	}
 
 	@Override
@@ -152,7 +134,7 @@ public class FamilyServiceImpl implements FamilyService {
 
 		return families.stream()
 				.map(family ->
-					buildFamilyDto(family, user))
+					FamilyDto.fromFamilyObj(family, user))
 				.collect(Collectors.toList());
 	}
 
@@ -160,13 +142,11 @@ public class FamilyServiceImpl implements FamilyService {
 	@Transactional
 	public FamilyDto updateFamily(FamilyDto familyRequest)
 			throws FamilyNotFoundException, AuthorizationException, UserNotFoundException {
-		User user = userService.getUserByUsername(familyRequest.getRequestingUser().getUsername());
-		if (user == null) {
-			user = userService.getUserById(familyRequest.getRequestingUser().getId());
+		UserDetails userDetails = authService.getSessionUserDetails();
+		if (userDetails == null) {
+			throw new AuthorizationException("No authenticated user found");
 		}
-		if (user == null) {
-			user = userService.getUserByEmail(familyRequest.getRequestingUser().getEmail());
-		}
+		User user = userService.getUserByUsername(userDetails.getUsername());
 		if (user == null) {
 			throw new UserNotFoundException("User not found");
 		}
@@ -196,7 +176,7 @@ public class FamilyServiceImpl implements FamilyService {
 		} else {
 			if (familyRelation.get().getRole().getLevel() >= Role.ADMIN.getLevel()) {
 				Family saved = familyRepository.save(family.get());
-				return buildFamilyDto(saved, user);
+				return FamilyDto.fromFamilyObj(saved, user);
 			} else {
 				throw new AuthorizationException("You are not authorized to complete this action");
 			}
@@ -204,10 +184,20 @@ public class FamilyServiceImpl implements FamilyService {
 	}
 
 	@Override
+	public Family updateFamily(Family family) {
+		Family updatedFamily = familyRepository.save(family);
+		return updatedFamily;
+	}
+
+	@Override
 	@Transactional
-	public void deleteFamily(Long id, String username)
+	public void deleteFamily(Long id)
 			throws FamilyNotFoundException, AuthorizationException {
-		User user = userService.getUserByUsername(username);
+		UserDetails userDetails = authService.getSessionUserDetails();
+		if (userDetails == null) {
+			throw new AuthorizationException("No authenticated user found");
+		}
+		User user = userService.getUserByUsername(userDetails.getUsername());
 		if (user == null) {
 			throw new UserNotFoundException("User not found");
 		}
@@ -231,41 +221,31 @@ public class FamilyServiceImpl implements FamilyService {
 		return null;
 	}
 
-	private FamilyDto buildFamilyDto(Family family, User requestingUser) {
-		FamilyDtoBuilder builder = new FamilyDtoBuilder();
-		builder.setId(family.getId());
-		builder.setInviteCode(family.getInviteCode());
-		builder.setEventColor(family.getEventColor());
-		builder.setMembers(
-				family.getMembers()
-					.stream()
-					.map(familyMember -> {
-						FamilyMemberDto memberDto
-							= FamilyMemberDto.fromFamilyMemberObj(familyMember);
-						if (memberDto.getRole().equals(Role.OWNER)) {
-							builder.setOwner(memberDto);
-						}
-						return memberDto;
-					})
-					.collect(Collectors.toSet()));
-		builder.setName(family.getName());
-		builder.setTimezone(family.getTimezone());
-		builder.setRequestingUser(UserDto.fromUserObj(requestingUser));
-
-		return builder.build();
-	}
-
+	/**
+	 * This should only be called for testing to mock the injected class
+	 * @param familyRepository
+	 */
 	void setFamilyRepository(FamilyRepository familyRepository) {
 		this.familyRepository = familyRepository;
 	}
-
+	/**
+	 * This should only be called for testing to mock the injected class
+	 * @param familyMemberRepository
+	 */
 	void setFamilyMemberRepository(FamilyMemberRepository familyMemberRepository) {
 		this.familyMemberRepository = familyMemberRepository;
 	}
-
+	/**
+	 * This should only be called for testing to mock the injected class
+	 * @param userService
+	 */
 	void setUserService(UserService userService) {
 		this.userService = userService;
 	}
-
+	/**
+	 * This should only be called for testing to mock the injected class
+	 * @param authService
+	 */
+	void setAuthService(AuthService authService) { this.authService = authService; }
 
 }

@@ -2,9 +2,13 @@ package com.familyorg.familyorganizationapp.service.impl;
 
 import java.util.List;
 
+import com.familyorg.familyorganizationapp.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -18,7 +22,7 @@ import com.familyorg.familyorganizationapp.repository.UserRepository;
 import com.familyorg.familyorganizationapp.service.UserService;
 
 @Service
-public class AuthServiceImpl implements UserDetailsService {
+public class AuthServiceImpl implements AuthService {
 
 	@Autowired
 	UserRepository userRepository;
@@ -35,5 +39,11 @@ public class AuthServiceImpl implements UserDetailsService {
 		}
 		String password = user.getPassword();
 		return new org.springframework.security.core.userdetails.User(username, password, auth);
+	}
+
+	@Override
+	public UserDetails getSessionUserDetails() {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		return authentication != null ? (UserDetails) authentication.getPrincipal() : null;
 	}
 }

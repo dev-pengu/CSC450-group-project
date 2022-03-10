@@ -1,5 +1,7 @@
 package com.familyorg.familyorganizationapp.domain;
 
+import org.springframework.security.core.userdetails.UserDetails;
+
 import java.io.Serializable;
 import java.util.Objects;
 import java.util.Set;

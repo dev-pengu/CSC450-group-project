@@ -1,28 +1,5 @@
 package com.familyorg.familyorganizationapp.controller;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-
-import com.familyorg.familyorganizationapp.DTO.FamilyMemberDto;
-import com.familyorg.familyorganizationapp.DTO.UserDto;
-import com.familyorg.familyorganizationapp.DTO.builder.FamilyDtoBuilder;
-import com.familyorg.familyorganizationapp.DTO.builder.FamilyMemberDtoBuilder;
-import com.familyorg.familyorganizationapp.DTO.builder.UserDtoBuilder;
-import com.familyorg.familyorganizationapp.Exception.AuthorizationException;
-import com.familyorg.familyorganizationapp.Exception.BadRequestException;
-import com.familyorg.familyorganizationapp.Exception.FamilyNotFoundException;
-import com.familyorg.familyorganizationapp.Exception.UserNotFoundException;
-import com.familyorg.familyorganizationapp.service.impl.FamilyServiceImpl;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-import org.springframework.http.ResponseEntity;
-
-import com.familyorg.familyorganizationapp.DTO.FamilyDto;
-import com.familyorg.familyorganizationapp.domain.Role;
-import com.familyorg.familyorganizationapp.service.FamilyService;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -32,15 +9,49 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.springframework.http.ResponseEntity;
+
+import com.familyorg.familyorganizationapp.DTO.FamilyDto;
+import com.familyorg.familyorganizationapp.DTO.FamilyMemberDto;
+import com.familyorg.familyorganizationapp.DTO.MemberInviteDto;
+import com.familyorg.familyorganizationapp.DTO.UserDto;
+import com.familyorg.familyorganizationapp.DTO.builder.FamilyDtoBuilder;
+import com.familyorg.familyorganizationapp.DTO.builder.FamilyMemberDtoBuilder;
+import com.familyorg.familyorganizationapp.DTO.builder.MemberInviteDtoBuilder;
+import com.familyorg.familyorganizationapp.DTO.builder.UserDtoBuilder;
+import com.familyorg.familyorganizationapp.Exception.AuthorizationException;
+import com.familyorg.familyorganizationapp.Exception.BadRequestException;
+import com.familyorg.familyorganizationapp.Exception.FamilyNotFoundException;
+import com.familyorg.familyorganizationapp.Exception.UserNotFoundException;
+import com.familyorg.familyorganizationapp.domain.Family;
+import com.familyorg.familyorganizationapp.domain.FamilyMembers;
+import com.familyorg.familyorganizationapp.domain.InviteCode;
+import com.familyorg.familyorganizationapp.domain.MemberInvite;
+import com.familyorg.familyorganizationapp.domain.Role;
+import com.familyorg.familyorganizationapp.domain.User;
+import com.familyorg.familyorganizationapp.service.FamilyService;
+import com.familyorg.familyorganizationapp.service.InviteService;
+import com.familyorg.familyorganizationapp.service.impl.FamilyServiceImpl;
+import com.familyorg.familyorganizationapp.service.impl.InviteServiceImpl;
+
 public class FamilyControllerTest {
 
 	static FamilyService familyService;
   static FamilyController familyController;
+  static InviteService inviteService;
 
   @BeforeAll
   public static void setup() {
     familyService = mock(FamilyServiceImpl.class);
-    familyController = new FamilyController(familyService);
+    inviteService = mock(InviteServiceImpl.class);
+    familyController = new FamilyController(familyService, inviteService);
   }
 
   @Test
@@ -316,12 +327,12 @@ public class FamilyControllerTest {
 
   @Test
   public void deleteFamily_success() {
-    doNothing().when(familyService).deleteFamily(any(Long.class), any(String.class));
+    doNothing().when(familyService).deleteFamily(any(Long.class));
     Long familyId = 1l;
     String username = "testuser";
 
     /* When */
-    ResponseEntity<?> response = familyController.deleteFamily(familyId, username);
+    ResponseEntity<?> response = familyController.deleteFamily(familyId);
 
     /* Then */
     assertNotNull(response);
@@ -330,12 +341,12 @@ public class FamilyControllerTest {
 
   @Test
   public void when_delete_family_and_user_doesnt_exist_then_404_returned() {
-    doThrow(UserNotFoundException.class).when(familyService).deleteFamily(any(Long.class), any(String.class));
+    doThrow(UserNotFoundException.class).when(familyService).deleteFamily(any(Long.class));
     Long familyId = 1l;
     String username = "testuser";
 
     /* When */
-    ResponseEntity<?> response = familyController.deleteFamily(familyId, username);
+    ResponseEntity<?> response = familyController.deleteFamily(familyId);
 
     /* Then */
     assertNotNull(response);
@@ -344,12 +355,12 @@ public class FamilyControllerTest {
 
   @Test
   public void when_delete_family_and_family_doesnt_exist_then_404_returned() {
-    doThrow(FamilyNotFoundException.class).when(familyService).deleteFamily(any(Long.class), any(String.class));
+    doThrow(FamilyNotFoundException.class).when(familyService).deleteFamily(any(Long.class));
     Long familyId = 1l;
     String username = "testuser";
 
     /* When */
-    ResponseEntity<?> response = familyController.deleteFamily(familyId, username);
+    ResponseEntity<?> response = familyController.deleteFamily(familyId);
 
     /* Then */
     assertNotNull(response);
@@ -358,16 +369,129 @@ public class FamilyControllerTest {
 
   @Test
   public void when_delete_family_and_user_unauthorized_then_401_returned() {
-    doThrow(AuthorizationException.class).when(familyService).deleteFamily(any(Long.class), any(String.class));
+    doThrow(AuthorizationException.class).when(familyService).deleteFamily(any(Long.class));
     Long familyId = 1l;
     String username = "testuser";
 
     /* When */
-    ResponseEntity<?> response = familyController.deleteFamily(familyId, username);
+    ResponseEntity<?> response = familyController.deleteFamily(familyId);
 
     /* Then */
     assertNotNull(response);
     assertEquals(401, response.getStatusCodeValue());
+  }
+
+  @Test
+  public void when_generate_non_persistent_invite_then_200_status_returned() {
+	  /* Given */
+	  when(inviteService.createUniqueMemberInvite(any(Long.class), any(String.class))).thenAnswer(
+			  invocation -> {
+				  Family family = new Family(invocation.getArgument(0), "Test", "ffffff", "America/Chicago", null, null);
+				  return new MemberInvite(family, invocation.getArgument(1));
+			  });
+	  MemberInviteDto request =
+			  new MemberInviteDtoBuilder()
+			  	.withFamilyId(1l)
+			  	.withPersistence(false)
+			  	.withRecipientEmail("testemail@test.com")
+			  	.build();
+
+	  /* When */
+	  ResponseEntity<?> response = familyController.generateInvite(request);
+
+	  /* Then */
+	  assertNotNull(response);
+	  assertEquals(200, response.getStatusCodeValue());
+  }
+
+  @Test
+  public void when_generate_non_persistent_invite_with_role_then_200_status_returned() {
+	  /* Given */
+	  when(inviteService.createUniqueMemberInviteWithRole(any(Long.class), any(String.class), any(Role.class))).thenAnswer(
+			  invocation -> {
+				  Family family = new Family(invocation.getArgument(0), "Test", "ffffff", "America/Chicago", null, null);
+				  return new MemberInvite(family, invocation.getArgument(1), invocation.getArgument(2));
+			  });
+	  MemberInviteDto request =
+			  new MemberInviteDtoBuilder()
+			  	.withFamilyId(1l)
+			  	.withPersistence(false)
+			  	.withRecipientEmail("testemail@test.com")
+			  	.withInitialRole(Role.ADULT)
+			  	.build();
+
+	  /* When */
+	  ResponseEntity<?> response = familyController.generateInvite(request);
+
+	  /* Then */
+	  assertNotNull(response);
+	  assertEquals(200, response.getStatusCodeValue());
+  }
+
+  @Test
+  public void when_generate_persistent_invite_then_invite_code_populated_on_response() {
+	  /* Given */
+	  when(inviteService.generatePersistentMemberInvite(any(Long.class))).thenAnswer(
+			  invocation -> {
+				 Family family = new Family(invocation.getArgument(0), "Test", "ffffff", "America/Chicago", null, null);
+				 User user = new User(1l, "Test", "User", "testuser", "password", "testemail@test.com", null);
+				 FamilyMembers member = new FamilyMembers(user, family, Role.OWNER, "eaeaea");
+				 family.addMember(member);
+				 user.setFamilies(Collections.singleton(member));
+				 InviteCode invite = new InviteCode(true);
+				 family.setInviteCode(invite);
+				 return FamilyDto.fromFamilyObj(family, user);
+			  });
+	  MemberInviteDto request =
+			  new MemberInviteDtoBuilder()
+			  	.withFamilyId(1l)
+			  	.withPersistence(true)
+			  	.build();
+
+	  /* When */
+	  ResponseEntity<?> response = familyController.generateInvite(request);
+
+	  /* Then */
+	  assertNotNull(response);
+	  assertEquals(200, response.getStatusCodeValue());
+	  assertTrue(response.getBody() instanceof FamilyDto);
+	  assertNotNull(((FamilyDto) response.getBody()).getInviteCode());
+  }
+
+  @Test
+  public void when_generate_invite_and_authorization_exception_thrown_then_401_returned() {
+	  /* Given */
+	  doThrow(AuthorizationException.class).when(inviteService).generatePersistentMemberInvite(any(Long.class));
+	  MemberInviteDto request =
+			  new MemberInviteDtoBuilder()
+			  	.withFamilyId(1l)
+			  	.withPersistence(true)
+			  	.build();
+
+	  /* When */
+	  ResponseEntity<?> response = familyController.generateInvite(request);
+
+	  /* Then */
+	  assertNotNull(response);
+	  assertEquals(401, response.getStatusCodeValue());
+  }
+
+  @Test
+  public void when_generate_invite_and_family_not_found_exception_thrown_then_404_returned() {
+	  /* Given */
+	  doThrow(FamilyNotFoundException.class).when(inviteService).generatePersistentMemberInvite(any(Long.class));
+	  MemberInviteDto request =
+			  new MemberInviteDtoBuilder()
+			  	.withFamilyId(1l)
+			  	.withPersistence(true)
+			  	.build();
+
+	  /* When */
+	  ResponseEntity<?> response = familyController.generateInvite(request);
+
+	  /* Then */
+	  assertNotNull(response);
+	  assertEquals(404, response.getStatusCodeValue());
   }
 
   private FamilyDto mockServiceResponse(FamilyDto request, boolean throwUser, boolean throwFamily, boolean throwAuth, boolean throwBadRequest)

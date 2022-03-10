@@ -1,8 +1,13 @@
 package com.familyorg.familyorganizationapp.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.io.Serializable;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -13,6 +18,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.persistence.criteria.CriteriaBuilder;
 
 @Entity
 @Table(name="family")
@@ -39,13 +45,10 @@ public class Family implements Serializable {
 	@OneToMany(mappedBy="family", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
 	private Set<FamilyMembers> members;
 
-	public Family() {
-		super();
-	}
+	public Family() {}
 
 	public Family(Long id, String name, String eventColor, String timezone, String inviteCode,
 			Set<FamilyMembers> members) {
-		super();
 		this.id = id;
 		this.name = name;
 		this.eventColor = eventColor;
@@ -97,11 +100,22 @@ public class Family implements Serializable {
 	}
 
 	public String getInviteCode() {
-		return inviteCode;
+		return this.inviteCode;
+	}
+
+	public InviteCode getInviteCodeObj() {
+		if (inviteCode == null) {
+			return new InviteCode();
+		}
+		return InviteCode.parseFromCodeString(InviteCode.PERSISTENT_PREFIX + "-" + this.inviteCode);
 	}
 
 	public void setInviteCode(String inviteCode) {
 		this.inviteCode = inviteCode;
+	}
+
+	public void setInviteCode(InviteCode inviteCode) {
+		this.inviteCode = inviteCode.toString();
 	}
 
 	public Set<FamilyMembers> getMembers() {
@@ -110,6 +124,20 @@ public class Family implements Serializable {
 
 	public void setMembers(Set<FamilyMembers> members) {
 		this.members = members;
+	}
+
+	public void addMember(FamilyMembers member) {
+		if (this.members == null) {
+			this.members = new HashSet<>();
+		}
+		this.members.add(member);
+	}
+
+	public void addMembers(Collection<FamilyMembers> members) {
+		if (this.members == null) {
+			this.members = new HashSet<>();
+		}
+		this.members.addAll(members);
 	}
 
 	@Override
@@ -136,6 +164,5 @@ public class Family implements Serializable {
 				&& Objects.equals(inviteCode, other.inviteCode)
 				&& Objects.equals(name, other.name) && Objects.equals(timezone, other.timezone);
 	}
-
 
 }

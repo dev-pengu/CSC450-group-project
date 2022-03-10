@@ -2,6 +2,9 @@ package com.familyorg.familyorganizationapp.controller;
 
 import java.util.List;
 
+import com.familyorg.familyorganizationapp.DTO.MemberInviteDto;
+import com.familyorg.familyorganizationapp.domain.MemberInvite;
+import com.familyorg.familyorganizationapp.service.InviteService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,11 +34,19 @@ public class FamilyController {
 
 	@Autowired
 	private FamilyService familyService;
+	@Autowired
+	private InviteService inviteService;
 
 	FamilyController() {}
 
-	FamilyController(FamilyService familyService) {
+	/**
+	 * This constructor should only be used for testing to mock the injected classes
+	 * @param familyService
+	 * @param inviteService
+	 */
+	FamilyController(FamilyService familyService, InviteService inviteService) {
 		this.familyService = familyService;
+		this.inviteService = inviteService;
 	}
 
 	@PostMapping()
@@ -44,13 +55,13 @@ public class FamilyController {
 			FamilyDto createdFamily = familyService.createFamily(familyRequest);
 			return new ResponseEntity<FamilyDto>(createdFamily, HttpStatus.CREATED);
 		} catch (BadRequestException e) {
-			LOG.debug(e.getMessage(), e);
+			LOG.error(e.getMessage(), e);
 			return new ResponseEntity<String>(e.getMessage(), HttpStatus.BAD_REQUEST);
 		} catch (UserNotFoundException e) {
-			LOG.debug(e.getMessage(), e);
+			LOG.error(e.getMessage(), e);
 			return new ResponseEntity<String>(e.getMessage(), HttpStatus.NOT_FOUND);
 		} catch (Exception e) {
-			LOG.debug(e.getMessage(), e);
+			LOG.error(e.getMessage(), e);
 			return new ResponseEntity<String>("Error processing request.", HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -61,16 +72,16 @@ public class FamilyController {
 			FamilyDto family = familyService.getFamily(familyRequest);
 			return new ResponseEntity<FamilyDto>(family, HttpStatus.OK);
 		} catch (FamilyNotFoundException e) {
-			LOG.debug(e.getMessage(), e);
+			LOG.error(e.getMessage(), e);
 			return new ResponseEntity<String>(e.getMessage(), HttpStatus.NOT_FOUND);
 		} catch(AuthorizationException e) {
-			LOG.debug(e.getMessage(), e);
+			LOG.error(e.getMessage(), e);
 			return new ResponseEntity<String>(e.getMessage(), HttpStatus.UNAUTHORIZED);
 		} catch(UserNotFoundException e) {
-			LOG.debug(e.getMessage(), e);
+			LOG.error(e.getMessage(), e);
 			return new ResponseEntity<String>(e.getMessage(), HttpStatus.NOT_FOUND);
 		} catch (Exception e) {
-			LOG.debug(e.getMessage(), e);
+			LOG.error(e.getMessage(), e);
 			return new ResponseEntity<String>("Error processing request.", HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -81,10 +92,10 @@ public class FamilyController {
 			List<FamilyDto> families = familyService.getFamiliesByUser(userId);
 			return new ResponseEntity<List<FamilyDto>>(families, HttpStatus.OK);
 		} catch (UserNotFoundException e) {
-			LOG.debug(e.getMessage(), e);
+			LOG.error(e.getMessage(), e);
 			return new ResponseEntity<String>(e.getMessage(), HttpStatus.NOT_FOUND);
 		} catch (Exception e) {
-			LOG.debug(e.getMessage(), e);
+			LOG.error(e.getMessage(), e);
 			return new ResponseEntity<String>("Error processing request.", HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -95,37 +106,71 @@ public class FamilyController {
 			FamilyDto family = familyService.updateFamily(familyRequest);
 			return new ResponseEntity<FamilyDto>(family, HttpStatus.OK);
 		} catch (AuthorizationException e) {
-			LOG.debug(e.getMessage(), e);
+			LOG.error(e.getMessage(), e);
 			return new ResponseEntity<String>(e.getMessage(), HttpStatus.UNAUTHORIZED);
 		} catch (FamilyNotFoundException e) {
-			LOG.debug(e.getMessage(), e);
+			LOG.error(e.getMessage(), e);
 			return new ResponseEntity<String>(e.getMessage(), HttpStatus.NOT_FOUND);
 		}  catch (UserNotFoundException e) {
-			LOG.debug(e.getMessage(), e);
+			LOG.error(e.getMessage(), e);
 			return new ResponseEntity<String>(e.getMessage(), HttpStatus.NOT_FOUND);
 		} catch (Exception e) {
-			LOG.debug(e.getMessage(), e);
+			LOG.error(e.getMessage(), e);
 			return new ResponseEntity<String>("Error processing request.", HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 
 	@DeleteMapping("/delete")
-	public ResponseEntity<?> deleteFamily(@RequestParam("familyId") Long familyId,
-			@RequestParam("username") String username) {
+	public ResponseEntity<?> deleteFamily(@RequestParam("familyId") Long familyId) {
 		try {
-			familyService.deleteFamily(familyId, username);
+			familyService.deleteFamily(familyId);
 			return new ResponseEntity<String>("Family successfully deleted", HttpStatus.OK);
 		} catch (AuthorizationException e) {
-			LOG.debug(e.getMessage(), e);
+			LOG.error(e.getMessage(), e);
 			return new ResponseEntity<String>(e.getMessage(), HttpStatus.UNAUTHORIZED);
 		} catch (FamilyNotFoundException e) {
-			LOG.debug(e.getMessage(), e);
+			LOG.error(e.getMessage(), e);
 			return new ResponseEntity<String>(e.getMessage(), HttpStatus.NOT_FOUND);
 		} catch (UserNotFoundException e) {
-			LOG.debug(e.getMessage(), e);
+			LOG.error(e.getMessage(), e);
 			return new ResponseEntity<String>(e.getMessage(), HttpStatus.NOT_FOUND);
 		} catch (Exception e) {
-			LOG.debug(e.getMessage(), e);
+			LOG.error(e.getMessage(), e);
+			return new ResponseEntity<String>("Error processing request.", HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	@PostMapping("/invite/generate")
+	public ResponseEntity<?> generateInvite(@RequestBody MemberInviteDto memberInvite) {
+		LOG.warn(memberInvite.toString());
+		try {
+			if (memberInvite.isPersistent()) {
+				FamilyDto familyWithInviteCode = inviteService.generatePersistentMemberInvite(memberInvite.getFamilyId());
+				return new ResponseEntity<FamilyDto>(familyWithInviteCode, HttpStatus.OK);
+			} else {
+				// Generate the Invite
+				MemberInvite invite = null;
+				if (memberInvite.getInitialRole() != null) {
+					invite = inviteService.createUniqueMemberInviteWithRole(
+							memberInvite.getFamilyId(), memberInvite.getRecipientEmail(), memberInvite.getInitialRole());
+				} else {
+					invite = inviteService.createUniqueMemberInvite(
+							memberInvite.getFamilyId(), memberInvite.getRecipientEmail());
+				}
+				// Send the invite via email
+				// TODO: add email generation FR.6
+				LOG.info(invite.toString());
+				// Assuming no errors were thrown, an invitation was sent successfully, respond with 200 status
+				return new ResponseEntity<String>("Success", HttpStatus.OK);
+			}
+		} catch (AuthorizationException e) {
+			LOG.error(e.getMessage(), e);
+			return new ResponseEntity<String>(e.getMessage(), HttpStatus.UNAUTHORIZED);
+		} catch (FamilyNotFoundException e) {
+			LOG.error(e.getMessage(), e);
+			return new ResponseEntity<String>(e.getMessage(), HttpStatus.NOT_FOUND);
+		} catch (Exception e) {
+			LOG.error(e.getMessage(), e);
 			return new ResponseEntity<String>("Error processing request.", HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}

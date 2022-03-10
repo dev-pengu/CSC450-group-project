@@ -6,10 +6,9 @@ import java.util.Set;
 import com.familyorg.familyorganizationapp.DTO.FamilyDto;
 import com.familyorg.familyorganizationapp.DTO.FamilyMemberDto;
 import com.familyorg.familyorganizationapp.DTO.UserDto;
-import com.familyorg.familyorganizationapp.domain.FamilyMembers;
 import com.familyorg.familyorganizationapp.domain.Role;
 
-public class FamilyDtoBuilder {
+public class FamilyDtoBuilder implements DtoBuilder<FamilyDto> {
 	private Long id;
 	private String name;
 	private String eventColor;
@@ -77,59 +76,7 @@ public class FamilyDtoBuilder {
 		return this;
 	}
 
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-	public void setName(String name) {
-		this.name = name;
-	}
-	public void setEventColor(String eventColor) {
-		this.eventColor = eventColor;
-	}
-	public void setTimezone(String timezone) {
-		this.timezone = timezone;
-	}
-	public void setInviteCode(String inviteCode) {
-		this.inviteCode = inviteCode;
-	}
-	public void setMembers(Set<FamilyMemberDto> members) {
-		for(FamilyMemberDto member : members) {
-			if (member.getRole().equals(Role.OWNER)) {
-				this.owner = member;
-				break;
-			}
-		}
-		this.members = members;
-	}
-	public void setOwner(FamilyMemberDto owner) {
-		this.owner = owner;
-	}
-	public void setRequestingUser(UserDto user) {
-		this.requestingUser = user;
-	}
-
-	public void addMember(FamilyMembers member) {
-		if (this.members == null) {
-			this.members = new HashSet<>();
-		}
-		UserDto user = new UserDto(
-				member.getUser().getId(),
-				member.getUser().getFirstName(),
-				member.getUser().getLastName(),
-				member.getUser().getEmail(),
-				member.getUser().getUsername());
-		FamilyMemberDto memberDto = new FamilyMemberDto(
-				user,
-				member.getEventColor(),
-				member.getFamily().getId(),
-				member.getRole());
-		this.members.add(memberDto);
-		if (member.getRole().equals(Role.OWNER)) {
-			this.owner = memberDto;
-		}
-	}
-
+	@Override
 	public FamilyDto build() {
 		return new FamilyDto(
 				this.id,

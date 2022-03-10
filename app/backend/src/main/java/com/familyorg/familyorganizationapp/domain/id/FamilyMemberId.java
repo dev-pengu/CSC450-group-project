@@ -1,4 +1,4 @@
-package com.familyorg.familyorganizationapp.domain;
+package com.familyorg.familyorganizationapp.domain.id;
 
 import java.io.Serializable;
 import java.util.Objects;
