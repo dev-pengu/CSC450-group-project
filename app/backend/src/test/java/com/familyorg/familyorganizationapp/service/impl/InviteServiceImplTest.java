@@ -41,12 +41,12 @@ import com.familyorg.familyorganizationapp.service.UserService;
 
 public class InviteServiceImplTest {
 	private InviteServiceImpl inviteService;
-	
+
 	private MemberInviteRepository memberInviteRepository;
 	private FamilyService familyService;
 	private AuthService authService;
 	private UserService userService;
-	
+
 	static User TEST_USER_1 = new User(1l, "Test", "User", "testuser", "password", "testuser@test.com", null);
 	static User TEST_USER_2 = new User(2l, "Test", "User2", "testuser2", "password", "testuser2@test.com", null);
 	static User TEST_USER_3 = new User(3l, "Test", "User3", "testuser3", "password", "testuser3@test.com", null);
@@ -60,7 +60,7 @@ public class InviteServiceImplTest {
 	static Map<FamilyMemberId, FamilyMembers> familyMembersById = new HashMap<>();
 	static Map<MemberInviteId, MemberInvite> invitesById = new HashMap<>();
 	static Map<Long, Family> familiesById = new HashMap<>();
-	
+
 	@BeforeAll
 	public static void setup() {
 		familyOneMembers = new ArrayList<>();
@@ -72,7 +72,7 @@ public class InviteServiceImplTest {
 					new FamilyMemberId(familyMember.getUser().getId(), familyMember.getFamily().getId()),
 					familyMember);
 		});
-		
+
 		TEST_USER_1.setFamilies(Collections.singleton(familyOneMembers.get(0)));
 		TEST_USER_3.setFamilies(Collections.singleton(familyOneMembers.get(1)));
 		usersByEmail.put(TEST_USER_1.getEmail(), TEST_USER_1);
@@ -93,7 +93,7 @@ public class InviteServiceImplTest {
 		familiesById.put(FAMILY_1.getId(), FAMILY_1);
 
 	}
-	
+
 	@BeforeEach
 	public void before() {
 		userService = mock(UserServiceImpl.class);
@@ -120,14 +120,14 @@ public class InviteServiceImplTest {
 				invocation -> invocation.getArgument(0));
 		when(familyService.updateFamily(any(Family.class))).thenAnswer(
 				invocation -> invocation.getArgument(0));
-		
+
 		inviteService = new InviteServiceImpl();
 		inviteService.setAuthService(authService);
 		inviteService.setFamilyService(familyService);
 		inviteService.setMemberInviteRepository(memberInviteRepository);
 		inviteService.setUserService(userService);
 	}
-	
+
 	@Test
 	public void when_permitted_and_create_one_time_code_then_code_generated() {
 		/* Given */
@@ -167,18 +167,18 @@ public class InviteServiceImplTest {
 				return false;
 			}
 		});
-		
-		
+
+
 		/* When */
 		MemberInvite generated = inviteService.createUniqueMemberInvite(FAMILY_1.getId(), "testemail@test.com");
-		
+
 		/* Then */
 		assertNotNull(generated);
 		assertNotNull(generated.getInviteCode());
 		assertTrue(generated.getInviteCodeObj().getInviteCodeString().contains(InviteCode.ONE_TIME_USE_PREFIX));
 		assertEquals(Role.CHILD, generated.getRole());
 	}
-	
+
 	@Test
 	public void when_permitted_and_create_one_time_with_role_then_code_generated() {
 		/* Given */
@@ -218,19 +218,19 @@ public class InviteServiceImplTest {
 				return false;
 			}
 		});
-		
+
 		/* When */
 		MemberInvite generated =
 				inviteService.createUniqueMemberInviteWithRole(
 						FAMILY_1.getId(), "testuser@test.com", Role.ADULT);
-		
+
 		/* Then */
 		assertNotNull(generated);
 		assertNotNull(generated.getInviteCode());
 		assertTrue(generated.getInviteCodeObj().getInviteCodeString().contains(InviteCode.ONE_TIME_USE_PREFIX));
 		assertEquals(Role.ADULT, generated.getRole());
 	}
-	
+
 	@Test
 	public void when_not_member_of_family_and_try_to_generate_code_then_authorization_exception_thrown() {
 		/* Given */
@@ -270,17 +270,17 @@ public class InviteServiceImplTest {
 				return false;
 			}
 		});
-		
+
 		/* When */
 		assertThrows(AuthorizationException.class, () -> {
 			inviteService.createUniqueMemberInvite(FAMILY_1.getId(), "testuser@test.com");
 		});
 	}
-	
+
 	@Test
 	public void when_requesting_user_lt_adult_level_and_try_to_generate_code_then_authorization_exception_thrown() {
 		/* Given */
-		
+
 		when(authService.getSessionUserDetails()).thenReturn(new UserDetails() {
 			@Override
 			public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -317,13 +317,13 @@ public class InviteServiceImplTest {
 				return false;
 			}
 		});
-		
+
 		/* When */
 		assertThrows(AuthorizationException.class, () -> {
 			inviteService.createUniqueMemberInvite(FAMILY_1.getId(), "testuser@test.com");
 		});
 	}
-	
+
 	@Test
 	public void when_family_doesnt_exist_and_try_to_generate_code_then_familynotfound_exception_thrown() {
 		/* Given */
@@ -363,13 +363,13 @@ public class InviteServiceImplTest {
 				return false;
 			}
 		});
-		
+
 		/* When */
 		assertThrows(FamilyNotFoundException.class, () -> {
 			inviteService.createUniqueMemberInvite(2l, "testuser@test.com");
 		});
 	}
-	
+
 	@Test
 	public void when_permitted_and_try_to_generate_permanent_code_then_code_generated() {
 		/* Given */
@@ -409,16 +409,16 @@ public class InviteServiceImplTest {
 				return false;
 			}
 		});
-		
+
 		/* When */
 		FamilyDto response = inviteService.generatePersistentMemberInvite(FAMILY_1.getId());
-		
+
 		/* Then */
 		assertNotNull(response);
 		assertNotNull(response.getInviteCode());
 		assertTrue(response.getInviteCode().contains(InviteCode.PERSISTENT_PREFIX));
 	}
-	
+
 	@Test
 	public void when_not_part_of_family_and_try_to_generate_permanent_invite_code_then_authorizationexception_thrown() {
 		/* Given */
@@ -458,13 +458,13 @@ public class InviteServiceImplTest {
 				return false;
 			}
 		});
-		
+
 		/* When */
 		assertThrows(AuthorizationException.class, () -> {
 			inviteService.generatePersistentMemberInvite(FAMILY_1.getId());
 		});
 	}
-	
+
 	@Test
 	public void when_not_admin_and_try_to_generate_permanent_invite_code_then_authorizationexception_thrown() {
 		/* Given */
@@ -504,13 +504,13 @@ public class InviteServiceImplTest {
 				return false;
 			}
 		});
-		
+
 		/* When */
 		assertThrows(AuthorizationException.class, () -> {
 			inviteService.generatePersistentMemberInvite(FAMILY_1.getId());
 		});
 	}
-	
+
 	@Test
 	public void when_family_doesnt_exist_and_try_to_generate_permanent_code_then_familynotfoundexception_thrown() {
 		/* Given */
@@ -550,7 +550,7 @@ public class InviteServiceImplTest {
 				return false;
 			}
 		});
-		
+
 		/* When */
 		assertThrows(FamilyNotFoundException.class, () -> {
 			inviteService.generatePersistentMemberInvite(3l);

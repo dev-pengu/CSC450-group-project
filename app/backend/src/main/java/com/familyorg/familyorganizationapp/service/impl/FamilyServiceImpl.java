@@ -133,7 +133,7 @@ public class FamilyServiceImpl implements FamilyService {
 		}
 
 		return families.stream()
-				.map(family -> 
+				.map(family ->
 					FamilyDto.fromFamilyObj(family, user))
 				.collect(Collectors.toList());
 	}

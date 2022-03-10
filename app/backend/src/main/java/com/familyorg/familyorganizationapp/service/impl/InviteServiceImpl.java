@@ -145,6 +145,6 @@ public class InviteServiceImpl implements InviteService {
 	void setUserService(UserService userService) {
 		this.userService = userService;
 	}
-  
-  
+
+
 }

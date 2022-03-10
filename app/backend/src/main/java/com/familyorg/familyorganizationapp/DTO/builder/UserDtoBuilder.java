@@ -33,7 +33,7 @@ public class UserDtoBuilder implements DtoBuilder<UserDto> {
 		this.username = username;
 		return this;
 	}
-	
+
 	@Override
 	public UserDto build() {
 		return new UserDto(

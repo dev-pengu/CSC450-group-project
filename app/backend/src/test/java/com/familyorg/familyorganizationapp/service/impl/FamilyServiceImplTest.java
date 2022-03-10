@@ -56,12 +56,8 @@ public class FamilyServiceImplTest {
 	private FamilyMemberRepository familyMemberRepository;
 	private FamilyRepository familyRepository;
 	private UserService userService;
-<<<<<<< HEAD
-
-=======
 	private AuthService authService;
-	
->>>>>>> a77c890 (CU-25d7q55 Added family invite generation)
+
 	static User TEST_USER_1 = new User(1l, "Test", "User", "testuser", "password", "testuser@test.com", null);
 	static User TEST_USER_2 = new User(2l, "Test", "User2", "testuser2", "password", "testuser2@test.com", null);
 	static Family FAMILY_1 = new Family(1l, "Test Family 1", "000000", "america/chicago", null, null);
@@ -186,12 +182,6 @@ public class FamilyServiceImplTest {
 	@Test
 	public void test_get_family() {
 		/* Given */
-<<<<<<< HEAD
-		UserDto requestingUser =
-				new UserDtoBuilder()
-						.withUsername("testuser")
-						.build();
-=======
 		when(authService.getSessionUserDetails()).thenReturn(new UserDetails() {
 			@Override
 			public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -228,7 +218,6 @@ public class FamilyServiceImplTest {
 				return false;
 			}
 		});
->>>>>>> a77c890 (CU-25d7q55 Added family invite generation)
 		FamilyDto request =
 				new FamilyDtoBuilder()
 						.withId(1l)

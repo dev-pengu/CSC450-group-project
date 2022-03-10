@@ -30,7 +30,7 @@ public class FamilyMemberDtoBuilder implements DtoBuilder<FamilyMemberDto> {
 		this.role = role;
 		return this;
 	}
-	
+
 	@Override
 	public FamilyMemberDto build() {
 		return new FamilyMemberDto(

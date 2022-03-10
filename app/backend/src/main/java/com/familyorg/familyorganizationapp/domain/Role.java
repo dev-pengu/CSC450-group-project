@@ -34,7 +34,7 @@ public enum Role {
 		}
 		return null;
 	}
-	
+
 	public int getLevel() {
 		return this.level;
 	}

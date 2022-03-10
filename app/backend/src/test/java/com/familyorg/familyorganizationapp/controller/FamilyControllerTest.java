@@ -380,7 +380,7 @@ public class FamilyControllerTest {
     assertNotNull(response);
     assertEquals(401, response.getStatusCodeValue());
   }
-  
+
   @Test
   public void when_generate_non_persistent_invite_then_200_status_returned() {
 	  /* Given */
@@ -395,15 +395,15 @@ public class FamilyControllerTest {
 			  	.withPersistence(false)
 			  	.withRecipientEmail("testemail@test.com")
 			  	.build();
-	  
+
 	  /* When */
 	  ResponseEntity<?> response = familyController.generateInvite(request);
-	  
+
 	  /* Then */
 	  assertNotNull(response);
 	  assertEquals(200, response.getStatusCodeValue());
   }
-  
+
   @Test
   public void when_generate_non_persistent_invite_with_role_then_200_status_returned() {
 	  /* Given */
@@ -419,15 +419,15 @@ public class FamilyControllerTest {
 			  	.withRecipientEmail("testemail@test.com")
 			  	.withInitialRole(Role.ADULT)
 			  	.build();
-	  
+
 	  /* When */
 	  ResponseEntity<?> response = familyController.generateInvite(request);
-	  
+
 	  /* Then */
 	  assertNotNull(response);
 	  assertEquals(200, response.getStatusCodeValue());
   }
-  
+
   @Test
   public void when_generate_persistent_invite_then_invite_code_populated_on_response() {
 	  /* Given */
@@ -447,17 +447,17 @@ public class FamilyControllerTest {
 			  	.withFamilyId(1l)
 			  	.withPersistence(true)
 			  	.build();
-	  
+
 	  /* When */
 	  ResponseEntity<?> response = familyController.generateInvite(request);
-	  
+
 	  /* Then */
 	  assertNotNull(response);
 	  assertEquals(200, response.getStatusCodeValue());
 	  assertTrue(response.getBody() instanceof FamilyDto);
 	  assertNotNull(((FamilyDto) response.getBody()).getInviteCode());
   }
-  
+
   @Test
   public void when_generate_invite_and_authorization_exception_thrown_then_401_returned() {
 	  /* Given */
@@ -467,15 +467,15 @@ public class FamilyControllerTest {
 			  	.withFamilyId(1l)
 			  	.withPersistence(true)
 			  	.build();
-	  
+
 	  /* When */
 	  ResponseEntity<?> response = familyController.generateInvite(request);
-	  
+
 	  /* Then */
 	  assertNotNull(response);
 	  assertEquals(401, response.getStatusCodeValue());
   }
-  
+
   @Test
   public void when_generate_invite_and_family_not_found_exception_thrown_then_404_returned() {
 	  /* Given */
@@ -485,10 +485,10 @@ public class FamilyControllerTest {
 			  	.withFamilyId(1l)
 			  	.withPersistence(true)
 			  	.build();
-	  
+
 	  /* When */
 	  ResponseEntity<?> response = familyController.generateInvite(request);
-	  
+
 	  /* Then */
 	  assertNotNull(response);
 	  assertEquals(404, response.getStatusCodeValue());

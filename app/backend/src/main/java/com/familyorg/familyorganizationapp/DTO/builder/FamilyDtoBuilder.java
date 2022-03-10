@@ -75,7 +75,7 @@ public class FamilyDtoBuilder implements DtoBuilder<FamilyDto> {
 		this.members.add(member);
 		return this;
 	}
-	
+
 	@Override
 	public FamilyDto build() {
 		return new FamilyDto(
