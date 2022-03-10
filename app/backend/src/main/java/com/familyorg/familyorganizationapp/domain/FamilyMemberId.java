@@ -7,9 +7,9 @@ public class FamilyMemberId implements Serializable {
 	private static final long serialVersionUID = 2559600146177437366L;
 	long user;
 	long family;
-	
+
 	public FamilyMemberId() {}
-	
+
 	public FamilyMemberId(long userId, long familyId) {
 		this.user = userId;
 		this.family = familyId;
@@ -51,6 +51,6 @@ public class FamilyMemberId implements Serializable {
 		FamilyMemberId other = (FamilyMemberId) obj;
 		return family == other.family && user == other.user;
 	}
-	
-	
+
+
 }

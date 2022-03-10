@@ -28,7 +28,7 @@ import com.familyorg.familyorganizationapp.service.FamilyService;
 public class FamilyController {
 
 	private static final Logger LOG = LoggerFactory.getLogger(FamilyController.class);
-	
+
 	@Autowired
 	private FamilyService familyService;
 
@@ -37,7 +37,7 @@ public class FamilyController {
 	FamilyController(FamilyService familyService) {
 		this.familyService = familyService;
 	}
-	
+
 	@PostMapping()
 	public ResponseEntity<?> createFamily(@RequestBody FamilyDto familyRequest) {
 		try {
@@ -54,7 +54,7 @@ public class FamilyController {
 			return new ResponseEntity<String>("Error processing request.", HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
-	
+
 	@PostMapping("/get-family")
 	public ResponseEntity<?> getFamily(@RequestBody FamilyDto familyRequest) {
 		try {
@@ -74,7 +74,7 @@ public class FamilyController {
 			return new ResponseEntity<String>("Error processing request.", HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
-	
+
 	@GetMapping("/get-family")
 	public ResponseEntity<?> getFamilies(@RequestParam("userId") Long userId) {
 		try {
@@ -88,7 +88,7 @@ public class FamilyController {
 			return new ResponseEntity<String>("Error processing request.", HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
-	
+
 	@PatchMapping()
 	public ResponseEntity<?> updateFamily(@RequestBody FamilyDto familyRequest) {
 		try {
@@ -108,7 +108,7 @@ public class FamilyController {
 			return new ResponseEntity<String>("Error processing request.", HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
-	
+
 	@DeleteMapping("/delete")
 	public ResponseEntity<?> deleteFamily(@RequestParam("familyId") Long familyId,
 			@RequestParam("username") String username) {

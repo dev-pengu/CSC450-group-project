@@ -18,18 +18,18 @@ import com.familyorg.familyorganizationapp.service.SecurityService;
 public class SecurityServiceImpl implements SecurityService {
 	@Autowired
 	private AuthenticationManager authenticationManager;
-	
+
 	@Autowired
 	private UserDetailsService userDetailsService;
-	
+
 	private Logger LOG = LoggerFactory.getLogger(SecurityServiceImpl.class);
-	
+
 	@Override
 	public void autologin(String username, String password) {
 		UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-		UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = 
+		UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken =
 				new UsernamePasswordAuthenticationToken(userDetails, password, userDetails.getAuthorities());
-		
+
 		authenticationManager.authenticate(usernamePasswordAuthenticationToken);
 		if (usernamePasswordAuthenticationToken.isAuthenticated()) {
 			SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
@@ -45,7 +45,7 @@ public class SecurityServiceImpl implements SecurityService {
 		if (authentication == null || AnonymousAuthenticationToken.class.isAssignableFrom(authentication.getClass())) {
 			return false;
 		}
-		
+
 		return authentication.isAuthenticated();
 	}
 }

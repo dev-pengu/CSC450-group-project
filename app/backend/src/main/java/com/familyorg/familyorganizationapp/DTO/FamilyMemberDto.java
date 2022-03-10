@@ -10,7 +10,7 @@ public class FamilyMemberDto {
 	private UserDto user;
 	private Long familyId;
 	private Role role;
-	
+
 	public FamilyMemberDto(UserDto user, String eventColor, Long familyId, Role role) {
 		super();
 		this.user = user;
@@ -34,7 +34,7 @@ public class FamilyMemberDto {
 	public Long getFamilyId() {
 		return familyId;
 	}
-	
+
 	public UserDto getUser() {
 		return user;
 	}
@@ -66,7 +66,7 @@ public class FamilyMemberDto {
 		return Objects.equals(user, other.user) && Objects.equals(eventColor, other.eventColor)
 				&& Objects.equals(familyId, other.familyId) && Objects.equals(role, other.role);
 	}
-	
+
 	public static FamilyMemberDto fromFamilyMemberObj(FamilyMembers familyMember) {
 		return new FamilyMemberDto(
 				UserDto.fromUserObj(familyMember.getUser()),
@@ -74,5 +74,5 @@ public class FamilyMemberDto {
 				familyMember.getFamily().getId(),
 				familyMember.getRole());
 	}
-	
+
 }

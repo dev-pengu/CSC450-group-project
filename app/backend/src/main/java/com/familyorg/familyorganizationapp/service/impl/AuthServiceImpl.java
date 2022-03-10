@@ -22,7 +22,7 @@ public class AuthServiceImpl implements UserDetailsService {
 
 	@Autowired
 	UserRepository userRepository;
-	
+
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UserNotFoundException {
 		User user = userRepository.findByUsername(username);

@@ -24,10 +24,10 @@ public class AuthController {
 	private UserService userService;
 	@Autowired
 	private SecurityService securityService;
-	
+
 	private static final Logger LOG = LoggerFactory.getLogger(AuthController.class);
-	
-	
+
+
 	/**
 	 * Create a new user. If username or email is already in use, will
 	 * return HttpStatus 409 and indication of which field is already in use.
@@ -43,19 +43,19 @@ public class AuthController {
 				return new ResponseEntity<>("User created successfully!",
 						HttpStatus.CREATED);
 			} else {
-				return new ResponseEntity<>("Error when creating user.", 
+				return new ResponseEntity<>("Error when creating user.",
 						HttpStatus.INTERNAL_SERVER_ERROR);
 			}
-		} catch (ExistingUserException e) { 
+		} catch (ExistingUserException e) {
 			return new ResponseEntity<>(e.getMessage(),
 					HttpStatus.CONFLICT);
 		} catch (Exception e) {
 			LOG.error("Error", e);
-			return new ResponseEntity<>(e.getMessage(), 
+			return new ResponseEntity<>(e.getMessage(),
 					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
-	
+
 	@PostMapping("/login")
 	public ResponseEntity<String> login(@RequestBody User user) {
 		try {

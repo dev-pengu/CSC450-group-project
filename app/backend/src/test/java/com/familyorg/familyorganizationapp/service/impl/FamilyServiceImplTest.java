@@ -45,11 +45,11 @@ import org.springframework.dao.DataIntegrityViolationException;
 public class FamilyServiceImplTest {
 
 	private FamilyServiceImpl familyService;
-	
+
 	private FamilyMemberRepository familyMemberRepository;
 	private FamilyRepository familyRepository;
 	private UserService userService;
-	
+
 	static User TEST_USER_1 = new User(1l, "Test", "User", "testuser", "password", "testuser@test.com", null);
 	static User TEST_USER_2 = new User(2l, "Test", "User2", "testuser2", "password", "testuser2@test.com", null);
 	static Family FAMILY_1 = new Family(1l, "Test Family 1", "000000", "america/chicago", null, null);
@@ -171,7 +171,7 @@ public class FamilyServiceImplTest {
 	@Test
 	public void test_get_family() {
 		/* Given */
-		UserDto requestingUser = 
+		UserDto requestingUser =
 				new UserDtoBuilder()
 						.withUsername("testuser")
 						.build();
@@ -200,11 +200,11 @@ public class FamilyServiceImplTest {
 
 		/* When */
 		FamilyDto response = familyService.getFamily(request);
-					
+
 		/* Then */
 		assertNotNull(response);
 		assertEquals(expected, response);
-		
+
 	}
 
 	@Test
