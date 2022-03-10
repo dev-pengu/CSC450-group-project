@@ -2,7 +2,6 @@ package com.familyorg.familyorganizationapp.DTO;
 
 import com.familyorg.familyorganizationapp.DTO.builder.FamilyDtoBuilder;
 import com.familyorg.familyorganizationapp.domain.Family;
-import com.familyorg.familyorganizationapp.domain.Role;
 import com.familyorg.familyorganizationapp.domain.User;
 
 import java.util.Objects;

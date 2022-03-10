@@ -45,9 +45,7 @@ public class Family implements Serializable {
 	@OneToMany(mappedBy="family", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
 	private Set<FamilyMembers> members;
 
-	public Family() {
-		super();
-	}
+	public Family() {}
 
 	public Family(Long id, String name, String eventColor, String timezone, String inviteCode,
 			Set<FamilyMembers> members) {

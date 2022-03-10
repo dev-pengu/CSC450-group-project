@@ -1,138 +1,115 @@
 package com.familyorg.familyorganizationapp.domain;
 
-import com.familyorg.familyorganizationapp.util.HibernateUtil;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-import org.hibernate.query.Query;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
-
-import java.util.List;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+import java.util.UUID;
+
+import org.junit.jupiter.api.Test;
+
 public class InviteCodeTest {
-  private static SessionFactory sessionFactory;
-  private Session session;
 
-  @BeforeAll
-  public static void setup() {
-    sessionFactory = HibernateUtil.getSessionFactory();
-    System.out.println("SessionFactory created");
-  }
-
-  @AfterAll
-  public static void tearDown() {
-    if (sessionFactory != null) {
-      sessionFactory.close();
-    }
-    System.out.println("SessionFactory destroyed");
-  }
-
-  @Test
-  @Order(1)
-  public void testCreate() {
-    System.out.println("Running [InviteCodeTest] testCreate...");
-    /* Given */
-    session.beginTransaction();
-    Family family = new Family("Test Family", "000000", "America/Chicago", null, null);
-
-    /* When */
-    Long id = (Long) session.save(family);
-    session.getTransaction().commit();
-
-    /* Then */
-    assertTrue(id > 0);
-  }
-
-  @Test
-  @Order(2)
-  public void testUpdate() {
-    System.out.println("Running [InviteCodeTest] testUpdate...");
-    /* Given */
-    Long id = 1l;
-    Family family = new Family(id, "Test Family", "ffffff", "America/Chicago", null, null);
-
-    /* When */
-    session.beginTransaction();
-    session.update(family);
-    session.getTransaction().commit();
-
-    Family updatedFamily = session.find(Family.class, 1l);
-
-    /* Then */
-    assertEquals("ffffff", updatedFamily.getEventColor());
-  }
-
-  @Test
-  @Order(3)
-  public void testGet() {
-    System.out.println("Running [InviteCodeTest] testGet...");
-    /* Given */
-    Long id = 1l;
-
-    /* When */
-    Family family = session.find(Family.class, id);
-
-    /* Then */
-    assertEquals("Test Family", family.getName());
-  }
-
-  @Test
-  @Order(4)
-  public void testList() {
-    System.out.println("Running [InviteCodeTest] testList...");
-    /* Given */
-    String queryString = "from Family";
-
-    /* When */
-    Query<Family> query = session.createQuery(queryString, Family.class);
-    List<Family> resultList = query.getResultList();
-
-    /* Then */
-    assertFalse(resultList.isEmpty());
-  }
-
-  @Test
-  @Order(5)
-  public void testDelete() {
-    System.out.println("Running [InviteCodeTest] testDelete...");
-    /* Given */
-    Long id = 1l;
-    Family family = session.find(Family.class, id);
-
-    /* When */
-    session.beginTransaction();
-    session.delete(family);
-    session.getTransaction().commit();
-    Family deletedFamily = session.find(Family.class, id);
-
-    /* Then */
-    assertNull(deletedFamily);
-  }
-
-
-  @BeforeEach
-  public void openSession() {
-    session = sessionFactory.openSession();
-    System.out.println("Session created");
-  }
-
-  @AfterEach
-  public void closeSession() {
-    if (session != null) {
-      session.close();
-    }
-    System.out.println("Session destroyed");
-  }
+	@Test
+	public void test_persistent_code_generation_from_string() {
+		/* Given */
+		String inviteCodeString = "31d7ad05-3352-4f67-8730-274b17e1da3d";
+		
+		/* When */
+		InviteCode inviteCode = InviteCode.parseFromCodeString(InviteCode.PERSISTENT_PREFIX + "-" + inviteCodeString);
+		
+		/* Then */
+		assertNotNull(inviteCode);
+		assertEquals(UUID.fromString(inviteCodeString), inviteCode.getCode());
+		assertTrue(inviteCode.getInviteCodeString().contains(InviteCode.PERSISTENT_PREFIX));
+		assertTrue(inviteCode.isPersistent());
+		assertEquals(inviteCodeString, inviteCode.toString());
+	}
+  
+	@Test
+	public void test_one_time_use_code_generation_from_string() {
+		/* Given */
+		String inviteCodeString = "31d7ad05-3352-4f67-8730-274b17e1da3d";
+		
+		/* When */
+		InviteCode inviteCode = InviteCode.parseFromCodeString(InviteCode.ONE_TIME_USE_PREFIX + "-" + inviteCodeString);
+		
+		/* Then */
+		assertNotNull(inviteCode);
+		assertEquals(UUID.fromString(inviteCodeString), inviteCode.getCode());
+		assertTrue(inviteCode.getInviteCodeString().contains(InviteCode.ONE_TIME_USE_PREFIX));
+		assertFalse(inviteCode.isPersistent());
+		assertEquals(inviteCodeString, inviteCode.toString());
+	}
+	
+	@Test
+	public void test_code_generation() {
+		/* Given */
+		InviteCode inviteCode = new InviteCode();
+		
+		/* When */
+		inviteCode.generate();
+		
+		/* Then */
+		assertNotNull(inviteCode.getCode());
+	}
+	
+	@Test
+	public void when_code_and_persistence_equal_then_invite_codes_equal() {
+		/* Given */
+		String inviteCodeString = "31d7ad05-3352-4f67-8730-274b17e1da3d";
+		InviteCode inviteCode1 = InviteCode.parseFromCodeString(InviteCode.ONE_TIME_USE_PREFIX + "-" + inviteCodeString);
+		InviteCode inviteCode2 = InviteCode.parseFromCodeString(InviteCode.ONE_TIME_USE_PREFIX + "-" + inviteCodeString);
+		
+		/* Then */
+		assertTrue(inviteCode1.equals(inviteCode2));
+	}
+	
+	@Test
+	public void when_persistence_not_equal_then_invite_codes_not_equal() {
+		/* Given */
+		String inviteCodeString = "31d7ad05-3352-4f67-8730-274b17e1da3d";
+		InviteCode inviteCode1 = InviteCode.parseFromCodeString(InviteCode.ONE_TIME_USE_PREFIX + "-" + inviteCodeString);
+		InviteCode inviteCode2 = InviteCode.parseFromCodeString(InviteCode.PERSISTENT_PREFIX + "-" + inviteCodeString);
+		
+		/* Then */
+		assertFalse(inviteCode1.equals(inviteCode2));
+	}
+	
+	@Test
+	public void when_code_not_equal_then_invite_codes_not_equal() {
+		/* Given */
+		InviteCode inviteCode1 = new InviteCode(true);
+		InviteCode inviteCode2 = new InviteCode(true);
+		
+		/* Then */
+		assertFalse(inviteCode1.equals(inviteCode2));
+	}
+	
+	@Test
+	public void when_created_with_persistence_arg_then_code_generated() {
+		/* Given */
+		InviteCode persistentCode = new InviteCode(true);
+		InviteCode oneTimeUseCode = new InviteCode(false);
+		
+		/* Then */
+		assertNotNull(persistentCode.getCode());
+		assertNotNull(oneTimeUseCode.getCode());
+		assertTrue(persistentCode.getInviteCodeString().contains(InviteCode.PERSISTENT_PREFIX));
+		assertTrue(oneTimeUseCode.getInviteCodeString().contains(InviteCode.ONE_TIME_USE_PREFIX));
+	}
+	
+	@Test
+	public void when_invite_code_parsed_from_generated_invite_code_then_codes_equal() {
+		/* Given */
+		InviteCode inviteCode = new InviteCode(true);
+		String inviteCodeString = inviteCode.getInviteCodeString();
+		
+		/* When */
+		InviteCode parsedInviteCode = InviteCode.parseFromCodeString(inviteCodeString);
+		
+		/* Then */
+		assertTrue(inviteCode.equals(parsedInviteCode));
+	}
 }

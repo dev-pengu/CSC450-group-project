@@ -1,5 +1,6 @@
 package com.familyorg.familyorganizationapp.domain;
 
+import com.familyorg.familyorganizationapp.domain.id.MemberInviteId;
 import com.familyorg.familyorganizationapp.util.HibernateUtil;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -17,6 +18,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -26,6 +28,7 @@ public class MemberInviteTest {
   private Session session;
 
   private static Family family;
+  private static MemberInviteId targetId;
 
   @BeforeAll
   public static void setup() {
@@ -48,18 +51,21 @@ public class MemberInviteTest {
     /* Given */
     session.beginTransaction();
     family = new Family("Test Name", "000000", "America/Chicago", null, null);
-
-    MemberInvite memberInvite = new MemberInvite(family, "testuser@test.com", Role.ADULT);
-    Family family = new Family("Test Family", "000000", "America/Chicago", null, null);
     Long familyId = (Long) session.save(family);
     assertTrue(familyId > 0);
 
+    MemberInvite memberInvite = new MemberInvite(family, "testuser@test.com", Role.ADULT);
+
+
     /* When */
-    Long id = (Long) session.save(memberInvite);
+    MemberInviteId id = (MemberInviteId) session.save(memberInvite);
     session.getTransaction().commit();
 
     /* Then */
-    assertTrue(id > 0);
+    assertTrue(id.getFamily() == 1l);
+    assertTrue(id.getInviteCode() != null);
+    assertTrue(id.getUserEmail().equals(memberInvite.getUserEmail()));
+    targetId = id;
   }
 
   // No update test is needed, updates will not be performed on this DAO
@@ -69,13 +75,17 @@ public class MemberInviteTest {
   public void testGet() {
     System.out.println("Running [MemberInviteTest] testGet...");
     /* Given */
-    Long id = 1l;
+    assertNotNull(targetId);
 
     /* When */
-    MemberInvite memberInvite = session.find(MemberInvite.class, id);
+    MemberInvite memberInvite = session.find(MemberInvite.class, targetId);
 
     /* Then */
-    assertEquals("Test Family", family.getName());
+    assertEquals(Role.ADULT, memberInvite.getRole());
+    assertEquals("testuser@test.com", memberInvite.getUserEmail());
+    assertEquals(1l, memberInvite.getFamilyId());
+    assertTrue(memberInvite.getInviteCodeObj().getInviteCodeString().contains("OTU"));
+    assertNotNull(memberInvite.getCreatedAt());
   }
 
   @Test
@@ -83,11 +93,11 @@ public class MemberInviteTest {
   public void testList() {
     System.out.println("Running [MemberInviteTest] testList...");
     /* Given */
-    String queryString = "from Family";
+    String queryString = "from MemberInvite";
 
     /* When */
-    Query<Family> query = session.createQuery(queryString, Family.class);
-    List<Family> resultList = query.getResultList();
+    Query<MemberInvite> query = session.createQuery(queryString, MemberInvite.class);
+    List<MemberInvite> resultList = query.getResultList();
 
     /* Then */
     assertFalse(resultList.isEmpty());
@@ -98,17 +108,17 @@ public class MemberInviteTest {
   public void testDelete() {
     System.out.println("Running [MemberInviteTest] testDelete...");
     /* Given */
-    Long id = 1l;
-    Family family = session.find(Family.class, id);
+    assertNotNull(targetId);
+    MemberInvite invite = session.find(MemberInvite.class, targetId);
 
     /* When */
     session.beginTransaction();
-    session.delete(family);
+    session.delete(invite);
     session.getTransaction().commit();
-    Family deletedFamily = session.find(Family.class, id);
+    MemberInvite deletedInvite = session.find(MemberInvite.class, targetId);
 
     /* Then */
-    assertNull(deletedFamily);
+    assertNull(deletedInvite);
   }
 
   @BeforeEach

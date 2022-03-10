@@ -39,8 +39,14 @@ public class FamilyController {
 
 	FamilyController() {}
 
-	FamilyController(FamilyService familyService) {
+	/**
+	 * This constructor should only be used for testing to mock the injected classes
+	 * @param familyService
+	 * @param inviteService
+	 */
+	FamilyController(FamilyService familyService, InviteService inviteService) {
 		this.familyService = familyService;
+		this.inviteService = inviteService;
 	}
 
 	@PostMapping()
@@ -153,7 +159,7 @@ public class FamilyController {
 				}
 				// Send the invite via email
 				// TODO: add email generation FR.6
-      	LOG.warn(invite.toString());
+				LOG.info(invite.toString());
 				// Assuming no errors were thrown, an invitation was sent successfully, respond with 200 status
 				return new ResponseEntity<String>("Success", HttpStatus.OK);
 			}

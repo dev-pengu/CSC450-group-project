@@ -73,6 +73,28 @@ public class FamilyTest {
 
     @Test
     @Order(3)
+    public void testAddInviteCode() {
+        System.out.println("Running [FamilyTest] testAddInviteCode...");
+        /* Given */
+        InviteCode inviteCode = new InviteCode(true);
+        Long id = 1l;
+        Family family = session.find(Family.class, id);
+        assertEquals(1l, family.getId());
+
+        /* When */
+        family.setInviteCode(inviteCode);
+        session.beginTransaction();
+        session.update(family);
+        session.getTransaction().commit();
+
+        Family updatedFamily = session.find(Family.class, id);
+
+        /* Then */
+        assertEquals(inviteCode.toString(), updatedFamily.getInviteCode());
+    }
+
+    @Test
+    @Order(3)
     public void testGet() {
         System.out.println("Running [FamilyTest] testGet...");
         /* Given */

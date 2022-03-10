@@ -38,9 +38,6 @@ public class MemberInvite {
   @Column(name="created_at", columnDefinition = "TIMESTAMP")
   private Timestamp createdAt;
 
-  @JsonIgnore
-  private InviteCode inviteCodeObj;
-
   public MemberInvite() {}
 
   public MemberInvite(Family family, String userEmail) {
@@ -60,50 +57,30 @@ public class MemberInvite {
     this.userEmail = userEmail;
     this.role = role != null ? role : Role.lowestLevelRole();
     this.createdAt = created != null ? created : Timestamp.valueOf(LocalDateTime.now());
-    InviteCode localInviteCode = null;
-    if (inviteCode != null) {
-      localInviteCode = InviteCode.parseFromCodeString(InviteCode.ONE_TIME_USE_PREFIX + "-" + inviteCode);
+    if (this.inviteCode != null) {
+      this.inviteCode = inviteCode;
     } else {
-      localInviteCode = new InviteCode(false);
+      this.inviteCode = new InviteCode(false).toString();
     }
-    this.inviteCode = localInviteCode.toString();
-
   }
 
-  public InviteCode getInviteCode() {
-    if (this.inviteCodeObj != null && !this.inviteCodeObj.equals(InviteCode.EMPTY)) {
-      return inviteCodeObj;
-    } else if (this.inviteCode != null) {
-      InviteCode localInviteCode = InviteCode.parseFromCodeString(InviteCode.ONE_TIME_USE_PREFIX + "-" + this.inviteCode);
-      this.inviteCodeObj = localInviteCode;
-      return localInviteCode;
+  public String getInviteCode() {
+    return this.inviteCode;
+  }
+
+  public InviteCode getInviteCodeObj() {
+    if (inviteCode == null) {
+      return new InviteCode();
     }
-    return null;
+    return InviteCode.parseFromCodeString(InviteCode.ONE_TIME_USE_PREFIX + "-" + this.inviteCode);
   }
 
   public void setInviteCode(String inviteCode) {
     this.inviteCode = inviteCode;
-    if (this.inviteCodeObj != null && !this.inviteCodeObj.equals(InviteCode.EMPTY)) {
-      this.inviteCodeObj.setCode(UUID.fromString(inviteCode));
-    } else {
-      InviteCode localInviteCode = new InviteCode();
-      localInviteCode.setPersistent(true);
-      localInviteCode.setCode(UUID.fromString(inviteCode));
-    }
   }
 
   public void setInviteCode(InviteCode inviteCode) {
     this.inviteCode = inviteCode.toString();
-    this.inviteCodeObj = inviteCode;
-  }
-
-  public UUID getInviteCodeUUID() {
-    if (this.inviteCodeObj != null && !this.inviteCodeObj.equals(InviteCode.EMPTY)) {
-      return this.inviteCodeObj.getCode();
-    } else if (this.inviteCode != null) {
-      return UUID.fromString(this.inviteCode);
-    }
-    return null;
   }
 
   public Long getFamilyId() {

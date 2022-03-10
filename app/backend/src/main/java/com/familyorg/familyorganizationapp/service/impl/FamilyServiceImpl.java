@@ -221,19 +221,31 @@ public class FamilyServiceImpl implements FamilyService {
 		return null;
 	}
 
-
+	/**
+	 * This should only be called for testing to mock the injected class
+	 * @param familyRepository
+	 */
 	void setFamilyRepository(FamilyRepository familyRepository) {
 		this.familyRepository = familyRepository;
 	}
-
+	/**
+	 * This should only be called for testing to mock the injected class
+	 * @param familyMemberRepository
+	 */
 	void setFamilyMemberRepository(FamilyMemberRepository familyMemberRepository) {
 		this.familyMemberRepository = familyMemberRepository;
 	}
-
+	/**
+	 * This should only be called for testing to mock the injected class
+	 * @param userService
+	 */
 	void setUserService(UserService userService) {
 		this.userService = userService;
 	}
-
+	/**
+	 * This should only be called for testing to mock the injected class
+	 * @param authService
+	 */
 	void setAuthService(AuthService authService) { this.authService = authService; }
 
 }

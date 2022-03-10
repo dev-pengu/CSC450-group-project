@@ -117,4 +117,34 @@ public class InviteServiceImpl implements InviteService {
   public MemberInvite verifyMemberInvite(MemberInvite memberInvite, boolean isPersistentCode) {
     return null;
   }
+/**
+ * This should only be called for testing to mock the injected class
+ * @param memberInviteRepository
+ */
+	void setMemberInviteRepository(MemberInviteRepository memberInviteRepository) {
+		this.memberInviteRepository = memberInviteRepository;
+	}
+	/**
+	 * This should only be called for testing to mock the injected class
+	 * @param familyService
+	 */
+	void setFamilyService(FamilyService familyService) {
+		this.familyService = familyService;
+	}
+	/**
+	 * This should only be called for testing to mock the injected class
+	 * @param authService
+	 */
+	void setAuthService(AuthService authService) {
+		this.authService = authService;
+	}
+	/**
+	 * This should only be called for testing to mock the injected class
+	 * @param userService
+	 */
+	void setUserService(UserService userService) {
+		this.userService = userService;
+	}
+  
+  
 }

@@ -2,7 +2,7 @@ package com.familyorg.familyorganizationapp.DTO.builder;
 
 import com.familyorg.familyorganizationapp.DTO.UserDto;
 
-public class UserDtoBuilder {
+public class UserDtoBuilder implements DtoBuilder<UserDto> {
 	private Long id;
 	private String firstName;
 	private String lastName;
@@ -33,7 +33,8 @@ public class UserDtoBuilder {
 		this.username = username;
 		return this;
 	}
-
+	
+	@Override
 	public UserDto build() {
 		return new UserDto(
 				this.id,

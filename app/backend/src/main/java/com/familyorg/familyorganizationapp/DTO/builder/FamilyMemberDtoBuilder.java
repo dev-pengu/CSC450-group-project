@@ -4,7 +4,7 @@ import com.familyorg.familyorganizationapp.DTO.FamilyMemberDto;
 import com.familyorg.familyorganizationapp.DTO.UserDto;
 import com.familyorg.familyorganizationapp.domain.Role;
 
-public class FamilyMemberDtoBuilder {
+public class FamilyMemberDtoBuilder implements DtoBuilder<FamilyMemberDto> {
 
 	private String eventColor;
 	private UserDto user;
@@ -30,7 +30,8 @@ public class FamilyMemberDtoBuilder {
 		this.role = role;
 		return this;
 	}
-
+	
+	@Override
 	public FamilyMemberDto build() {
 		return new FamilyMemberDto(
 				this.user,

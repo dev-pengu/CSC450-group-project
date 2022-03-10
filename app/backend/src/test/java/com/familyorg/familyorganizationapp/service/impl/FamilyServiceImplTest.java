@@ -1,11 +1,13 @@
 package com.familyorg.familyorganizationapp.service.impl;
 
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
@@ -19,6 +21,13 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
 import com.familyorg.familyorganizationapp.DTO.FamilyDto;
 import com.familyorg.familyorganizationapp.DTO.FamilyMemberDto;
 import com.familyorg.familyorganizationapp.DTO.UserDto;
@@ -30,20 +39,14 @@ import com.familyorg.familyorganizationapp.Exception.BadRequestException;
 import com.familyorg.familyorganizationapp.Exception.FamilyNotFoundException;
 import com.familyorg.familyorganizationapp.Exception.UserNotFoundException;
 import com.familyorg.familyorganizationapp.domain.Family;
-import com.familyorg.familyorganizationapp.domain.id.FamilyMemberId;
 import com.familyorg.familyorganizationapp.domain.FamilyMembers;
 import com.familyorg.familyorganizationapp.domain.Role;
 import com.familyorg.familyorganizationapp.domain.User;
+import com.familyorg.familyorganizationapp.domain.id.FamilyMemberId;
 import com.familyorg.familyorganizationapp.repository.FamilyMemberRepository;
 import com.familyorg.familyorganizationapp.repository.FamilyRepository;
 import com.familyorg.familyorganizationapp.service.AuthService;
 import com.familyorg.familyorganizationapp.service.UserService;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 
 
 public class FamilyServiceImplTest {
@@ -233,7 +236,7 @@ public class FamilyServiceImplTest {
 		FamilyDto expected =
 				new FamilyDtoBuilder()
 						.withId(FAMILY_1.getId())
-						.withInviteCode(FAMILY_1.getInviteCode().getInviteCodeString())
+						.withInviteCode(null)
 						.withEventColor(FAMILY_1.getEventColor())
 						.withName(FAMILY_1.getName())
 						.withTimezone(FAMILY_1.getTimezone())
@@ -350,7 +353,7 @@ public class FamilyServiceImplTest {
 		expectedFamilyDtos.add(
 				new FamilyDtoBuilder()
 						.withId(FAMILY_1.getId())
-						.withInviteCode(FAMILY_1.getInviteCode().getInviteCodeString())
+						.withInviteCode(null)
 						.withEventColor(FAMILY_1.getEventColor())
 						.withName(FAMILY_1.getName())
 						.withTimezone(FAMILY_1.getTimezone())
@@ -367,7 +370,7 @@ public class FamilyServiceImplTest {
 		expectedFamilyDtos.add(
 				new FamilyDtoBuilder()
 						.withId(FAMILY_3.getId())
-						.withInviteCode(FAMILY_3.getInviteCode().getInviteCodeString())
+						.withInviteCode(null)
 						.withEventColor(FAMILY_3.getEventColor())
 						.withName(FAMILY_3.getName())
 						.withTimezone(FAMILY_3.getTimezone())
