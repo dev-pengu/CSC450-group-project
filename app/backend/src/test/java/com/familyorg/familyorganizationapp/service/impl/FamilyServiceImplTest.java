@@ -9,7 +9,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -20,20 +19,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-
 import com.familyorg.familyorganizationapp.DTO.FamilyDto;
 import com.familyorg.familyorganizationapp.DTO.FamilyMemberDto;
 import com.familyorg.familyorganizationapp.DTO.UserDto;
 import com.familyorg.familyorganizationapp.DTO.builder.FamilyDtoBuilder;
 import com.familyorg.familyorganizationapp.DTO.builder.FamilyMemberDtoBuilder;
-import com.familyorg.familyorganizationapp.DTO.builder.UserDtoBuilder;
 import com.familyorg.familyorganizationapp.Exception.AuthorizationException;
 import com.familyorg.familyorganizationapp.Exception.BadRequestException;
 import com.familyorg.familyorganizationapp.Exception.FamilyNotFoundException;
@@ -51,905 +47,882 @@ import com.familyorg.familyorganizationapp.service.UserService;
 
 public class FamilyServiceImplTest {
 
-	private FamilyServiceImpl familyService;
-
-	private FamilyMemberRepository familyMemberRepository;
-	private FamilyRepository familyRepository;
-	private UserService userService;
-	private AuthService authService;
-
-	static User TEST_USER_1 = new User(1l, "Test", "User", "testuser", "password", "testuser@test.com", null);
-	static User TEST_USER_2 = new User(2l, "Test", "User2", "testuser2", "password", "testuser2@test.com", null);
-	static Family FAMILY_1 = new Family(1l, "Test Family 1", "000000", "america/chicago", null, null);
-	static Family FAMILY_2 = new Family(2l, "Test Family 2", "ffffff", "america/chicago", null, null);
-	static Family FAMILY_3 = new Family(3l, "Test Family 3", "eaeaea", "america/chicago", null, null);
-	static List<FamilyMembers> familyOneMembers;
-	static List<FamilyMembers> familyTwoMembers;
-	static List<FamilyMembers> familyThreeMembers;
-	static Map<String, User> usersByEmail = new HashMap<>();
-	static Map<String, User> usersByUsername = new HashMap<>();
-	static Map<Long, User> usersById = new HashMap<>();
-	static Map<Long, Family> familiesById = new HashMap<>();
-	static Map<FamilyMemberId, FamilyMembers> familyMembersById = new HashMap<>();
-
-	@BeforeAll
-	public static void setup() {
-		familyOneMembers = new ArrayList<>();
-		familyOneMembers.add(new FamilyMembers(TEST_USER_1, FAMILY_1, Role.OWNER, "e802d7"));
-		FAMILY_1.setMembers(familyOneMembers.stream().collect(Collectors.toSet()));
-		familyOneMembers.forEach(familyMember -> {
-			familyMembersById.put(
-					new FamilyMemberId(familyMember.getUser().getId(), familyMember.getFamily().getId()),
-					familyMember);
-		});
-
-		familyTwoMembers = new ArrayList<>();
-		familyTwoMembers.add(new FamilyMembers(TEST_USER_2, FAMILY_2, Role.OWNER, "000000"));
-		FAMILY_2.setMembers(familyTwoMembers.stream().collect(Collectors.toSet()));
-		familyTwoMembers.forEach(familyMember -> {
-			familyMembersById.put(
-					new FamilyMemberId(familyMember.getUser().getId(), familyMember.getFamily().getId()),
-					familyMember);
-		});
-
-		familyThreeMembers = new ArrayList<>();
-		familyThreeMembers.add(new FamilyMembers(TEST_USER_1, FAMILY_3, Role.OWNER, "fffff"));
-		familyThreeMembers.add(new FamilyMembers(TEST_USER_2, FAMILY_3, Role.CHILD, "457163"));
-		FAMILY_3.setMembers(familyThreeMembers.stream().collect(Collectors.toSet()));
-		familyThreeMembers.forEach(familyMember -> {
-			familyMembersById.put(
-					new FamilyMemberId(familyMember.getUser().getId(), familyMember.getFamily().getId()),
-					familyMember);
-		});
-
-		TEST_USER_1.setFamilies(new HashSet<>(Arrays.asList(familyOneMembers.get(0), familyThreeMembers.get(0))));
-		TEST_USER_2.setFamilies(new HashSet<>(Arrays.asList(familyTwoMembers.get(0), familyThreeMembers.get(1))));
-
-		usersByEmail.put(TEST_USER_1.getEmail(), TEST_USER_1);
-		usersByEmail.put(TEST_USER_2.getEmail(), TEST_USER_2);
-		usersById.put(TEST_USER_1.getId(), TEST_USER_1);
-		usersById.put(TEST_USER_2.getId(), TEST_USER_2);
-		usersByUsername.put(TEST_USER_1.getUsername(), TEST_USER_1);
-		usersByUsername.put(TEST_USER_2.getUsername(), TEST_USER_2);
-
-		familiesById.put(FAMILY_1.getId(), FAMILY_1);
-		familiesById.put(FAMILY_2.getId(), FAMILY_2);
-		familiesById.put(FAMILY_3.getId(), FAMILY_3);
-	}
-
-	@BeforeEach
-	public void before() {
-		userService = mock(UserServiceImpl.class);
-		familyRepository = mock(FamilyRepository.class);
-		when(familyRepository.save(any(Family.class))).thenAnswer(
-				invocation -> {
-					Family family = invocation.getArgument(0);
-					if (family.getName() == null) {
-						throw new DataIntegrityViolationException("Name cannot be null");
-					}
-					if (family.getTimezone() == null) {
-						throw new DataIntegrityViolationException("Timezone cannot be null");
-					}
-					if (family.getEventColor() == null) {
-						throw new DataIntegrityViolationException("EventColor cannot be null");
-					}
-					if (family.getId() == null) {
-						family.setId(3l);
-					}
-					return family;
-				});
-		familyMemberRepository = mock(FamilyMemberRepository.class);
-		familyService = new FamilyServiceImpl();
-		familyService.setFamilyMemberRepository(familyMemberRepository);
-		familyService.setFamilyRepository(familyRepository);
-		familyService.setUserService(userService);
-
-		authService = mock(AuthServiceImpl.class);
-		familyService.setAuthService(authService);
-
-		when(userService.getUserByEmail(any(String.class))).thenAnswer(
-				invocation -> usersByEmail.get(invocation.getArgument(0)));
-		when(userService.getUserById(any(Long.class))).thenAnswer(
-				invocation -> usersById.get(invocation.getArgument(0)));
-		when(userService.getUserByUsername(any(String.class))).thenAnswer(
-				invocation -> usersByUsername.get(invocation.getArgument(0)));
-
-		when(familyRepository.findById(any(Long.class))).thenAnswer(
-				invocation -> {
-					Family family = familiesById.get(invocation.getArgument(0));
-					if (family == null) {
-						return Optional.empty();
-					}
-					return Optional.of(family);
-				});
-		when(familyRepository.getFamiliesByUserId(any(Long.class))).thenAnswer(
-				invocation -> usersById.get(invocation.getArgument(0))
-						.getFamilies()
-						.stream()
-						.map(familyMember -> familiesById.get(familyMember.getFamily().getId()))
-						.collect(Collectors.toList()));
-		when(familyMemberRepository.findById(any(FamilyMemberId.class))).thenAnswer(
-				invocation -> {
-					FamilyMembers familyMember = familyMembersById.get(invocation.getArgument(0));
-					if (familyMember == null) {
-						return Optional.empty();
-					}
-					return Optional.of(familyMember);
-				});
-		doNothing().when(familyRepository).deleteById(any(Long.class));
-	}
-
-	@Test
-	public void test_get_family() {
-		/* Given */
-		when(authService.getSessionUserDetails()).thenReturn(new UserDetails() {
-			@Override
-			public Collection<? extends GrantedAuthority> getAuthorities() {
-				return null;
-			}
-
-			@Override
-			public String getPassword() {
-				return "password";
-			}
-
-			@Override
-			public String getUsername() {
-				return "testuser";
-			}
-
-			@Override
-			public boolean isAccountNonExpired() {
-				return false;
-			}
-
-			@Override
-			public boolean isAccountNonLocked() {
-				return false;
-			}
-
-			@Override
-			public boolean isCredentialsNonExpired() {
-				return false;
-			}
-
-			@Override
-			public boolean isEnabled() {
-				return false;
-			}
-		});
-		FamilyDto request =
-				new FamilyDtoBuilder()
-						.withId(1l)
-						.build();
-		FamilyDto expected =
-				new FamilyDtoBuilder()
-						.withId(FAMILY_1.getId())
-						.withInviteCode(null)
-						.withEventColor(FAMILY_1.getEventColor())
-						.withName(FAMILY_1.getName())
-						.withTimezone(FAMILY_1.getTimezone())
-						.withRequestingUser(UserDto.fromUserObj(TEST_USER_1))
-						.withOwner(FamilyMemberDto.fromFamilyMemberObj(familyOneMembers.get(0)))
-						.withMembers(
-								familyOneMembers
-										.stream()
-										.map(
-												familyMember ->
-														FamilyMemberDto.fromFamilyMemberObj(familyMember))
-										.collect(Collectors.toSet()))
-						.build();
-
-		/* When */
-		FamilyDto response = familyService.getFamily(request);
-
-		/* Then */
-		assertNotNull(response);
-		assertEquals(expected, response);
-
-	}
-
-	@Test
-	public void when_get_family_and_not_part_of_family_then_authorization_exception_thrown() {
-		/* Given */
-		when(authService.getSessionUserDetails()).thenReturn(new UserDetails() {
-			@Override
-			public Collection<? extends GrantedAuthority> getAuthorities() {
-				return null;
-			}
-
-			@Override
-			public String getPassword() {
-				return "password";
-			}
-
-			@Override
-			public String getUsername() {
-				return "testuser2";
-			}
-
-			@Override
-			public boolean isAccountNonExpired() {
-				return false;
-			}
-
-			@Override
-			public boolean isAccountNonLocked() {
-				return false;
-			}
-
-			@Override
-			public boolean isCredentialsNonExpired() {
-				return false;
-			}
-
-			@Override
-			public boolean isEnabled() {
-				return false;
-			}
-		});
-		FamilyDto request =
-				new FamilyDtoBuilder()
-						.withId(1l)
-						.build();
-
-		/* When */
-		assertThrows(AuthorizationException.class, () -> {
-			familyService.getFamily(request);
-		});
-	}
-
-	@Test
-	public void test_get_families_by_user_multiple_families() {
-		/* Given */
-		when(authService.getSessionUserDetails()).thenReturn(new UserDetails() {
-			@Override
-			public Collection<? extends GrantedAuthority> getAuthorities() {
-				return null;
-			}
-
-			@Override
-			public String getPassword() {
-				return "password";
-			}
-
-			@Override
-			public String getUsername() {
-				return "testuser";
-			}
-
-			@Override
-			public boolean isAccountNonExpired() {
-				return false;
-			}
-
-			@Override
-			public boolean isAccountNonLocked() {
-				return false;
-			}
-
-			@Override
-			public boolean isCredentialsNonExpired() {
-				return false;
-			}
-
-			@Override
-			public boolean isEnabled() {
-				return false;
-			}
-		});
-		List<FamilyDto> expectedFamilyDtos = new ArrayList<>();
-		expectedFamilyDtos.add(
-				new FamilyDtoBuilder()
-						.withId(FAMILY_1.getId())
-						.withInviteCode(null)
-						.withEventColor(FAMILY_1.getEventColor())
-						.withName(FAMILY_1.getName())
-						.withTimezone(FAMILY_1.getTimezone())
-						.withRequestingUser(UserDto.fromUserObj(TEST_USER_1))
-						.withOwner(FamilyMemberDto.fromFamilyMemberObj(familyOneMembers.get(0)))
-						.withMembers(
-								familyOneMembers
-										.stream()
-										.map(
-												familyMember ->
-														FamilyMemberDto.fromFamilyMemberObj(familyMember))
-										.collect(Collectors.toSet()))
-						.build());
-		expectedFamilyDtos.add(
-				new FamilyDtoBuilder()
-						.withId(FAMILY_3.getId())
-						.withInviteCode(null)
-						.withEventColor(FAMILY_3.getEventColor())
-						.withName(FAMILY_3.getName())
-						.withTimezone(FAMILY_3.getTimezone())
-						.withRequestingUser(UserDto.fromUserObj(TEST_USER_1))
-						.withOwner(FamilyMemberDto.fromFamilyMemberObj(familyThreeMembers.get(0)))
-						.withMembers(
-								familyThreeMembers
-										.stream()
-										.map(
-												familyMember ->
-														FamilyMemberDto.fromFamilyMemberObj(familyMember))
-										.collect(Collectors.toSet()))
-						.build());
-
-		/* When */
-		List<FamilyDto> response = familyService.getFamiliesByUser(TEST_USER_1.getId());
-
-		/* Then */
-		assertNotNull(response);
-		assertTrue(response.containsAll(expectedFamilyDtos));
-	}
-
-	@Test
-	public void when_get_families_by_user_and_user_does_not_exist_then_user_not_found_exception_thrown() {
-		/* Given */
-		Long id = 3l;
-
-		/* When */
-		assertThrows(UserNotFoundException.class, () -> {
-			familyService.getFamiliesByUser(id);
-		});
-	}
-
-	@Test
-	public void when_create_with_required_params_then_familydto_returned() {
-		/* Given */
-		FamilyDto request =
-				new FamilyDtoBuilder()
-						.withEventColor("ffffff")
-						.withName("Test Family")
-						.withTimezone("America/Chicago")
-						.withOwner(
-								new FamilyMemberDtoBuilder()
-										.withUser(
-												new UserDtoBuilder()
-														.withUsername(TEST_USER_1.getUsername())
-														.build())
-										.withEventColor("aeaeae")
-										.build())
-						.build();
-		FamilyMemberDto expectedFamilyMemberObj =
-				new FamilyMemberDtoBuilder()
-						.withUser(UserDto.fromUserObj(TEST_USER_1))
-						.withFamilyId(3l)
-						.withEventColor("aeaeae")
-						.withRole(Role.OWNER)
-						.build();
-		FamilyDto expected =
-				new FamilyDtoBuilder()
-						.withId(3l)
-						.withEventColor("ffffff")
-						.withName("Test Family")
-						.withTimezone("America/Chicago")
-						.withMembers(new HashSet<>(Collections.singleton(expectedFamilyMemberObj)))
-						.withOwner(expectedFamilyMemberObj)
-						.withRequestingUser(UserDto.fromUserObj(TEST_USER_1))
-						.build();
-
-		/* When */
-		FamilyDto response = familyService.createFamily(request);
-
-		/* Then */
-		assertNotNull(response);
-		assertEquals(expected, response);
-	}
-
-	@Test
-	public void when_create_with_missing_family_params_then_bad_request_exception_thrown() {
-		/* Given */
-		FamilyDto request =
-				new FamilyDtoBuilder()
-						.withEventColor("ffffff")
-						.withTimezone("America/Chicago")
-						.withOwner(
-								new FamilyMemberDtoBuilder()
-										.withUser(
-												new UserDtoBuilder()
-														.withUsername(TEST_USER_1.getUsername())
-														.build())
-										.withEventColor("aeaeae")
-										.build())
-						.build();
-
-		/* When */
-		assertThrows(BadRequestException.class, () -> {
-			familyService.createFamily(request);
-		});
-	}
-
-	@Test
-	public void when_create_with_missing_user_data_then_bad_request_exception_thrown() {
-		/* Given */
-		FamilyDto request =
-				new FamilyDtoBuilder()
-						.withEventColor("ffffff")
-						.withTimezone("America/Chicago")
-						.withName("Test Family")
-						.withOwner(
-								new FamilyMemberDtoBuilder()
-										.withUser(
-												new UserDtoBuilder()
-														.withUsername(null)
-														.build())
-										.withEventColor("aeaeae")
-										.build())
-						.build();
-
-		/* When */
-		assertThrows(BadRequestException.class, () -> {
-			familyService.createFamily(request);
-		});
-	}
-
-	@Test
-	public void when_create_and_user_does_not_exist_then_user_not_found_exception_thrown() {
-		/* Given */
-		FamilyDto request =
-				new FamilyDtoBuilder()
-						.withEventColor("ffffff")
-						.withTimezone("America/Chicago")
-						.withName("Test Family")
-						.withOwner(
-								new FamilyMemberDtoBuilder()
-										.withUser(
-												new UserDtoBuilder()
-														.withUsername("userthatdoesntexist")
-														.build())
-										.withEventColor("aeaeae")
-										.build())
-						.build();
-
-		/* When */
-		assertThrows(UserNotFoundException.class, () -> {
-			familyService.createFamily(request);
-		});
-	}
-
-	@Test
-	public void when_update_with_required_params_then_family_updated_and_returned() {
-		/* Given */
-		when(authService.getSessionUserDetails()).thenReturn(new UserDetails() {
-			@Override
-			public Collection<? extends GrantedAuthority> getAuthorities() {
-				return null;
-			}
-
-			@Override
-			public String getPassword() {
-				return "password";
-			}
-
-			@Override
-			public String getUsername() {
-				return "testuser";
-			}
-
-			@Override
-			public boolean isAccountNonExpired() {
-				return false;
-			}
-
-			@Override
-			public boolean isAccountNonLocked() {
-				return false;
-			}
-
-			@Override
-			public boolean isCredentialsNonExpired() {
-				return false;
-			}
-
-			@Override
-			public boolean isEnabled() {
-				return false;
-			}
-		});
-		FamilyDto request =
-				new FamilyDtoBuilder()
-						.withId(1l)
-						.withEventColor("01c89e")
-						.build();
-
-		/* When */
-		FamilyDto response = familyService.updateFamily(request);
-
-		/* Then */
-		assertEquals("01c89e", response.getEventColor());
-	}
-
-	@Test
-	public void when_update_and_not_part_of_family_then_authorization_exception_thrown() {
-		/* Given */
-		when(authService.getSessionUserDetails()).thenReturn(new UserDetails() {
-			@Override
-			public Collection<? extends GrantedAuthority> getAuthorities() {
-				return null;
-			}
-
-			@Override
-			public String getPassword() {
-				return "password";
-			}
-
-			@Override
-			public String getUsername() {
-				return "testuser2";
-			}
-
-			@Override
-			public boolean isAccountNonExpired() {
-				return false;
-			}
-
-			@Override
-			public boolean isAccountNonLocked() {
-				return false;
-			}
-
-			@Override
-			public boolean isCredentialsNonExpired() {
-				return false;
-			}
-
-			@Override
-			public boolean isEnabled() {
-				return false;
-			}
-		});
-		FamilyDto request =
-				new FamilyDtoBuilder()
-						.withId(FAMILY_1.getId())
-						.withEventColor("01c89e")
-						.build();
-
-		Map<FamilyMemberId, FamilyMembers> test = familyMembersById;
-		/* When */
-		assertThrows(AuthorizationException.class, () -> {
-			familyService.updateFamily(request);
-		});
-	}
-
-	@Test
-	public void when_update_and_family_id_doesnt_exist_then_family_not_found_exception_thrown() {
-		/* Given */
-		when(authService.getSessionUserDetails()).thenReturn(new UserDetails() {
-			@Override
-			public Collection<? extends GrantedAuthority> getAuthorities() {
-				return null;
-			}
-
-			@Override
-			public String getPassword() {
-				return "password";
-			}
-
-			@Override
-			public String getUsername() {
-				return "testuser2";
-			}
-
-			@Override
-			public boolean isAccountNonExpired() {
-				return false;
-			}
-
-			@Override
-			public boolean isAccountNonLocked() {
-				return false;
-			}
-
-			@Override
-			public boolean isCredentialsNonExpired() {
-				return false;
-			}
-
-			@Override
-			public boolean isEnabled() {
-				return false;
-			}
-		});
-		FamilyDto request =
-				new FamilyDtoBuilder()
-						.withId(4l)
-						.withEventColor("01c89e")
-						.build();
-
-		/* When */
-		assertThrows(FamilyNotFoundException.class, () -> {
-			familyService.updateFamily(request);
-		});
-	}
-
-	@Test
-	public void when_update_and_user_doesnt_exist_then_user_not_found_exception_thrown() {
-		/* Given */
-		when(authService.getSessionUserDetails()).thenReturn(new UserDetails() {
-			@Override
-			public Collection<? extends GrantedAuthority> getAuthorities() {
-				return null;
-			}
-
-			@Override
-			public String getPassword() {
-				return "password";
-			}
-
-			@Override
-			public String getUsername() {
-				return "userthatdoesntexist";
-			}
-
-			@Override
-			public boolean isAccountNonExpired() {
-				return false;
-			}
-
-			@Override
-			public boolean isAccountNonLocked() {
-				return false;
-			}
-
-			@Override
-			public boolean isCredentialsNonExpired() {
-				return false;
-			}
-
-			@Override
-			public boolean isEnabled() {
-				return false;
-			}
-		});
-		FamilyDto request =
-				new FamilyDtoBuilder()
-						.withId(1l)
-						.withEventColor("01c89e")
-						.build();
-
-		/* When */
-		assertThrows(UserNotFoundException.class, () -> {
-			familyService.updateFamily(request);
-		});
-	}
-
-	@Test
-	public void when_update_and_user_doesnt_have_gte_admin_then_authorization_exception_thrown() {
-		/* Given */
-		when(authService.getSessionUserDetails()).thenReturn(new UserDetails() {
-			@Override
-			public Collection<? extends GrantedAuthority> getAuthorities() {
-				return null;
-			}
-
-			@Override
-			public String getPassword() {
-				return "password";
-			}
-
-			@Override
-			public String getUsername() {
-				return "testuser2";
-			}
-
-			@Override
-			public boolean isAccountNonExpired() {
-				return false;
-			}
-
-			@Override
-			public boolean isAccountNonLocked() {
-				return false;
-			}
-
-			@Override
-			public boolean isCredentialsNonExpired() {
-				return false;
-			}
-
-			@Override
-			public boolean isEnabled() {
-				return false;
-			}
-		});
-		FamilyDto request =
-				new FamilyDtoBuilder()
-						.withId(3l)
-						.withEventColor("01c89e")
-						.build();
-
-		/* When */
-		assertThrows(AuthorizationException.class, () -> {
-			familyService.updateFamily(request);
-		});
-	}
-
-	@Test
-	public void when_delete_and_required_params_included_then_completes_successfully() {
-		/* Given */
-		Long familyId = 1l;
-		when(authService.getSessionUserDetails()).thenReturn(new UserDetails() {
-			@Override
-			public Collection<? extends GrantedAuthority> getAuthorities() {
-				return null;
-			}
-
-			@Override
-			public String getPassword() {
-				return "password";
-			}
-
-			@Override
-			public String getUsername() {
-				return "testuser";
-			}
-
-			@Override
-			public boolean isAccountNonExpired() {
-				return false;
-			}
-
-			@Override
-			public boolean isAccountNonLocked() {
-				return false;
-			}
-
-			@Override
-			public boolean isCredentialsNonExpired() {
-				return false;
-			}
-
-			@Override
-			public boolean isEnabled() {
-				return false;
-			}
-		});
-
-		/* When */
-		familyService.deleteFamily(familyId);
-
-		/* Then */
-		// dont need to assert anything, if completes successfully then working as expected
-	}
-
-	@Test
-	public void when_delete_and_user_doesnt_exist_then_user_not_found_exception_thrown() {
-		/* Given */
-		Long familyId = 1l;
-		when(authService.getSessionUserDetails()).thenReturn(new UserDetails() {
-			@Override
-			public Collection<? extends GrantedAuthority> getAuthorities() {
-				return null;
-			}
-
-			@Override
-			public String getPassword() {
-				return "password";
-			}
-
-			@Override
-			public String getUsername() {
-				return "userthatdoesntexist";
-			}
-
-			@Override
-			public boolean isAccountNonExpired() {
-				return false;
-			}
-
-			@Override
-			public boolean isAccountNonLocked() {
-				return false;
-			}
-
-			@Override
-			public boolean isCredentialsNonExpired() {
-				return false;
-			}
-
-			@Override
-			public boolean isEnabled() {
-				return false;
-			}
-		});
-
-		/* When */
-		assertThrows(UserNotFoundException.class, () -> {
-			familyService.deleteFamily(familyId);
-		});
-	}
-
-	@Test
-	public void when_delete_and_not_part_of_family_then_authorization_exception_thrown() {
-		/* Given */
-		Long familyId = 1l;
-		when(authService.getSessionUserDetails()).thenReturn(new UserDetails() {
-			@Override
-			public Collection<? extends GrantedAuthority> getAuthorities() {
-				return null;
-			}
-
-			@Override
-			public String getPassword() {
-				return "password";
-			}
-
-			@Override
-			public String getUsername() {
-				return "testuser2";
-			}
-
-			@Override
-			public boolean isAccountNonExpired() {
-				return false;
-			}
-
-			@Override
-			public boolean isAccountNonLocked() {
-				return false;
-			}
-
-			@Override
-			public boolean isCredentialsNonExpired() {
-				return false;
-			}
-
-			@Override
-			public boolean isEnabled() {
-				return false;
-			}
-		});
-
-		/* When */
-		assertThrows(AuthorizationException.class, () -> {
-			familyService.deleteFamily(familyId);
-		});
-	}
-
-	@Test
-	public void when_delete_and_not_owner_then_authorization_exception_thrown() {
-		/* Given */
-		Long familyId = 3l;
-		when(authService.getSessionUserDetails()).thenReturn(new UserDetails() {
-			@Override
-			public Collection<? extends GrantedAuthority> getAuthorities() {
-				return null;
-			}
-
-			@Override
-			public String getPassword() {
-				return "password";
-			}
-
-			@Override
-			public String getUsername() {
-				return "testuser2";
-			}
-
-			@Override
-			public boolean isAccountNonExpired() {
-				return false;
-			}
-
-			@Override
-			public boolean isAccountNonLocked() {
-				return false;
-			}
-
-			@Override
-			public boolean isCredentialsNonExpired() {
-				return false;
-			}
-
-			@Override
-			public boolean isEnabled() {
-				return false;
-			}
-		});
-
-		/* When */
-		assertThrows(AuthorizationException.class, () -> {
-			familyService.deleteFamily(familyId);
-		});
-	}
+  private FamilyServiceImpl familyService;
+
+  private FamilyMemberRepository familyMemberRepository;
+  private FamilyRepository familyRepository;
+  private UserService userService;
+  private AuthService authService;
+
+  static User TEST_USER_1 =
+      new User(1l, "Test", "User", "testuser", "password", "testuser@test.com", null);
+  static User TEST_USER_2 =
+      new User(2l, "Test", "User2", "testuser2", "password", "testuser2@test.com", null);
+  static Family FAMILY_1 = new Family(1l, "Test Family 1", "000000", "america/chicago", null, null);
+  static Family FAMILY_2 = new Family(2l, "Test Family 2", "ffffff", "america/chicago", null, null);
+  static Family FAMILY_3 = new Family(3l, "Test Family 3", "eaeaea", "america/chicago", null, null);
+  static List<FamilyMembers> familyOneMembers;
+  static List<FamilyMembers> familyTwoMembers;
+  static List<FamilyMembers> familyThreeMembers;
+  static Map<String, User> usersByEmail = new HashMap<>();
+  static Map<String, User> usersByUsername = new HashMap<>();
+  static Map<Long, User> usersById = new HashMap<>();
+  static Map<Long, Family> familiesById = new HashMap<>();
+  static Map<FamilyMemberId, FamilyMembers> familyMembersById = new HashMap<>();
+
+  @BeforeAll
+  public static void setup() {
+    familyOneMembers = new ArrayList<>();
+    familyOneMembers.add(new FamilyMembers(TEST_USER_1, FAMILY_1, Role.OWNER, "e802d7"));
+    FAMILY_1.setMembers(familyOneMembers.stream().collect(Collectors.toSet()));
+    familyOneMembers.forEach(familyMember -> {
+      familyMembersById.put(
+          new FamilyMemberId(familyMember.getUser().getId(), familyMember.getFamily().getId()),
+          familyMember);
+    });
+
+    familyTwoMembers = new ArrayList<>();
+    familyTwoMembers.add(new FamilyMembers(TEST_USER_2, FAMILY_2, Role.OWNER, "000000"));
+    FAMILY_2.setMembers(familyTwoMembers.stream().collect(Collectors.toSet()));
+    familyTwoMembers.forEach(familyMember -> {
+      familyMembersById.put(
+          new FamilyMemberId(familyMember.getUser().getId(), familyMember.getFamily().getId()),
+          familyMember);
+    });
+
+    familyThreeMembers = new ArrayList<>();
+    familyThreeMembers.add(new FamilyMembers(TEST_USER_1, FAMILY_3, Role.OWNER, "fffff"));
+    familyThreeMembers.add(new FamilyMembers(TEST_USER_2, FAMILY_3, Role.CHILD, "457163"));
+    FAMILY_3.setMembers(familyThreeMembers.stream().collect(Collectors.toSet()));
+    familyThreeMembers.forEach(familyMember -> {
+      familyMembersById.put(
+          new FamilyMemberId(familyMember.getUser().getId(), familyMember.getFamily().getId()),
+          familyMember);
+    });
+
+    TEST_USER_1.setFamilies(
+        new HashSet<>(Arrays.asList(familyOneMembers.get(0), familyThreeMembers.get(0))));
+    TEST_USER_2.setFamilies(
+        new HashSet<>(Arrays.asList(familyTwoMembers.get(0), familyThreeMembers.get(1))));
+
+    usersByEmail.put(TEST_USER_1.getEmail(), TEST_USER_1);
+    usersByEmail.put(TEST_USER_2.getEmail(), TEST_USER_2);
+    usersById.put(TEST_USER_1.getId(), TEST_USER_1);
+    usersById.put(TEST_USER_2.getId(), TEST_USER_2);
+    usersByUsername.put(TEST_USER_1.getUsername(), TEST_USER_1);
+    usersByUsername.put(TEST_USER_2.getUsername(), TEST_USER_2);
+
+    familiesById.put(FAMILY_1.getId(), FAMILY_1);
+    familiesById.put(FAMILY_2.getId(), FAMILY_2);
+    familiesById.put(FAMILY_3.getId(), FAMILY_3);
+  }
+
+  @BeforeEach
+  public void before() {
+    userService = mock(UserServiceImpl.class);
+    familyRepository = mock(FamilyRepository.class);
+    when(familyRepository.save(any(Family.class))).thenAnswer(invocation -> {
+      Family family = invocation.getArgument(0);
+      if (family.getName() == null) {
+        throw new DataIntegrityViolationException("Name cannot be null");
+      }
+      if (family.getTimezone() == null) {
+        throw new DataIntegrityViolationException("Timezone cannot be null");
+      }
+      if (family.getEventColor() == null) {
+        throw new DataIntegrityViolationException("EventColor cannot be null");
+      }
+      if (family.getId() == null) {
+        family.setId(3l);
+      }
+      return family;
+    });
+    familyMemberRepository = mock(FamilyMemberRepository.class);
+    familyService = new FamilyServiceImpl();
+    familyService.setFamilyMemberRepository(familyMemberRepository);
+    familyService.setFamilyRepository(familyRepository);
+    familyService.setUserService(userService);
+
+    authService = mock(AuthServiceImpl.class);
+    familyService.setAuthService(authService);
+
+    when(userService.getUserByEmail(any(String.class)))
+        .thenAnswer(invocation -> usersByEmail.get(invocation.getArgument(0)));
+    when(userService.getUserById(any(Long.class)))
+        .thenAnswer(invocation -> usersById.get(invocation.getArgument(0)));
+    when(userService.getUserByUsername(any(String.class)))
+        .thenAnswer(invocation -> usersByUsername.get(invocation.getArgument(0)));
+
+    when(familyRepository.findById(any(Long.class))).thenAnswer(invocation -> {
+      Family family = familiesById.get(invocation.getArgument(0));
+      if (family == null) {
+        return Optional.empty();
+      }
+      return Optional.of(family);
+    });
+    when(familyRepository.getFamiliesByUserId(any(Long.class)))
+        .thenAnswer(invocation -> usersById.get(invocation.getArgument(0)).getFamilies().stream()
+            .map(familyMember -> familiesById.get(familyMember.getFamily().getId()))
+            .collect(Collectors.toList()));
+    when(familyMemberRepository.findById(any(FamilyMemberId.class))).thenAnswer(invocation -> {
+      FamilyMembers familyMember = familyMembersById.get(invocation.getArgument(0));
+      if (familyMember == null) {
+        return Optional.empty();
+      }
+      return Optional.of(familyMember);
+    });
+    doNothing().when(familyRepository).deleteById(any(Long.class));
+  }
+
+  @Test
+  public void test_get_family() {
+    /* Given */
+    when(authService.getSessionUserDetails()).thenReturn(new UserDetails() {
+      @Override
+      public Collection<? extends GrantedAuthority> getAuthorities() {
+        return null;
+      }
+
+      @Override
+      public String getPassword() {
+        return "password";
+      }
+
+      @Override
+      public String getUsername() {
+        return "testuser";
+      }
+
+      @Override
+      public boolean isAccountNonExpired() {
+        return false;
+      }
+
+      @Override
+      public boolean isAccountNonLocked() {
+        return false;
+      }
+
+      @Override
+      public boolean isCredentialsNonExpired() {
+        return false;
+      }
+
+      @Override
+      public boolean isEnabled() {
+        return false;
+      }
+    });
+    FamilyDto request = new FamilyDtoBuilder().withId(1l).build();
+    FamilyDto expected = new FamilyDtoBuilder().withId(FAMILY_1.getId()).withInviteCode(null)
+        .withEventColor(FAMILY_1.getEventColor()).withName(FAMILY_1.getName())
+        .withTimezone(FAMILY_1.getTimezone()).withRequestingUser(UserDto.fromUserObj(TEST_USER_1))
+        .withOwner(FamilyMemberDto.fromFamilyMemberObj(familyOneMembers.get(0)))
+        .withMembers(familyOneMembers.stream()
+            .map(familyMember -> FamilyMemberDto.fromFamilyMemberObj(familyMember))
+            .collect(Collectors.toSet()))
+        .build();
+
+    /* When */
+    FamilyDto response = familyService.getFamily(request);
+
+    /* Then */
+    assertNotNull(response);
+    assertEquals(expected, response);
+
+  }
+
+  @Test
+  public void when_get_family_and_not_part_of_family_then_authorization_exception_thrown() {
+    /* Given */
+    when(authService.getSessionUserDetails()).thenReturn(new UserDetails() {
+      @Override
+      public Collection<? extends GrantedAuthority> getAuthorities() {
+        return null;
+      }
+
+      @Override
+      public String getPassword() {
+        return "password";
+      }
+
+      @Override
+      public String getUsername() {
+        return "testuser2";
+      }
+
+      @Override
+      public boolean isAccountNonExpired() {
+        return false;
+      }
+
+      @Override
+      public boolean isAccountNonLocked() {
+        return false;
+      }
+
+      @Override
+      public boolean isCredentialsNonExpired() {
+        return false;
+      }
+
+      @Override
+      public boolean isEnabled() {
+        return false;
+      }
+    });
+    FamilyDto request = new FamilyDtoBuilder().withId(1l).build();
+
+    /* When */
+    assertThrows(AuthorizationException.class, () -> {
+      familyService.getFamily(request);
+    });
+  }
+
+  @Test
+  public void test_get_families_by_user_multiple_families() {
+    /* Given */
+    when(authService.getSessionUserDetails()).thenReturn(new UserDetails() {
+      @Override
+      public Collection<? extends GrantedAuthority> getAuthorities() {
+        return null;
+      }
+
+      @Override
+      public String getPassword() {
+        return "password";
+      }
+
+      @Override
+      public String getUsername() {
+        return "testuser";
+      }
+
+      @Override
+      public boolean isAccountNonExpired() {
+        return false;
+      }
+
+      @Override
+      public boolean isAccountNonLocked() {
+        return false;
+      }
+
+      @Override
+      public boolean isCredentialsNonExpired() {
+        return false;
+      }
+
+      @Override
+      public boolean isEnabled() {
+        return false;
+      }
+    });
+    List<FamilyDto> expectedFamilyDtos = new ArrayList<>();
+    expectedFamilyDtos.add(new FamilyDtoBuilder().withId(FAMILY_1.getId()).withInviteCode(null)
+        .withEventColor(FAMILY_1.getEventColor()).withName(FAMILY_1.getName())
+        .withTimezone(FAMILY_1.getTimezone()).withRequestingUser(UserDto.fromUserObj(TEST_USER_1))
+        .withOwner(FamilyMemberDto.fromFamilyMemberObj(familyOneMembers.get(0)))
+        .withMembers(familyOneMembers.stream()
+            .map(familyMember -> FamilyMemberDto.fromFamilyMemberObj(familyMember))
+            .collect(Collectors.toSet()))
+        .build());
+    expectedFamilyDtos.add(new FamilyDtoBuilder().withId(FAMILY_3.getId()).withInviteCode(null)
+        .withEventColor(FAMILY_3.getEventColor()).withName(FAMILY_3.getName())
+        .withTimezone(FAMILY_3.getTimezone()).withRequestingUser(UserDto.fromUserObj(TEST_USER_1))
+        .withOwner(FamilyMemberDto.fromFamilyMemberObj(familyThreeMembers.get(0)))
+        .withMembers(familyThreeMembers.stream()
+            .map(familyMember -> FamilyMemberDto.fromFamilyMemberObj(familyMember))
+            .collect(Collectors.toSet()))
+        .build());
+
+    /* When */
+    List<FamilyDto> response = familyService.getFamiliesByUser(TEST_USER_1.getId());
+
+    /* Then */
+    assertNotNull(response);
+    assertTrue(response.containsAll(expectedFamilyDtos));
+  }
+
+  @Test
+  public void when_get_families_by_user_and_user_does_not_exist_then_user_not_found_exception_thrown() {
+    /* Given */
+    when(authService.getSessionUserDetails()).thenReturn(new UserDetails() {
+      @Override
+      public Collection<? extends GrantedAuthority> getAuthorities() {
+        return null;
+      }
+
+      @Override
+      public String getPassword() {
+        return "password";
+      }
+
+      @Override
+      public String getUsername() {
+        return "testuserthatdoesntexist";
+      }
+
+      @Override
+      public boolean isAccountNonExpired() {
+        return false;
+      }
+
+      @Override
+      public boolean isAccountNonLocked() {
+        return false;
+      }
+
+      @Override
+      public boolean isCredentialsNonExpired() {
+        return false;
+      }
+
+      @Override
+      public boolean isEnabled() {
+        return false;
+      }
+    });
+    Long id = 3l;
+
+    /* When */
+    assertThrows(UserNotFoundException.class, () -> {
+      familyService.getFamiliesByUser(id);
+    });
+  }
+
+  @Test
+  public void when_create_with_required_params_then_familydto_returned() {
+    /* Given */
+    when(authService.getSessionUserDetails()).thenReturn(new UserDetails() {
+      @Override
+      public Collection<? extends GrantedAuthority> getAuthorities() {
+        return null;
+      }
+
+      @Override
+      public String getPassword() {
+        return TEST_USER_1.getPassword();
+      }
+
+      @Override
+      public String getUsername() {
+        return TEST_USER_1.getUsername();
+      }
+
+      @Override
+      public boolean isAccountNonExpired() {
+        return false;
+      }
+
+      @Override
+      public boolean isAccountNonLocked() {
+        return false;
+      }
+
+      @Override
+      public boolean isCredentialsNonExpired() {
+        return false;
+      }
+
+      @Override
+      public boolean isEnabled() {
+        return false;
+      }
+    });
+    FamilyDto request = new FamilyDtoBuilder().withEventColor("ffffff").withName("Test Family")
+        .withTimezone("America/Chicago")
+        .withOwner(new FamilyMemberDtoBuilder().withEventColor("aeaeae").build()).build();
+    FamilyMemberDto expectedFamilyMemberObj =
+        new FamilyMemberDtoBuilder().withUser(UserDto.fromUserObj(TEST_USER_1)).withFamilyId(3l)
+            .withEventColor("aeaeae").withRole(Role.OWNER).build();
+    FamilyDto expected = new FamilyDtoBuilder().withId(3l).withEventColor("ffffff")
+        .withName("Test Family").withTimezone("America/Chicago")
+        .withMembers(new HashSet<>(Collections.singleton(expectedFamilyMemberObj)))
+        .withOwner(expectedFamilyMemberObj).withRequestingUser(UserDto.fromUserObj(TEST_USER_1))
+        .build();
+
+    /* When */
+    FamilyDto response = familyService.createFamily(request);
+
+    /* Then */
+    assertNotNull(response);
+    assertEquals(expected, response);
+  }
+
+  @Test
+  public void when_create_with_missing_family_params_then_bad_request_exception_thrown() {
+    /* Given */
+    when(authService.getSessionUserDetails()).thenReturn(new UserDetails() {
+      @Override
+      public Collection<? extends GrantedAuthority> getAuthorities() {
+        return null;
+      }
+
+      @Override
+      public String getPassword() {
+        return TEST_USER_1.getPassword();
+      }
+
+      @Override
+      public String getUsername() {
+        return TEST_USER_1.getUsername();
+      }
+
+      @Override
+      public boolean isAccountNonExpired() {
+        return false;
+      }
+
+      @Override
+      public boolean isAccountNonLocked() {
+        return false;
+      }
+
+      @Override
+      public boolean isCredentialsNonExpired() {
+        return false;
+      }
+
+      @Override
+      public boolean isEnabled() {
+        return false;
+      }
+    });
+    FamilyDto request =
+        new FamilyDtoBuilder().withEventColor("ffffff").withTimezone("America/Chicago")
+            .withOwner(new FamilyMemberDtoBuilder().withEventColor("aeaeae").build()).build();
+
+    /* When */
+    assertThrows(BadRequestException.class, () -> {
+      familyService.createFamily(request);
+    });
+  }
+
+  @Test
+  public void when_update_with_required_params_then_family_updated_and_returned() {
+    /* Given */
+    when(authService.getSessionUserDetails()).thenReturn(new UserDetails() {
+      @Override
+      public Collection<? extends GrantedAuthority> getAuthorities() {
+        return null;
+      }
+
+      @Override
+      public String getPassword() {
+        return "password";
+      }
+
+      @Override
+      public String getUsername() {
+        return "testuser";
+      }
+
+      @Override
+      public boolean isAccountNonExpired() {
+        return false;
+      }
+
+      @Override
+      public boolean isAccountNonLocked() {
+        return false;
+      }
+
+      @Override
+      public boolean isCredentialsNonExpired() {
+        return false;
+      }
+
+      @Override
+      public boolean isEnabled() {
+        return false;
+      }
+    });
+    FamilyDto request = new FamilyDtoBuilder().withId(1l).withEventColor("01c89e").build();
+
+    /* When */
+    FamilyDto response = familyService.updateFamily(request);
+
+    /* Then */
+    assertEquals("01c89e", response.getEventColor());
+  }
+
+  @Test
+  public void when_update_and_not_part_of_family_then_authorization_exception_thrown() {
+    /* Given */
+    when(authService.getSessionUserDetails()).thenReturn(new UserDetails() {
+      @Override
+      public Collection<? extends GrantedAuthority> getAuthorities() {
+        return null;
+      }
+
+      @Override
+      public String getPassword() {
+        return "password";
+      }
+
+      @Override
+      public String getUsername() {
+        return "testuser2";
+      }
+
+      @Override
+      public boolean isAccountNonExpired() {
+        return false;
+      }
+
+      @Override
+      public boolean isAccountNonLocked() {
+        return false;
+      }
+
+      @Override
+      public boolean isCredentialsNonExpired() {
+        return false;
+      }
+
+      @Override
+      public boolean isEnabled() {
+        return false;
+      }
+    });
+    FamilyDto request =
+        new FamilyDtoBuilder().withId(FAMILY_1.getId()).withEventColor("01c89e").build();
+
+    Map<FamilyMemberId, FamilyMembers> test = familyMembersById;
+    /* When */
+    assertThrows(AuthorizationException.class, () -> {
+      familyService.updateFamily(request);
+    });
+  }
+
+  @Test
+  public void when_update_and_family_id_doesnt_exist_then_family_not_found_exception_thrown() {
+    /* Given */
+    when(authService.getSessionUserDetails()).thenReturn(new UserDetails() {
+      @Override
+      public Collection<? extends GrantedAuthority> getAuthorities() {
+        return null;
+      }
+
+      @Override
+      public String getPassword() {
+        return "password";
+      }
+
+      @Override
+      public String getUsername() {
+        return "testuser2";
+      }
+
+      @Override
+      public boolean isAccountNonExpired() {
+        return false;
+      }
+
+      @Override
+      public boolean isAccountNonLocked() {
+        return false;
+      }
+
+      @Override
+      public boolean isCredentialsNonExpired() {
+        return false;
+      }
+
+      @Override
+      public boolean isEnabled() {
+        return false;
+      }
+    });
+    FamilyDto request = new FamilyDtoBuilder().withId(4l).withEventColor("01c89e").build();
+
+    /* When */
+    assertThrows(FamilyNotFoundException.class, () -> {
+      familyService.updateFamily(request);
+    });
+  }
+
+  @Test
+  public void when_update_and_user_doesnt_exist_then_user_not_found_exception_thrown() {
+    /* Given */
+    when(authService.getSessionUserDetails()).thenReturn(new UserDetails() {
+      @Override
+      public Collection<? extends GrantedAuthority> getAuthorities() {
+        return null;
+      }
+
+      @Override
+      public String getPassword() {
+        return "password";
+      }
+
+      @Override
+      public String getUsername() {
+        return "userthatdoesntexist";
+      }
+
+      @Override
+      public boolean isAccountNonExpired() {
+        return false;
+      }
+
+      @Override
+      public boolean isAccountNonLocked() {
+        return false;
+      }
+
+      @Override
+      public boolean isCredentialsNonExpired() {
+        return false;
+      }
+
+      @Override
+      public boolean isEnabled() {
+        return false;
+      }
+    });
+    FamilyDto request = new FamilyDtoBuilder().withId(1l).withEventColor("01c89e").build();
+
+    /* When */
+    assertThrows(UserNotFoundException.class, () -> {
+      familyService.updateFamily(request);
+    });
+  }
+
+  @Test
+  public void when_update_and_user_doesnt_have_gte_admin_then_authorization_exception_thrown() {
+    /* Given */
+    when(authService.getSessionUserDetails()).thenReturn(new UserDetails() {
+      @Override
+      public Collection<? extends GrantedAuthority> getAuthorities() {
+        return null;
+      }
+
+      @Override
+      public String getPassword() {
+        return "password";
+      }
+
+      @Override
+      public String getUsername() {
+        return "testuser2";
+      }
+
+      @Override
+      public boolean isAccountNonExpired() {
+        return false;
+      }
+
+      @Override
+      public boolean isAccountNonLocked() {
+        return false;
+      }
+
+      @Override
+      public boolean isCredentialsNonExpired() {
+        return false;
+      }
+
+      @Override
+      public boolean isEnabled() {
+        return false;
+      }
+    });
+    FamilyDto request = new FamilyDtoBuilder().withId(3l).withEventColor("01c89e").build();
+
+    /* When */
+    assertThrows(AuthorizationException.class, () -> {
+      familyService.updateFamily(request);
+    });
+  }
+
+  @Test
+  public void when_delete_and_required_params_included_then_completes_successfully() {
+    /* Given */
+    Long familyId = 1l;
+    when(authService.getSessionUserDetails()).thenReturn(new UserDetails() {
+      @Override
+      public Collection<? extends GrantedAuthority> getAuthorities() {
+        return null;
+      }
+
+      @Override
+      public String getPassword() {
+        return "password";
+      }
+
+      @Override
+      public String getUsername() {
+        return "testuser";
+      }
+
+      @Override
+      public boolean isAccountNonExpired() {
+        return false;
+      }
+
+      @Override
+      public boolean isAccountNonLocked() {
+        return false;
+      }
+
+      @Override
+      public boolean isCredentialsNonExpired() {
+        return false;
+      }
+
+      @Override
+      public boolean isEnabled() {
+        return false;
+      }
+    });
+
+    /* When */
+    familyService.deleteFamily(familyId);
+
+    /* Then */
+    // dont need to assert anything, if completes successfully then working as expected
+  }
+
+  @Test
+  public void when_delete_and_user_doesnt_exist_then_user_not_found_exception_thrown() {
+    /* Given */
+    Long familyId = 1l;
+    when(authService.getSessionUserDetails()).thenReturn(new UserDetails() {
+      @Override
+      public Collection<? extends GrantedAuthority> getAuthorities() {
+        return null;
+      }
+
+      @Override
+      public String getPassword() {
+        return "password";
+      }
+
+      @Override
+      public String getUsername() {
+        return "userthatdoesntexist";
+      }
+
+      @Override
+      public boolean isAccountNonExpired() {
+        return false;
+      }
+
+      @Override
+      public boolean isAccountNonLocked() {
+        return false;
+      }
+
+      @Override
+      public boolean isCredentialsNonExpired() {
+        return false;
+      }
+
+      @Override
+      public boolean isEnabled() {
+        return false;
+      }
+    });
+
+    /* When */
+    assertThrows(UserNotFoundException.class, () -> {
+      familyService.deleteFamily(familyId);
+    });
+  }
+
+  @Test
+  public void when_delete_and_not_part_of_family_then_authorization_exception_thrown() {
+    /* Given */
+    Long familyId = 1l;
+    when(authService.getSessionUserDetails()).thenReturn(new UserDetails() {
+      @Override
+      public Collection<? extends GrantedAuthority> getAuthorities() {
+        return null;
+      }
+
+      @Override
+      public String getPassword() {
+        return "password";
+      }
+
+      @Override
+      public String getUsername() {
+        return "testuser2";
+      }
+
+      @Override
+      public boolean isAccountNonExpired() {
+        return false;
+      }
+
+      @Override
+      public boolean isAccountNonLocked() {
+        return false;
+      }
+
+      @Override
+      public boolean isCredentialsNonExpired() {
+        return false;
+      }
+
+      @Override
+      public boolean isEnabled() {
+        return false;
+      }
+    });
+
+    /* When */
+    assertThrows(AuthorizationException.class, () -> {
+      familyService.deleteFamily(familyId);
+    });
+  }
+
+  @Test
+  public void when_delete_and_not_owner_then_authorization_exception_thrown() {
+    /* Given */
+    Long familyId = 3l;
+    when(authService.getSessionUserDetails()).thenReturn(new UserDetails() {
+      @Override
+      public Collection<? extends GrantedAuthority> getAuthorities() {
+        return null;
+      }
+
+      @Override
+      public String getPassword() {
+        return "password";
+      }
+
+      @Override
+      public String getUsername() {
+        return "testuser2";
+      }
+
+      @Override
+      public boolean isAccountNonExpired() {
+        return false;
+      }
+
+      @Override
+      public boolean isAccountNonLocked() {
+        return false;
+      }
+
+      @Override
+      public boolean isCredentialsNonExpired() {
+        return false;
+      }
+
+      @Override
+      public boolean isEnabled() {
+        return false;
+      }
+    });
+
+    /* When */
+    assertThrows(AuthorizationException.class, () -> {
+      familyService.deleteFamily(familyId);
+    });
+  }
 }
