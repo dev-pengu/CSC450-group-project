@@ -1,6 +1,7 @@
 module.exports = {
   outputDir: 'target/dist',
   assetsDir: 'static',
+
   devServer: {
     proxy: {
       '/api/services': {
@@ -10,4 +11,8 @@ module.exports = {
       },
     },
   },
+
+  transpileDependencies: [
+    'vuetify',
+  ],
 };

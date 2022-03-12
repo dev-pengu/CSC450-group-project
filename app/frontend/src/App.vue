@@ -1,13 +1,15 @@
 <template>
-  <div id="app">
-    <div v-if="this.$store && this.$store.getters.isLoggedIn">
-      <NavBar />
-      <router-view/>
-    </div>
-    <div v-else>
-      <router-view/>
-    </div>
-  </div>
+  <v-app>
+    <v-main>
+      <div v-if="this.$store && this.$store.getters.isLoggedIn">
+        <NavBar />
+        <router-view />
+      </div>
+      <div v-else>
+        <router-view />
+      </div>
+    </v-main>
+  </v-app>
 </template>
 
 <script>
