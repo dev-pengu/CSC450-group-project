@@ -1,6 +1,7 @@
 package com.familyorg.familyorganizationapp.controller;
 
 import java.util.List;
+import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +28,11 @@ import com.familyorg.familyorganizationapp.domain.InviteCode;
 import com.familyorg.familyorganizationapp.domain.MemberInvite;
 import com.familyorg.familyorganizationapp.service.FamilyService;
 import com.familyorg.familyorganizationapp.service.InviteService;
+import com.familyorg.familyorganizationapp.domain.FamilyMembers;
+import com.familyorg.familyorganizationapp.domain.MemberInvite;
+import com.familyorg.familyorganizationapp.service.FamilyService;
+import com.familyorg.familyorganizationapp.service.InviteService;
+import com.familyorg.familyorganizationapp.service.MessagingService;
 
 @RestController
 @RequestMapping("/api/v1/family")
@@ -38,6 +44,8 @@ public class FamilyController {
   private FamilyService familyService;
   @Autowired
   private InviteService inviteService;
+  @Autowired
+  private MessagingService messagingService;
 
   FamilyController() {}
 
@@ -46,10 +54,13 @@ public class FamilyController {
    *
    * @param familyService
    * @param inviteService
+   * @param messagingService
    */
-  FamilyController(FamilyService familyService, InviteService inviteService) {
+  FamilyController(FamilyService familyService, InviteService inviteService,
+      MessagingService messagingService) {
     this.familyService = familyService;
     this.inviteService = inviteService;
+    this.messagingService = messagingService;
   }
 
   @PostMapping()
@@ -257,8 +268,13 @@ public class FamilyController {
               memberInvite.getRecipientEmail());
         }
         // Send the invite via email
-        // TODO: add email generation FR.6
-        LOG.info(invite.toString());
+        Optional<FamilyMembers> owner = invite.getFamily().getOwner();
+        if (owner.isPresent()) {
+          String emailContents = messagingService.buildInviteContent(
+              invite.getInviteCodeObj().getInviteCodeString(), owner.get().getUser().getFullname());
+          messagingService.sendHtmlEmail(invite.getUserEmail(), "You've been invited to a family!",
+              emailContents);
+        }
         // Assuming no errors were thrown, an invitation was sent successfully, respond with 200
         // status
         return new ResponseEntity<String>("Success", HttpStatus.OK);
@@ -327,6 +343,5 @@ public class FamilyController {
               .withMessage("Error processing request.").build();
       return new ResponseEntity<ErrorDto>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
-
   }
 }

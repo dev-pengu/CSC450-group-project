@@ -14,6 +14,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import javax.mail.MessagingException;
+import javax.mail.internet.AddressException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;
@@ -39,20 +41,28 @@ import com.familyorg.familyorganizationapp.domain.Role;
 import com.familyorg.familyorganizationapp.domain.User;
 import com.familyorg.familyorganizationapp.service.FamilyService;
 import com.familyorg.familyorganizationapp.service.InviteService;
+import com.familyorg.familyorganizationapp.service.MessagingService;
 import com.familyorg.familyorganizationapp.service.impl.FamilyServiceImpl;
 import com.familyorg.familyorganizationapp.service.impl.InviteServiceImpl;
+import com.familyorg.familyorganizationapp.service.impl.MessagingServiceImpl;
 
 public class FamilyControllerTest {
 
   static FamilyService familyService;
   static FamilyController familyController;
   static InviteService inviteService;
+  static MessagingService messagingService;
 
   @BeforeAll
-  public static void setup() {
+  public static void setup() throws AddressException, MessagingException {
     familyService = mock(FamilyServiceImpl.class);
     inviteService = mock(InviteServiceImpl.class);
-    familyController = new FamilyController(familyService, inviteService);
+    messagingService = mock(MessagingServiceImpl.class);
+    when(messagingService.buildInviteContent(any(String.class), any(String.class)))
+        .thenReturn("test");
+    doNothing().when(messagingService).sendHtmlEmail(any(String.class), any(String.class),
+        any(String.class));
+    familyController = new FamilyController(familyService, inviteService, messagingService);
   }
 
   @Test
@@ -358,8 +368,13 @@ public class FamilyControllerTest {
     /* Given */
     when(inviteService.createUniqueMemberInvite(any(Long.class), any(String.class)))
         .thenAnswer(invocation -> {
+          User user =
+              new User(1l, "Test", "User", "testuser", "password", "testemail@test.com", null);
           Family family = new Family(invocation.getArgument(0), "Test", "ffffff", "America/Chicago",
               null, null);
+          FamilyMembers owner = new FamilyMembers(user, family, Role.OWNER, "ffffff");
+          user.setFamilies(new HashSet<>(Collections.singleton(owner)));
+          family.setMembers(new HashSet<>(Collections.singleton(owner)));
           return new MemberInvite(family, invocation.getArgument(1));
         });
     MemberInviteDto request = new MemberInviteDtoBuilder().withFamilyId(1l).withPersistence(false)
@@ -378,8 +393,13 @@ public class FamilyControllerTest {
     /* Given */
     when(inviteService.createUniqueMemberInviteWithRole(any(Long.class), any(String.class),
         any(Role.class))).thenAnswer(invocation -> {
+          User user =
+              new User(1l, "Test", "User", "testuser", "password", "testemail@test.com", null);
           Family family = new Family(invocation.getArgument(0), "Test", "ffffff", "America/Chicago",
               null, null);
+          FamilyMembers owner = new FamilyMembers(user, family, Role.OWNER, "ffffff");
+          user.setFamilies(new HashSet<>(Collections.singleton(owner)));
+          family.setMembers(new HashSet<>(Collections.singleton(owner)));
           return new MemberInvite(family, invocation.getArgument(1), invocation.getArgument(2));
         });
     MemberInviteDto request = new MemberInviteDtoBuilder().withFamilyId(1l).withPersistence(false)

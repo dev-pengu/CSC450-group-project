@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -14,6 +15,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
@@ -142,6 +144,10 @@ public class Family implements Serializable {
       this.members = new HashSet<>();
     }
     this.members.addAll(members);
+  }
+
+  public Optional<FamilyMembers> getOwner() {
+    return this.members.stream().filter(member -> Role.OWNER.equals(member.getRole())).findFirst();
   }
 
   @Override
