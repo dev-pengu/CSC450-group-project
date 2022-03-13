@@ -12,6 +12,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "users")
@@ -38,6 +39,7 @@ public class User implements Serializable {
   @Column(name = "email", columnDefinition = "VARCHAR(70)", nullable = false, unique = true)
   private String email;
 
+  @JsonIgnore
   @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, orphanRemoval = true,
       cascade = CascadeType.ALL)
   private Set<FamilyMembers> families;

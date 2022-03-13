@@ -15,12 +15,19 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import com.familyorg.familyorganizationapp.DTO.ErrorDto;
 import com.familyorg.familyorganizationapp.DTO.FamilyDto;
 import com.familyorg.familyorganizationapp.DTO.MemberInviteDto;
+import com.familyorg.familyorganizationapp.DTO.builder.ErrorDtoBuilder;
 import com.familyorg.familyorganizationapp.Exception.AuthorizationException;
 import com.familyorg.familyorganizationapp.Exception.BadRequestException;
 import com.familyorg.familyorganizationapp.Exception.FamilyNotFoundException;
+import com.familyorg.familyorganizationapp.Exception.InviteCodeNotFoundException;
 import com.familyorg.familyorganizationapp.Exception.UserNotFoundException;
+import com.familyorg.familyorganizationapp.domain.InviteCode;
+import com.familyorg.familyorganizationapp.domain.MemberInvite;
+import com.familyorg.familyorganizationapp.service.FamilyService;
+import com.familyorg.familyorganizationapp.service.InviteService;
 import com.familyorg.familyorganizationapp.domain.FamilyMembers;
 import com.familyorg.familyorganizationapp.domain.MemberInvite;
 import com.familyorg.familyorganizationapp.service.FamilyService;
@@ -63,14 +70,28 @@ public class FamilyController {
       return new ResponseEntity<FamilyDto>(createdFamily, HttpStatus.CREATED);
     } catch (BadRequestException e) {
       LOG.error(e.getMessage(), e);
-      return new ResponseEntity<String>(e.getMessage(), HttpStatus.BAD_REQUEST);
+      ErrorDto errorResponse = new ErrorDtoBuilder().withErrorCode(HttpStatus.BAD_REQUEST.value())
+          .withMessage(e.getMessage()).build();
+      return new ResponseEntity<ErrorDto>(errorResponse, HttpStatus.BAD_REQUEST);
+    } catch (AuthorizationException e) {
+      LOG.error(e.getMessage(), e);
+      ErrorDtoBuilder errorResponse = new ErrorDtoBuilder()
+          .withErrorCode(HttpStatus.UNAUTHORIZED.value()).withMessage(e.getMessage());
+      if (e.isRedirect()) {
+        errorResponse = errorResponse.addRedirect("/login");
+      }
+      return new ResponseEntity<ErrorDto>(errorResponse.build(), HttpStatus.UNAUTHORIZED);
     } catch (UserNotFoundException e) {
       LOG.error(e.getMessage(), e);
-      return new ResponseEntity<String>(e.getMessage(), HttpStatus.NOT_FOUND);
+      ErrorDto errorResponse = new ErrorDtoBuilder().withErrorCode(HttpStatus.NOT_FOUND.value())
+          .withMessage(e.getMessage()).addRedirect("/register").build();
+      return new ResponseEntity<ErrorDto>(errorResponse, HttpStatus.NOT_FOUND);
     } catch (Exception e) {
       LOG.error(e.getMessage(), e);
-      return new ResponseEntity<String>("Error processing request.",
-          HttpStatus.INTERNAL_SERVER_ERROR);
+      ErrorDto errorResponse =
+          new ErrorDtoBuilder().withErrorCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+              .withMessage("Error processing request.").build();
+      return new ResponseEntity<ErrorDto>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -79,19 +100,30 @@ public class FamilyController {
     try {
       FamilyDto family = familyService.getFamily(familyRequest);
       return new ResponseEntity<FamilyDto>(family, HttpStatus.OK);
-    } catch (FamilyNotFoundException e) {
-      LOG.error(e.getMessage(), e);
-      return new ResponseEntity<String>(e.getMessage(), HttpStatus.NOT_FOUND);
-    } catch (AuthorizationException e) {
-      LOG.error(e.getMessage(), e);
-      return new ResponseEntity<String>(e.getMessage(), HttpStatus.UNAUTHORIZED);
     } catch (UserNotFoundException e) {
       LOG.error(e.getMessage(), e);
-      return new ResponseEntity<String>(e.getMessage(), HttpStatus.NOT_FOUND);
+      ErrorDto errorResponse = new ErrorDtoBuilder().withErrorCode(HttpStatus.NOT_FOUND.value())
+          .withMessage(e.getMessage()).addRedirect("/register").build();
+      return new ResponseEntity<ErrorDto>(errorResponse, HttpStatus.NOT_FOUND);
+    } catch (AuthorizationException e) {
+      LOG.error(e.getMessage(), e);
+      ErrorDtoBuilder errorResponse = new ErrorDtoBuilder()
+          .withErrorCode(HttpStatus.UNAUTHORIZED.value()).withMessage(e.getMessage());
+      if (e.isRedirect()) {
+        errorResponse = errorResponse.addRedirect("/login");
+      }
+      return new ResponseEntity<ErrorDto>(errorResponse.build(), HttpStatus.UNAUTHORIZED);
+    } catch (FamilyNotFoundException e) {
+      LOG.error(e.getMessage(), e);
+      ErrorDto errorResponse = new ErrorDtoBuilder().withErrorCode(HttpStatus.NOT_FOUND.value())
+          .withMessage(e.getMessage()).build();
+      return new ResponseEntity<ErrorDto>(errorResponse, HttpStatus.NOT_FOUND);
     } catch (Exception e) {
       LOG.error(e.getMessage(), e);
-      return new ResponseEntity<String>("Error processing request.",
-          HttpStatus.INTERNAL_SERVER_ERROR);
+      ErrorDto errorResponse =
+          new ErrorDtoBuilder().withErrorCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+              .withMessage("Error processing request.").build();
+      return new ResponseEntity<ErrorDto>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -102,11 +134,23 @@ public class FamilyController {
       return new ResponseEntity<List<FamilyDto>>(families, HttpStatus.OK);
     } catch (UserNotFoundException e) {
       LOG.error(e.getMessage(), e);
-      return new ResponseEntity<String>(e.getMessage(), HttpStatus.NOT_FOUND);
+      ErrorDto errorResponse = new ErrorDtoBuilder().withErrorCode(HttpStatus.NOT_FOUND.value())
+          .withMessage(e.getMessage()).addRedirect("/register").build();
+      return new ResponseEntity<ErrorDto>(errorResponse, HttpStatus.NOT_FOUND);
+    } catch (AuthorizationException e) {
+      LOG.error(e.getMessage(), e);
+      ErrorDtoBuilder errorResponse = new ErrorDtoBuilder()
+          .withErrorCode(HttpStatus.UNAUTHORIZED.value()).withMessage(e.getMessage());
+      if (e.isRedirect()) {
+        errorResponse = errorResponse.addRedirect("/login");
+      }
+      return new ResponseEntity<ErrorDto>(errorResponse.build(), HttpStatus.UNAUTHORIZED);
     } catch (Exception e) {
       LOG.error(e.getMessage(), e);
-      return new ResponseEntity<String>("Error processing request.",
-          HttpStatus.INTERNAL_SERVER_ERROR);
+      ErrorDto errorResponse =
+          new ErrorDtoBuilder().withErrorCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+              .withMessage("Error processing request.").build();
+      return new ResponseEntity<ErrorDto>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -115,19 +159,35 @@ public class FamilyController {
     try {
       FamilyDto family = familyService.updateFamily(familyRequest);
       return new ResponseEntity<FamilyDto>(family, HttpStatus.OK);
-    } catch (AuthorizationException e) {
-      LOG.error(e.getMessage(), e);
-      return new ResponseEntity<String>(e.getMessage(), HttpStatus.UNAUTHORIZED);
-    } catch (FamilyNotFoundException e) {
-      LOG.error(e.getMessage(), e);
-      return new ResponseEntity<String>(e.getMessage(), HttpStatus.NOT_FOUND);
     } catch (UserNotFoundException e) {
       LOG.error(e.getMessage(), e);
-      return new ResponseEntity<String>(e.getMessage(), HttpStatus.NOT_FOUND);
+      ErrorDto errorResponse = new ErrorDtoBuilder().withErrorCode(HttpStatus.NOT_FOUND.value())
+          .withMessage(e.getMessage()).addRedirect("/register").build();
+      return new ResponseEntity<ErrorDto>(errorResponse, HttpStatus.NOT_FOUND);
+    } catch (AuthorizationException e) {
+      LOG.error(e.getMessage(), e);
+      ErrorDtoBuilder errorResponse = new ErrorDtoBuilder()
+          .withErrorCode(HttpStatus.UNAUTHORIZED.value()).withMessage(e.getMessage());
+      if (e.isRedirect()) {
+        errorResponse = errorResponse.addRedirect("/login");
+      }
+      return new ResponseEntity<ErrorDto>(errorResponse.build(), HttpStatus.UNAUTHORIZED);
+    } catch (FamilyNotFoundException e) {
+      LOG.error(e.getMessage(), e);
+      ErrorDto errorResponse = new ErrorDtoBuilder().withErrorCode(HttpStatus.NOT_FOUND.value())
+          .withMessage(e.getMessage()).build();
+      return new ResponseEntity<ErrorDto>(errorResponse, HttpStatus.NOT_FOUND);
+    } catch (BadRequestException e) {
+      LOG.error(e.getMessage(), e);
+      ErrorDto errorResponse = new ErrorDtoBuilder().withErrorCode(HttpStatus.BAD_REQUEST.value())
+          .withMessage(e.getMessage()).build();
+      return new ResponseEntity<ErrorDto>(errorResponse, HttpStatus.BAD_REQUEST);
     } catch (Exception e) {
       LOG.error(e.getMessage(), e);
-      return new ResponseEntity<String>("Error processing request.",
-          HttpStatus.INTERNAL_SERVER_ERROR);
+      ErrorDto errorResponse =
+          new ErrorDtoBuilder().withErrorCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+              .withMessage("Error processing request.").build();
+      return new ResponseEntity<ErrorDto>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -136,19 +196,57 @@ public class FamilyController {
     try {
       familyService.deleteFamily(familyId);
       return new ResponseEntity<String>("Family successfully deleted", HttpStatus.OK);
-    } catch (AuthorizationException e) {
-      LOG.error(e.getMessage(), e);
-      return new ResponseEntity<String>(e.getMessage(), HttpStatus.UNAUTHORIZED);
-    } catch (FamilyNotFoundException e) {
-      LOG.error(e.getMessage(), e);
-      return new ResponseEntity<String>(e.getMessage(), HttpStatus.NOT_FOUND);
     } catch (UserNotFoundException e) {
       LOG.error(e.getMessage(), e);
-      return new ResponseEntity<String>(e.getMessage(), HttpStatus.NOT_FOUND);
+      ErrorDto errorResponse = new ErrorDtoBuilder().withErrorCode(HttpStatus.NOT_FOUND.value())
+          .withMessage(e.getMessage()).addRedirect("/register").build();
+      return new ResponseEntity<ErrorDto>(errorResponse, HttpStatus.NOT_FOUND);
+    } catch (AuthorizationException e) {
+      LOG.error(e.getMessage(), e);
+      ErrorDtoBuilder errorResponse = new ErrorDtoBuilder()
+          .withErrorCode(HttpStatus.UNAUTHORIZED.value()).withMessage(e.getMessage());
+      if (e.isRedirect()) {
+        errorResponse = errorResponse.addRedirect("/login");
+      }
+      return new ResponseEntity<ErrorDto>(errorResponse.build(), HttpStatus.UNAUTHORIZED);
+    } catch (FamilyNotFoundException e) {
+      LOG.error(e.getMessage(), e);
+      ErrorDto errorResponse = new ErrorDtoBuilder().withErrorCode(HttpStatus.NOT_FOUND.value())
+          .withMessage(e.getMessage()).build();
+      return new ResponseEntity<ErrorDto>(errorResponse, HttpStatus.NOT_FOUND);
     } catch (Exception e) {
       LOG.error(e.getMessage(), e);
-      return new ResponseEntity<String>("Error processing request.",
-          HttpStatus.INTERNAL_SERVER_ERROR);
+      ErrorDto errorResponse =
+          new ErrorDtoBuilder().withErrorCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+              .withMessage("Error processing request.").build();
+      return new ResponseEntity<ErrorDto>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @GetMapping("/invite")
+  public ResponseEntity<?> getInvites(@RequestParam("id") Long familyId) {
+    try {
+      List<MemberInvite> invites = inviteService.getInvites(familyId);
+      return new ResponseEntity<List<MemberInvite>>(invites, HttpStatus.OK);
+    } catch (FamilyNotFoundException e) {
+      LOG.error(e.getMessage(), e);
+      ErrorDto errorResponse = new ErrorDtoBuilder().withErrorCode(HttpStatus.NOT_FOUND.value())
+          .withMessage(e.getMessage()).build();
+      return new ResponseEntity<ErrorDto>(errorResponse, HttpStatus.NOT_FOUND);
+    } catch (AuthorizationException e) {
+      LOG.error(e.getMessage(), e);
+      ErrorDtoBuilder errorResponse = new ErrorDtoBuilder()
+          .withErrorCode(HttpStatus.UNAUTHORIZED.value()).withMessage(e.getMessage());
+      if (e.isRedirect()) {
+        errorResponse = errorResponse.addRedirect("/login");
+      }
+      return new ResponseEntity<ErrorDto>(errorResponse.build(), HttpStatus.UNAUTHORIZED);
+    } catch (Exception e) {
+      LOG.error(e.getMessage(), e);
+      ErrorDto errorResponse =
+          new ErrorDtoBuilder().withErrorCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+              .withMessage("Error processing request.").build();
+      return new ResponseEntity<ErrorDto>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -183,14 +281,67 @@ public class FamilyController {
       }
     } catch (AuthorizationException e) {
       LOG.error(e.getMessage(), e);
-      return new ResponseEntity<String>(e.getMessage(), HttpStatus.UNAUTHORIZED);
+      ErrorDtoBuilder errorResponse = new ErrorDtoBuilder()
+          .withErrorCode(HttpStatus.UNAUTHORIZED.value()).withMessage(e.getMessage());
+      if (e.isRedirect()) {
+        errorResponse = errorResponse.addRedirect("/login");
+      }
+      return new ResponseEntity<ErrorDto>(errorResponse.build(), HttpStatus.UNAUTHORIZED);
     } catch (FamilyNotFoundException e) {
       LOG.error(e.getMessage(), e);
-      return new ResponseEntity<String>(e.getMessage(), HttpStatus.NOT_FOUND);
+      ErrorDto errorResponse = new ErrorDtoBuilder().withErrorCode(HttpStatus.NOT_FOUND.value())
+          .withMessage(e.getMessage()).build();
+      return new ResponseEntity<ErrorDto>(errorResponse, HttpStatus.NOT_FOUND);
     } catch (Exception e) {
       LOG.error(e.getMessage(), e);
-      return new ResponseEntity<String>("Error processing request.",
-          HttpStatus.INTERNAL_SERVER_ERROR);
+      ErrorDto errorResponse =
+          new ErrorDtoBuilder().withErrorCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+              .withMessage("Error processing request.").build();
+      return new ResponseEntity<ErrorDto>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @GetMapping("/invite/join")
+  public ResponseEntity<?> joinFamily(@RequestParam("code") String inviteCode,
+      @RequestParam("eventColor") String eventColor) {
+    try {
+      InviteCode inviteCodeObj = InviteCode.parseFromCodeString(inviteCode);
+      inviteService.verifyMemberInvite(inviteCodeObj, eventColor);
+      return new ResponseEntity<String>("Success", HttpStatus.OK);
+    } catch (UserNotFoundException e) {
+      LOG.error(e.getMessage(), e);
+      ErrorDto errorResponse = new ErrorDtoBuilder().withErrorCode(HttpStatus.NOT_FOUND.value())
+          .withMessage(e.getMessage()).addRedirect("/register").build();
+      return new ResponseEntity<ErrorDto>(errorResponse, HttpStatus.NOT_FOUND);
+    } catch (InviteCodeNotFoundException e) {
+      LOG.error(e.getMessage(), e);
+      ErrorDto errorResponse = new ErrorDtoBuilder().withErrorCode(HttpStatus.NOT_FOUND.value())
+          .withMessage(e.getMessage()).build();
+      return new ResponseEntity<ErrorDto>(errorResponse, HttpStatus.NOT_FOUND);
+    } catch (FamilyNotFoundException e) {
+      LOG.error(e.getMessage(), e);
+      ErrorDto errorResponse = new ErrorDtoBuilder().withErrorCode(HttpStatus.NOT_FOUND.value())
+          .withMessage(e.getMessage()).build();
+      return new ResponseEntity<ErrorDto>(errorResponse, HttpStatus.NOT_FOUND);
+    } catch (AuthorizationException e) {
+      LOG.error(e.getMessage(), e);
+      ErrorDtoBuilder errorResponse = new ErrorDtoBuilder()
+          .withErrorCode(HttpStatus.UNAUTHORIZED.value()).withMessage(e.getMessage());
+      if (e.isRedirect()) {
+        errorResponse = errorResponse.addRedirect("/login");
+      }
+      return new ResponseEntity<ErrorDto>(errorResponse.build(), HttpStatus.UNAUTHORIZED);
+    } catch (BadRequestException e) {
+      LOG.error(e.getMessage(), e);
+      ErrorDto errorResponse = new ErrorDtoBuilder().withErrorCode(HttpStatus.BAD_REQUEST.value())
+          .withMessage(e.getMessage()).build();
+      return new ResponseEntity<ErrorDto>(errorResponse, HttpStatus.BAD_REQUEST);
+    } catch (Exception e) {
+      LOG.error(e.getMessage(), e);
+      ErrorDto errorResponse =
+          new ErrorDtoBuilder().withErrorCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+              .withMessage("Error processing request.").build();
+      return new ResponseEntity<ErrorDto>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 }

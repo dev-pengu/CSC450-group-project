@@ -1,7 +1,9 @@
 package com.familyorg.familyorganizationapp.controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
@@ -17,6 +19,7 @@ import javax.mail.internet.AddressException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;
+import com.familyorg.familyorganizationapp.DTO.ErrorDto;
 import com.familyorg.familyorganizationapp.DTO.FamilyDto;
 import com.familyorg.familyorganizationapp.DTO.FamilyMemberDto;
 import com.familyorg.familyorganizationapp.DTO.MemberInviteDto;
@@ -28,6 +31,7 @@ import com.familyorg.familyorganizationapp.DTO.builder.UserDtoBuilder;
 import com.familyorg.familyorganizationapp.Exception.AuthorizationException;
 import com.familyorg.familyorganizationapp.Exception.BadRequestException;
 import com.familyorg.familyorganizationapp.Exception.FamilyNotFoundException;
+import com.familyorg.familyorganizationapp.Exception.InviteCodeNotFoundException;
 import com.familyorg.familyorganizationapp.Exception.UserNotFoundException;
 import com.familyorg.familyorganizationapp.domain.Family;
 import com.familyorg.familyorganizationapp.domain.FamilyMembers;
@@ -85,9 +89,7 @@ public class FamilyControllerTest {
     /* Given */
     when(familyService.getFamily(any(FamilyDto.class))).thenAnswer(
         invocation -> mockServiceResponse(invocation.getArgument(0), true, false, false, false));
-    FamilyDto request = new FamilyDtoBuilder()
-        .withRequestingUser(new UserDtoBuilder().withUsername("userthatdoesntexist").build())
-        .withId(1l).build();
+    FamilyDto request = new FamilyDtoBuilder().withId(1l).build();
 
     /* When */
     ResponseEntity<?> response = familyController.getFamily(request);
@@ -95,6 +97,7 @@ public class FamilyControllerTest {
     /* Then */
     assertNotNull(response);
     assertEquals(404, response.getStatusCodeValue());
+    assertTrue(response.getBody() instanceof ErrorDto);
   }
 
   @Test
@@ -112,6 +115,7 @@ public class FamilyControllerTest {
     /* Then */
     assertNotNull(response);
     assertEquals(404, response.getStatusCodeValue());
+    assertTrue(response.getBody() instanceof ErrorDto);
   }
 
   @Test
@@ -129,6 +133,7 @@ public class FamilyControllerTest {
     /* Then */
     assertNotNull(response);
     assertEquals(401, response.getStatusCodeValue());
+    assertTrue(response.getBody() instanceof ErrorDto);
   }
 
   @Test
@@ -161,6 +166,7 @@ public class FamilyControllerTest {
     /* Then */
     assertNotNull(response);
     assertEquals(404, response.getStatusCodeValue());
+    assertTrue(response.getBody() instanceof ErrorDto);
   }
 
   @Test
@@ -202,6 +208,7 @@ public class FamilyControllerTest {
     /* Then */
     assertNotNull(response);
     assertEquals(400, response.getStatusCodeValue());
+    assertTrue(response.getBody() instanceof ErrorDto);
   }
 
   @Test
@@ -222,6 +229,7 @@ public class FamilyControllerTest {
     /* Then */
     assertNotNull(response);
     assertEquals(404, response.getStatusCodeValue());
+    assertTrue(response.getBody() instanceof ErrorDto);
   }
 
   @Test
@@ -257,6 +265,7 @@ public class FamilyControllerTest {
     /* Then */
     assertNotNull(response);
     assertEquals(404, response.getStatusCodeValue());
+    assertTrue(response.getBody() instanceof ErrorDto);
   }
 
   @Test
@@ -274,6 +283,7 @@ public class FamilyControllerTest {
     /* Then */
     assertNotNull(response);
     assertEquals(404, response.getStatusCodeValue());
+    assertTrue(response.getBody() instanceof ErrorDto);
   }
 
   @Test
@@ -291,6 +301,7 @@ public class FamilyControllerTest {
     /* Then */
     assertNotNull(response);
     assertEquals(401, response.getStatusCodeValue());
+    assertTrue(response.getBody() instanceof ErrorDto);
   }
 
   @Test
@@ -319,6 +330,7 @@ public class FamilyControllerTest {
     /* Then */
     assertNotNull(response);
     assertEquals(404, response.getStatusCodeValue());
+    assertTrue(response.getBody() instanceof ErrorDto);
   }
 
   @Test
@@ -333,6 +345,7 @@ public class FamilyControllerTest {
     /* Then */
     assertNotNull(response);
     assertEquals(404, response.getStatusCodeValue());
+    assertTrue(response.getBody() instanceof ErrorDto);
   }
 
   @Test
@@ -347,6 +360,7 @@ public class FamilyControllerTest {
     /* Then */
     assertNotNull(response);
     assertEquals(401, response.getStatusCodeValue());
+    assertTrue(response.getBody() instanceof ErrorDto);
   }
 
   @Test
@@ -440,6 +454,7 @@ public class FamilyControllerTest {
     /* Then */
     assertNotNull(response);
     assertEquals(401, response.getStatusCodeValue());
+    assertTrue(response.getBody() instanceof ErrorDto);
   }
 
   @Test
@@ -456,6 +471,145 @@ public class FamilyControllerTest {
     /* Then */
     assertNotNull(response);
     assertEquals(404, response.getStatusCodeValue());
+    assertTrue(response.getBody() instanceof ErrorDto);
+  }
+
+  @SuppressWarnings("unchecked")
+  @Test
+  public void when_get_list_of_invites_then_list_of_invites_returned() {
+    /* Given */
+    List<MemberInvite> invites = new ArrayList<>();
+    Family family = new Family(1l, "Test", "ffffff", "America/Chicago", null, mock(HashSet.class));
+    invites.add(new MemberInvite(family, "testemail@test.com"));
+    invites.add(new MemberInvite(family, "testemail2@test.com"));
+    when(inviteService.getInvites(any(Long.class))).thenReturn(invites);
+
+    /* When */
+    ResponseEntity<?> response = familyController.getInvites(family.getId());
+
+    /* Then */
+    assertNotNull(response);
+    assertEquals(200, response.getStatusCodeValue());
+    assertTrue(response.getBody() instanceof List);
+    assertEquals(2, ((List<MemberInvite>) response.getBody()).size());
+  }
+
+  @Test
+  public void when_join_then_success() {
+    /* Given */
+    doNothing().when(inviteService).verifyMemberInvite(any(InviteCode.class), any(String.class));
+    String inviteCode = new InviteCode(false).getInviteCodeString();
+    String color = "ffffff";
+
+    /* When */
+    ResponseEntity<?> response = familyController.joinFamily(inviteCode, color);
+
+    /* Then */
+    assertNotNull(response);
+    assertEquals(200, response.getStatusCodeValue());
+  }
+
+  @Test
+  public void when_join_and_authorization_exception_thrown_with_redirect_then_error_response_returned() {
+    /* Given */
+    AuthorizationException authException = new AuthorizationException("Error", true);
+    doThrow(authException).when(inviteService).verifyMemberInvite(any(InviteCode.class),
+        any(String.class));
+    String inviteCode = new InviteCode(false).getInviteCodeString();
+    String color = "ffffff";
+
+    /* When */
+    ResponseEntity<?> response = familyController.joinFamily(inviteCode, color);
+
+    /* Then */
+    assertNotNull(response);
+    assertTrue(response.getBody() instanceof ErrorDto);
+    assertEquals(401, response.getStatusCodeValue());
+    ErrorDto responseBody = (ErrorDto) response.getBody();
+    assertTrue(responseBody.isRedirect());
+    assertEquals(401, responseBody.getErrorCode());
+    assertNotNull(responseBody.getRedirectUrl());
+  }
+
+  @Test
+  public void when_join_and_authorization_exception_thrown_without_redirect_then_error_response_returned() {
+    /* Given */
+    AuthorizationException authException = new AuthorizationException("Error");
+    doThrow(authException).when(inviteService).verifyMemberInvite(any(InviteCode.class),
+        any(String.class));
+    String inviteCode = new InviteCode(false).getInviteCodeString();
+    String color = "ffffff";
+
+    /* When */
+    ResponseEntity<?> response = familyController.joinFamily(inviteCode, color);
+
+    /* Then */
+    assertNotNull(response);
+    assertTrue(response.getBody() instanceof ErrorDto);
+    assertEquals(401, response.getStatusCodeValue());
+    ErrorDto responseBody = (ErrorDto) response.getBody();
+    assertFalse(responseBody.isRedirect());
+    assertNull(responseBody.getRedirectUrl());
+    assertEquals(401, responseBody.getErrorCode());
+  }
+
+  @Test
+  public void when_join_and_invite_test_not_found_exception_thrown_then_verify_response() {
+    /* Given */
+    doThrow(InviteCodeNotFoundException.class).when(inviteService)
+        .verifyMemberInvite(any(InviteCode.class), any(String.class));
+    String inviteCode = new InviteCode(false).getInviteCodeString();
+    String color = "fffff";
+
+    /* When */
+    ResponseEntity<?> response = familyController.joinFamily(inviteCode, color);
+
+    /* Then */
+    assertNotNull(response);
+    assertTrue(response.getBody() instanceof ErrorDto);
+    assertEquals(404, response.getStatusCodeValue());
+    ErrorDto responseBody = (ErrorDto) response.getBody();
+    assertEquals(404, responseBody.getErrorCode());
+  }
+
+  @Test
+  public void when_join_and_user_not_found_exception_thrown_then_verifiy_response() {
+    /* Given */
+    doThrow(UserNotFoundException.class).when(inviteService)
+        .verifyMemberInvite(any(InviteCode.class), any(String.class));
+    String inviteCode = new InviteCode(false).getInviteCodeString();
+    String color = "ffffff";
+
+    /* When */
+    ResponseEntity<?> response = familyController.joinFamily(inviteCode, color);
+
+    /* Then */
+    assertNotNull(response);
+    assertTrue(response.getBody() instanceof ErrorDto);
+    assertEquals(404, response.getStatusCodeValue());
+    ErrorDto responseBody = (ErrorDto) response.getBody();
+    assertEquals(404, responseBody.getErrorCode());
+    assertTrue(responseBody.isRedirect());
+    assertNotNull(responseBody.getRedirectUrl());
+  }
+
+  @Test
+  public void when_join_and_family_not_found_exception_thown_then_verify_response() {
+    /* Given */
+    doThrow(FamilyNotFoundException.class).when(inviteService)
+        .verifyMemberInvite(any(InviteCode.class), any(String.class));
+    String inviteCode = new InviteCode(false).getInviteCodeString();
+    String color = "ffffff";
+
+    /* When */
+    ResponseEntity<?> response = familyController.joinFamily(inviteCode, color);
+
+    /* Then */
+    assertNotNull(response);
+    assertTrue(response.getBody() instanceof ErrorDto);
+    assertEquals(404, response.getStatusCodeValue());
+    ErrorDto responseBody = (ErrorDto) response.getBody();
+    assertEquals(404, responseBody.getErrorCode());
   }
 
   private FamilyDto mockServiceResponse(FamilyDto request, boolean throwUser, boolean throwFamily,

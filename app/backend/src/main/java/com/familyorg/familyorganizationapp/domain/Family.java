@@ -16,6 +16,8 @@ import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Entity
 @Table(name = "family")
 public class Family implements Serializable {
@@ -38,6 +40,7 @@ public class Family implements Serializable {
   @Column(name = "invite_code", columnDefinition = "VARCHAR(36)")
   private String inviteCode;
 
+  @JsonIgnore
   @OneToMany(mappedBy = "family", fetch = FetchType.LAZY, cascade = CascadeType.ALL,
       orphanRemoval = true)
   private Set<FamilyMembers> members;
@@ -126,6 +129,12 @@ public class Family implements Serializable {
   public void addMember(FamilyMembers member) {
     if (this.members == null) {
       this.members = new HashSet<>();
+    }
+    Long existingUsersWithId = this.members.stream()
+        .filter(existingMember -> existingMember.getUser().getId().equals(member.getUser().getId()))
+        .count();
+    if (existingUsersWithId > 0) {
+      return;
     }
     this.members.add(member);
   }

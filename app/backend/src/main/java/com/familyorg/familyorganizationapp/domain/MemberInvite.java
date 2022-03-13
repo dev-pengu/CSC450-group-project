@@ -1,8 +1,9 @@
 package com.familyorg.familyorganizationapp.domain;
 
-import com.familyorg.familyorganizationapp.domain.id.MemberInviteId;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
+import java.io.Serializable;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.util.Objects;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -10,32 +11,34 @@ import javax.persistence.Id;
 import javax.persistence.IdClass;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
-import java.util.Objects;
-import java.util.UUID;
+import com.familyorg.familyorganizationapp.domain.id.MemberInviteId;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
-@Table(name="member_invite")
+@Table(name = "member_invite")
 @IdClass(MemberInviteId.class)
-public class MemberInvite {
+public class MemberInvite implements Serializable {
 
+  private static final long serialVersionUID = 4046233503515534959L;
+
+  @JsonIgnore
   @Id
-  @Column(name="invite_code", columnDefinition="VARCHAR(36)", nullable=false)
+  @Column(name = "invite_code", columnDefinition = "VARCHAR(36)", nullable = false)
   private String inviteCode;
 
+  @JsonIgnore
   @Id
-  @ManyToOne(fetch= FetchType.EAGER)
+  @ManyToOne(fetch = FetchType.EAGER)
   private Family family;
 
   @Id
-  @Column(name="user_email", columnDefinition="VARCHAR(70)", nullable=false)
+  @Column(name = "user_email", columnDefinition = "VARCHAR(70)", nullable = false)
   private String userEmail;
 
-  @Column(name="initial_role", columnDefinition="VARCHAR(10)", nullable = false)
+  @Column(name = "initial_role", columnDefinition = "INT", nullable = false)
   private Role role;
 
-  @Column(name="created_at", columnDefinition = "TIMESTAMP")
+  @Column(name = "created_at", columnDefinition = "TIMESTAMP")
   private Timestamp createdAt;
 
   public MemberInvite() {}
@@ -52,7 +55,8 @@ public class MemberInvite {
     this(family, userEmail, role, created, null);
   }
 
-  public MemberInvite(Family family, String userEmail, Role role, Timestamp created, String inviteCode) {
+  public MemberInvite(Family family, String userEmail, Role role, Timestamp created,
+      String inviteCode) {
     this.family = family;
     this.userEmail = userEmail;
     this.role = role != null ? role : Role.lowestLevelRole();
@@ -123,10 +127,13 @@ public class MemberInvite {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    if (this == o)
+      return true;
+    if (o == null || getClass() != o.getClass())
+      return false;
     MemberInvite that = (MemberInvite) o;
-    return inviteCode.equals(that.inviteCode) && family.getId().equals(that.family.getId()) && userEmail.equals(that.userEmail);
+    return inviteCode.equals(that.inviteCode) && family.getId().equals(that.family.getId())
+        && userEmail.equals(that.userEmail);
   }
 
   @Override
@@ -136,11 +143,7 @@ public class MemberInvite {
 
   @Override
   public String toString() {
-    return "MemberInvite{" +
-        "inviteCode='" + inviteCode + '\'' +
-        ", familyId=" + family.getId() +
-        ", userEmail='" + userEmail + '\'' +
-        ", role='" + role + '\'' +
-        '}';
+    return "MemberInvite{" + "inviteCode='" + inviteCode + '\'' + ", familyId=" + family.getId()
+        + ", userEmail='" + userEmail + '\'' + ", role='" + role + '\'' + '}';
   }
 }

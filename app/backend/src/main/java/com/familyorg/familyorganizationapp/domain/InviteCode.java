@@ -5,6 +5,8 @@ import java.util.Objects;
 import java.util.UUID;
 
 public class InviteCode implements Serializable {
+
+  private static final long serialVersionUID = -1868348275730997549L;
   public static final String PERSISTENT_PREFIX = "PRS";
   public static final String ONE_TIME_USE_PREFIX = "OTU";
   public static final InviteCode EMPTY = new InviteCode();
@@ -36,6 +38,7 @@ public class InviteCode implements Serializable {
     if (parts.length < 2 || parts[1].length() < 36) {
       throw new IllegalStateException("codeString passed did not contain enough parts");
     }
+    parts[1] = parts[1].trim();
     InviteCode inviteCode = new InviteCode();
     inviteCode.setPersistent(parts[0].contains(PERSISTENT_PREFIX));
     inviteCode.setCode(UUID.fromString(parts[1]));
@@ -60,8 +63,10 @@ public class InviteCode implements Serializable {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    if (this == o)
+      return true;
+    if (o == null || getClass() != o.getClass())
+      return false;
     InviteCode that = (InviteCode) o;
     return persistent == that.persistent && Objects.equals(code, that.code);
   }
