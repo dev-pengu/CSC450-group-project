@@ -3,7 +3,6 @@ package com.familyorg.familyorganizationapp.service;
 import java.util.List;
 import java.util.Optional;
 import com.familyorg.familyorganizationapp.DTO.FamilyDto;
-import com.familyorg.familyorganizationapp.DTO.UserDto;
 import com.familyorg.familyorganizationapp.Exception.AuthorizationException;
 import com.familyorg.familyorganizationapp.Exception.BadRequestException;
 import com.familyorg.familyorganizationapp.Exception.FamilyNotFoundException;
@@ -27,7 +26,8 @@ public interface FamilyService {
 
   void deleteFamily(Long id) throws AuthorizationException;
 
-  FamilyDto transferOwnership(Long id, UserDto currentOwner, UserDto newOwner);
+  FamilyDto transferOwnership(FamilyDto request) throws AuthorizationException,
+      UserNotFoundException, FamilyNotFoundException, BadRequestException;
 
   Family getFamilyByInviteCode(String inviteCode);
 }

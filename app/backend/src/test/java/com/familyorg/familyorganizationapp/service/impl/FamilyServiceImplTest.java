@@ -30,6 +30,7 @@ import com.familyorg.familyorganizationapp.DTO.FamilyMemberDto;
 import com.familyorg.familyorganizationapp.DTO.UserDto;
 import com.familyorg.familyorganizationapp.DTO.builder.FamilyDtoBuilder;
 import com.familyorg.familyorganizationapp.DTO.builder.FamilyMemberDtoBuilder;
+import com.familyorg.familyorganizationapp.DTO.builder.UserDtoBuilder;
 import com.familyorg.familyorganizationapp.Exception.AuthorizationException;
 import com.familyorg.familyorganizationapp.Exception.BadRequestException;
 import com.familyorg.familyorganizationapp.Exception.FamilyNotFoundException;
@@ -72,6 +73,20 @@ public class FamilyServiceImplTest {
 
   @BeforeAll
   public static void setup() {
+    usersByEmail.put(TEST_USER_1.getEmail(), TEST_USER_1);
+    usersByEmail.put(TEST_USER_2.getEmail(), TEST_USER_2);
+    usersById.put(TEST_USER_1.getId(), TEST_USER_1);
+    usersById.put(TEST_USER_2.getId(), TEST_USER_2);
+    usersByUsername.put(TEST_USER_1.getUsername(), TEST_USER_1);
+    usersByUsername.put(TEST_USER_2.getUsername(), TEST_USER_2);
+
+    familiesById.put(FAMILY_1.getId(), FAMILY_1);
+    familiesById.put(FAMILY_2.getId(), FAMILY_2);
+    familiesById.put(FAMILY_3.getId(), FAMILY_3);
+  }
+
+  @BeforeEach
+  public void before() {
     familyOneMembers = new ArrayList<>();
     familyOneMembers.add(new FamilyMembers(TEST_USER_1, FAMILY_1, Role.OWNER, "e802d7"));
     FAMILY_1.setMembers(familyOneMembers.stream().collect(Collectors.toSet()));
@@ -105,20 +120,6 @@ public class FamilyServiceImplTest {
     TEST_USER_2.setFamilies(
         new HashSet<>(Arrays.asList(familyTwoMembers.get(0), familyThreeMembers.get(1))));
 
-    usersByEmail.put(TEST_USER_1.getEmail(), TEST_USER_1);
-    usersByEmail.put(TEST_USER_2.getEmail(), TEST_USER_2);
-    usersById.put(TEST_USER_1.getId(), TEST_USER_1);
-    usersById.put(TEST_USER_2.getId(), TEST_USER_2);
-    usersByUsername.put(TEST_USER_1.getUsername(), TEST_USER_1);
-    usersByUsername.put(TEST_USER_2.getUsername(), TEST_USER_2);
-
-    familiesById.put(FAMILY_1.getId(), FAMILY_1);
-    familiesById.put(FAMILY_2.getId(), FAMILY_2);
-    familiesById.put(FAMILY_3.getId(), FAMILY_3);
-  }
-
-  @BeforeEach
-  public void before() {
     userService = mock(UserServiceImpl.class);
     familyRepository = mock(FamilyRepository.class);
     when(familyRepository.save(any(Family.class))).thenAnswer(invocation -> {
@@ -923,6 +924,312 @@ public class FamilyServiceImplTest {
     /* When */
     assertThrows(AuthorizationException.class, () -> {
       familyService.deleteFamily(familyId);
+    });
+  }
+
+  @Test
+  public void when_transfer_ownership_then_memberships_updated() {
+    /* Given */
+    when(authService.getSessionUserDetails()).thenReturn(new UserDetails() {
+      @Override
+      public Collection<? extends GrantedAuthority> getAuthorities() {
+        return null;
+      }
+
+      @Override
+      public String getPassword() {
+        return TEST_USER_1.getPassword();
+      }
+
+      @Override
+      public String getUsername() {
+        return TEST_USER_1.getUsername();
+      }
+
+      @Override
+      public boolean isAccountNonExpired() {
+        return false;
+      }
+
+      @Override
+      public boolean isAccountNonLocked() {
+        return false;
+      }
+
+      @Override
+      public boolean isCredentialsNonExpired() {
+        return false;
+      }
+
+      @Override
+      public boolean isEnabled() {
+        return false;
+      }
+    });
+    FamilyDto request = new FamilyDtoBuilder().withId(FAMILY_3.getId())
+        .withOwner(new FamilyMemberDtoBuilder()
+            .withUser(new UserDtoBuilder().withUsername(TEST_USER_2.getUsername()).build()).build())
+        .build();
+
+    /* When */
+    FamilyDto response = familyService.transferOwnership(request);
+
+    /* Then */
+    assertNotNull(response);
+    assertEquals(TEST_USER_2.getId(), response.getOwner().getUser().getId());
+    assertTrue(response.getMembers().stream()
+        .filter(member -> member.getUser().getId().equals(TEST_USER_1.getId())
+            && member.getRole().equals(Role.ADMIN))
+        .count() > 0);
+  }
+
+  @Test
+  public void when_transfer_ownership_and_family_doesnt_exist_then_family_not_found_exception_thrown() {
+    /* Given */
+    when(authService.getSessionUserDetails()).thenReturn(new UserDetails() {
+      @Override
+      public Collection<? extends GrantedAuthority> getAuthorities() {
+        return null;
+      }
+
+      @Override
+      public String getPassword() {
+        return TEST_USER_1.getPassword();
+      }
+
+      @Override
+      public String getUsername() {
+        return TEST_USER_1.getUsername();
+      }
+
+      @Override
+      public boolean isAccountNonExpired() {
+        return false;
+      }
+
+      @Override
+      public boolean isAccountNonLocked() {
+        return false;
+      }
+
+      @Override
+      public boolean isCredentialsNonExpired() {
+        return false;
+      }
+
+      @Override
+      public boolean isEnabled() {
+        return false;
+      }
+    });
+    FamilyDto request = new FamilyDtoBuilder().withId(5l)
+        .withOwner(new FamilyMemberDtoBuilder()
+            .withUser(new UserDtoBuilder().withUsername(TEST_USER_2.getUsername()).build()).build())
+        .build();
+
+    /* Given */
+    assertThrows(FamilyNotFoundException.class, () -> {
+      familyService.transferOwnership(request);
+    });
+  }
+
+  @Test
+  public void when_transfer_ownership_and_user_not_in_family_then_authorization_exception_thrown() {
+    /* Given */
+    when(authService.getSessionUserDetails()).thenReturn(new UserDetails() {
+      @Override
+      public Collection<? extends GrantedAuthority> getAuthorities() {
+        return null;
+      }
+
+      @Override
+      public String getPassword() {
+        return TEST_USER_1.getPassword();
+      }
+
+      @Override
+      public String getUsername() {
+        return TEST_USER_1.getUsername();
+      }
+
+      @Override
+      public boolean isAccountNonExpired() {
+        return false;
+      }
+
+      @Override
+      public boolean isAccountNonLocked() {
+        return false;
+      }
+
+      @Override
+      public boolean isCredentialsNonExpired() {
+        return false;
+      }
+
+      @Override
+      public boolean isEnabled() {
+        return false;
+      }
+    });
+    FamilyDto request = new FamilyDtoBuilder().withId(FAMILY_2.getId())
+        .withOwner(new FamilyMemberDtoBuilder()
+            .withUser(new UserDtoBuilder().withUsername(TEST_USER_1.getUsername()).build()).build())
+        .build();
+
+    /* Given */
+    assertThrows(AuthorizationException.class, () -> {
+      familyService.transferOwnership(request);
+    });
+  }
+
+  @Test
+  public void when_transfer_ownership_and_user_is_not_owner_then_authorization_exception_thrown() {
+    /* Given */
+    when(authService.getSessionUserDetails()).thenReturn(new UserDetails() {
+      @Override
+      public Collection<? extends GrantedAuthority> getAuthorities() {
+        return null;
+      }
+
+      @Override
+      public String getPassword() {
+        return TEST_USER_2.getPassword();
+      }
+
+      @Override
+      public String getUsername() {
+        return TEST_USER_2.getUsername();
+      }
+
+      @Override
+      public boolean isAccountNonExpired() {
+        return false;
+      }
+
+      @Override
+      public boolean isAccountNonLocked() {
+        return false;
+      }
+
+      @Override
+      public boolean isCredentialsNonExpired() {
+        return false;
+      }
+
+      @Override
+      public boolean isEnabled() {
+        return false;
+      }
+    });
+    FamilyDto request = new FamilyDtoBuilder().withId(FAMILY_3.getId())
+        .withOwner(new FamilyMemberDtoBuilder()
+            .withUser(new UserDtoBuilder().withUsername(TEST_USER_2.getUsername()).build()).build())
+        .build();
+
+    /* Given */
+    assertThrows(AuthorizationException.class, () -> {
+      familyService.transferOwnership(request);
+    });
+  }
+
+  @Test
+  public void when_transfer_ownership_and_new_owner_doesnt_exist_then_user_not_found_exception_thrown() {
+    /* Given */
+    when(authService.getSessionUserDetails()).thenReturn(new UserDetails() {
+      @Override
+      public Collection<? extends GrantedAuthority> getAuthorities() {
+        return null;
+      }
+
+      @Override
+      public String getPassword() {
+        return TEST_USER_1.getPassword();
+      }
+
+      @Override
+      public String getUsername() {
+        return TEST_USER_1.getUsername();
+      }
+
+      @Override
+      public boolean isAccountNonExpired() {
+        return false;
+      }
+
+      @Override
+      public boolean isAccountNonLocked() {
+        return false;
+      }
+
+      @Override
+      public boolean isCredentialsNonExpired() {
+        return false;
+      }
+
+      @Override
+      public boolean isEnabled() {
+        return false;
+      }
+    });
+    FamilyDto request = new FamilyDtoBuilder().withId(FAMILY_3.getId())
+        .withOwner(new FamilyMemberDtoBuilder()
+            .withUser(new UserDtoBuilder().withUsername("userthatdoesntexist").build()).build())
+        .build();
+
+    /* Given */
+    assertThrows(UserNotFoundException.class, () -> {
+      familyService.transferOwnership(request);
+    });
+  }
+
+  @Test
+  public void when_transfer_ownership_and_new_owner_is_not_part_of_family_then_user_not_found_exception_thrown() {
+    /* Given */
+    when(authService.getSessionUserDetails()).thenReturn(new UserDetails() {
+      @Override
+      public Collection<? extends GrantedAuthority> getAuthorities() {
+        return null;
+      }
+
+      @Override
+      public String getPassword() {
+        return TEST_USER_1.getPassword();
+      }
+
+      @Override
+      public String getUsername() {
+        return TEST_USER_1.getUsername();
+      }
+
+      @Override
+      public boolean isAccountNonExpired() {
+        return false;
+      }
+
+      @Override
+      public boolean isAccountNonLocked() {
+        return false;
+      }
+
+      @Override
+      public boolean isCredentialsNonExpired() {
+        return false;
+      }
+
+      @Override
+      public boolean isEnabled() {
+        return false;
+      }
+    });
+    FamilyDto request = new FamilyDtoBuilder().withId(FAMILY_1.getId())
+        .withOwner(new FamilyMemberDtoBuilder()
+            .withUser(new UserDtoBuilder().withUsername(TEST_USER_2.getUsername()).build()).build())
+        .build();
+
+    /* Given */
+    assertThrows(UserNotFoundException.class, () -> {
+      familyService.transferOwnership(request);
     });
   }
 }
