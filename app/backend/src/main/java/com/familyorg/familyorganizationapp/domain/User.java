@@ -155,6 +155,14 @@ public class User implements Serializable {
         && Objects.equals(password, other.password) && Objects.equals(username, other.username);
   }
 
+  public boolean isValid() {
+    if (firstName == null || lastName == null || username == null || email == null
+        || password == null) {
+      return false;
+    }
+
+    return true;
+  }
 
 
 }
