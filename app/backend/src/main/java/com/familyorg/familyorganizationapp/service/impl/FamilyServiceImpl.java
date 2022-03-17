@@ -13,7 +13,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import com.familyorg.familyorganizationapp.DTO.FamilyDto;
 import com.familyorg.familyorganizationapp.DTO.FamilyMemberDto;
-import com.familyorg.familyorganizationapp.DTO.UserDto;
 import com.familyorg.familyorganizationapp.Exception.AuthorizationException;
 import com.familyorg.familyorganizationapp.Exception.BadRequestException;
 import com.familyorg.familyorganizationapp.Exception.FamilyNotFoundException;
@@ -186,6 +185,7 @@ public class FamilyServiceImpl implements FamilyService {
   }
 
   @Override
+  @Transactional
   public Family updateFamily(Family family) {
     Family updatedFamily = familyRepository.save(family);
     return updatedFamily;
@@ -215,10 +215,53 @@ public class FamilyServiceImpl implements FamilyService {
     }
   }
 
+  @Transactional
   @Override
-  public FamilyDto transferOwnership(Long id, UserDto currentOwner, UserDto newOwner) {
-    // TODO FR.9
-    return null;
+  public FamilyDto transferOwnership(FamilyDto request) {
+    UserDetails userDetails = authService.getSessionUserDetails();
+    if (userDetails.getUsername() == null) {
+      throw new AuthorizationException("No authenticated user found", true);
+    }
+    User user = userService.getUserByUsername(userDetails.getUsername());
+    if (user == null) {
+      throw new UserNotFoundException("User not found", true);
+    }
+    Optional<Family> family = familyRepository.findById(request.getId());
+    if (family.isEmpty()) {
+      throw new FamilyNotFoundException("Family with id " + request.getId() + " not found.");
+    }
+    Optional<FamilyMembers> familyRelation =
+        familyMemberRepository.findById(new FamilyMemberId(user.getId(), family.get().getId()));
+    if (familyRelation.isEmpty() || familyRelation.get().getRole() != Role.OWNER) {
+      throw new AuthorizationException(
+          "User with username " + user.getUsername() + " not authorized to perform this action.",
+          false);
+    }
+    // if owner on request is the same as the current owner, no work needs to be done, just return
+    // the current family object
+    if (request.getOwner().getUser().getUsername().equals(user.getUsername())) {
+      return FamilyDto.fromFamilyObj(family.get(), user);
+    }
+
+    User newOwner = userService.getUserByUsername(request.getOwner().getUser().getUsername());
+    if (newOwner == null) {
+      throw new UserNotFoundException("User supplied to be new owner does not exist.", false);
+    }
+    Optional<FamilyMembers> newOwnerRelation =
+        familyMemberRepository.findById(new FamilyMemberId(newOwner.getId(), family.get().getId()));
+    if (newOwnerRelation.isEmpty()) {
+      throw new UserNotFoundException(
+          "User supplied to be new owner is not a member of family with id " + family.get().getId(),
+          false);
+    }
+
+    familyRelation.get().setRole(Role.ADMIN);
+    newOwnerRelation.get().setRole(Role.OWNER);
+    familyMemberRepository.save(familyRelation.get());
+    familyMemberRepository.save(newOwnerRelation.get());
+
+    Optional<Family> updatedFamily = familyRepository.findById(request.getId());
+    return FamilyDto.fromFamilyObj(updatedFamily.get(), user);
   }
 
   @Override

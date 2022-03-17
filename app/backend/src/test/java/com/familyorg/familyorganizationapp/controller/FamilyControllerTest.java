@@ -308,7 +308,6 @@ public class FamilyControllerTest {
   public void deleteFamily_success() {
     doNothing().when(familyService).deleteFamily(any(Long.class));
     Long familyId = 1l;
-    String username = "testuser";
 
     /* When */
     ResponseEntity<?> response = familyController.deleteFamily(familyId);
@@ -322,7 +321,6 @@ public class FamilyControllerTest {
   public void when_delete_family_and_user_doesnt_exist_then_404_returned() {
     doThrow(UserNotFoundException.class).when(familyService).deleteFamily(any(Long.class));
     Long familyId = 1l;
-    String username = "testuser";
 
     /* When */
     ResponseEntity<?> response = familyController.deleteFamily(familyId);
@@ -337,7 +335,6 @@ public class FamilyControllerTest {
   public void when_delete_family_and_family_doesnt_exist_then_404_returned() {
     doThrow(FamilyNotFoundException.class).when(familyService).deleteFamily(any(Long.class));
     Long familyId = 1l;
-    String username = "testuser";
 
     /* When */
     ResponseEntity<?> response = familyController.deleteFamily(familyId);
@@ -352,7 +349,6 @@ public class FamilyControllerTest {
   public void when_delete_family_and_user_unauthorized_then_401_returned() {
     doThrow(AuthorizationException.class).when(familyService).deleteFamily(any(Long.class));
     Long familyId = 1l;
-    String username = "testuser";
 
     /* When */
     ResponseEntity<?> response = familyController.deleteFamily(familyId);
@@ -612,6 +608,94 @@ public class FamilyControllerTest {
     assertEquals(404, responseBody.getErrorCode());
   }
 
+  @Test
+  public void transferOwnership_success() {
+    /* Given */
+    when(familyService.transferOwnership(any(FamilyDto.class))).thenAnswer(
+        invocation -> mockServiceResponse(invocation.getArgument(0), false, false, false, false));
+    FamilyDto request = new FamilyDtoBuilder().withId(1l).withOwner(new FamilyMemberDtoBuilder()
+        .withUser(new UserDtoBuilder().withUsername("testuser").build()).build()).build();
+
+    /* When */
+    ResponseEntity<?> response = familyController.transferOwnership(request);
+
+    /* Then */
+    assertNotNull(response);
+    assertTrue(response.getBody() instanceof FamilyDto);
+    assertEquals(200, response.getStatusCodeValue());
+  }
+
+  @Test
+  public void when_transfer_ownership_and_user_not_found_exception_thrown_then_404_returned() {
+    /* Given */
+    doThrow(UserNotFoundException.class).when(familyService)
+        .transferOwnership(any(FamilyDto.class));
+    FamilyDto request = new FamilyDtoBuilder().withId(1l).withOwner(new FamilyMemberDtoBuilder()
+        .withUser(new UserDtoBuilder().withUsername("testuser").build()).build()).build();
+
+    /* When */
+    ResponseEntity<?> response = familyController.transferOwnership(request);
+
+    /* Then */
+    assertNotNull(response);
+    assertTrue(response.getBody() instanceof ErrorDto);
+    assertEquals(404, response.getStatusCodeValue());
+    assertEquals(404, ((ErrorDto) response.getBody()).getErrorCode());
+  }
+
+  @Test
+  public void when_transfer_ownership_and_authorization_exception_thrown_then_401_returned() {
+    /* Given */
+    doThrow(AuthorizationException.class).when(familyService)
+        .transferOwnership(any(FamilyDto.class));
+    FamilyDto request = new FamilyDtoBuilder().withId(1l).withOwner(new FamilyMemberDtoBuilder()
+        .withUser(new UserDtoBuilder().withUsername("testuser").build()).build()).build();
+
+    /* When */
+    ResponseEntity<?> response = familyController.transferOwnership(request);
+
+    /* Then */
+    assertNotNull(response);
+    assertTrue(response.getBody() instanceof ErrorDto);
+    assertEquals(401, response.getStatusCodeValue());
+    assertEquals(401, ((ErrorDto) response.getBody()).getErrorCode());
+  }
+
+  @Test
+  public void when_transfer_ownership_and_family_not_found_exception_thrown_then_404_returned() {
+    /* Given */
+    doThrow(FamilyNotFoundException.class).when(familyService)
+        .transferOwnership(any(FamilyDto.class));
+    FamilyDto request = new FamilyDtoBuilder().withId(1l).withOwner(new FamilyMemberDtoBuilder()
+        .withUser(new UserDtoBuilder().withUsername("testuser").build()).build()).build();
+
+    /* When */
+    ResponseEntity<?> response = familyController.transferOwnership(request);
+
+    /* Then */
+    assertNotNull(response);
+    assertTrue(response.getBody() instanceof ErrorDto);
+    assertEquals(404, response.getStatusCodeValue());
+    assertEquals(404, ((ErrorDto) response.getBody()).getErrorCode());
+  }
+
+  @Test
+  public void when_transfer_ownership_and_bad_request_exception_thrown_then_400_returned() {
+    /* Given */
+    doThrow(BadRequestException.class).when(familyService).transferOwnership(any(FamilyDto.class));
+    FamilyDto request = new FamilyDtoBuilder().withId(1l).withOwner(new FamilyMemberDtoBuilder()
+        .withUser(new UserDtoBuilder().withUsername("testuser").build()).build()).build();
+
+    /* When */
+    ResponseEntity<?> response = familyController.transferOwnership(request);
+
+    /* Then */
+    assertNotNull(response);
+    assertTrue(response.getBody() instanceof ErrorDto);
+    assertEquals(400, response.getStatusCodeValue());
+    assertEquals(400, ((ErrorDto) response.getBody()).getErrorCode());
+  }
+
   private FamilyDto mockServiceResponse(FamilyDto request, boolean throwUser, boolean throwFamily,
       boolean throwAuth, boolean throwBadRequest)
       throws UserNotFoundException, FamilyNotFoundException, AuthorizationException {
@@ -633,9 +717,15 @@ public class FamilyControllerTest {
     return new FamilyDtoBuilder().withId(1l).withEventColor("ffffff").withInviteCode(null)
         .withName("Test Family").withTimezone("America/Chicago").withRequestingUser(requestingUser)
         .withOwner(new FamilyMemberDto(requestingUser, "ffffff", 1l, Role.OWNER))
-        .withMembers(new HashSet<>(
-            Collections.singleton(new FamilyMemberDto(requestingUser, "ffffff", 1l, Role.OWNER))))
-        .build();
+        .withMembers(new HashSet<>() {
+          {
+            add(new FamilyMemberDto(requestingUser, "ffffff", 1l, Role.OWNER));
+            add(new FamilyMemberDto(
+                new UserDtoBuilder().withId(2l).withEmail("testuser2@test.com")
+                    .withFirstName("Test").withLastName("User2").withUsername("testuser2").build(),
+                "eaeaea", 1l, Role.ADMIN));
+          }
+        }).build();
   }
 
   private List<FamilyDto> mockServiceResponse(Long userId, int numResponse, boolean throwUser)
