@@ -31,7 +31,7 @@
           </v-card-text>
           <v-card-actions>
             <v-row justify="center">
-              <v-col cols="12" md="6">
+              <v-col cols="12" sm="6">
                 <v-btn block color="primary" elevation="2" :loading="loading" :disabled="loading" @click="submit"
                   >Login</v-btn
                 >
