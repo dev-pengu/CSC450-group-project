@@ -182,14 +182,7 @@ public class FamilyServiceImpl implements FamilyService {
   @Transactional
   @Override
   public FamilyDto transferOwnership(FamilyDto request) {
-    UserDetails userDetails = authService.getSessionUserDetails();
-    if (userDetails.getUsername() == null) {
-      throw new AuthorizationException("No authenticated user found", true);
-    }
-    User user = userService.getUserByUsername(userDetails.getUsername());
-    if (user == null) {
-      throw new UserNotFoundException("User not found", true);
-    }
+    User user = userService.getRequestingUser();
     Optional<Family> family = familyRepository.findById(request.getId());
     if (family.isEmpty()) {
       throw new FamilyNotFoundException("Family with id " + request.getId() + " not found.");

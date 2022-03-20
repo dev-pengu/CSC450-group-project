@@ -55,6 +55,8 @@ public class FamilyServiceImplTest {
       new User(1l, "Test", "User", "testuser", "password", "testuser@test.com", null);
   static User TEST_USER_2 =
       new User(2l, "Test", "User2", "testuser2", "password", "testuser2@test.com", null);
+  static User TEST_USER_3 =
+      new User(2l, "Test", "User3", "testuser3", "password", "testuser3@test.com", null);
   static Family FAMILY_1 = new Family(1l, "Test Family 1", "000000", "america/chicago", null, null);
   static Family FAMILY_2 = new Family(2l, "Test Family 2", "ffffff", "america/chicago", null, null);
   static Family FAMILY_3 = new Family(3l, "Test Family 3", "eaeaea", "america/chicago", null, null);
@@ -71,10 +73,13 @@ public class FamilyServiceImplTest {
   public static void setup() {
     usersByEmail.put(TEST_USER_1.getEmail(), TEST_USER_1);
     usersByEmail.put(TEST_USER_2.getEmail(), TEST_USER_2);
+    usersByEmail.put(TEST_USER_2.getEmail(), TEST_USER_3);
     usersById.put(TEST_USER_1.getId(), TEST_USER_1);
     usersById.put(TEST_USER_2.getId(), TEST_USER_2);
+    usersById.put(TEST_USER_2.getId(), TEST_USER_3);
     usersByUsername.put(TEST_USER_1.getUsername(), TEST_USER_1);
     usersByUsername.put(TEST_USER_2.getUsername(), TEST_USER_2);
+    usersByUsername.put(TEST_USER_2.getUsername(), TEST_USER_3);
 
     familiesById.put(FAMILY_1.getId(), FAMILY_1);
     familiesById.put(FAMILY_2.getId(), FAMILY_2);
@@ -398,42 +403,7 @@ public class FamilyServiceImplTest {
   @Test
   public void when_transfer_ownership_then_memberships_updated() {
     /* Given */
-    when(authService.getSessionUserDetails()).thenReturn(new UserDetails() {
-      @Override
-      public Collection<? extends GrantedAuthority> getAuthorities() {
-        return null;
-      }
-
-      @Override
-      public String getPassword() {
-        return TEST_USER_1.getPassword();
-      }
-
-      @Override
-      public String getUsername() {
-        return TEST_USER_1.getUsername();
-      }
-
-      @Override
-      public boolean isAccountNonExpired() {
-        return false;
-      }
-
-      @Override
-      public boolean isAccountNonLocked() {
-        return false;
-      }
-
-      @Override
-      public boolean isCredentialsNonExpired() {
-        return false;
-      }
-
-      @Override
-      public boolean isEnabled() {
-        return false;
-      }
-    });
+    when(userService.getRequestingUser()).thenReturn(TEST_USER_1);
     FamilyDto request = new FamilyDtoBuilder().withId(FAMILY_3.getId())
         .withOwner(new FamilyMemberDtoBuilder()
             .withUser(new UserDtoBuilder().withUsername(TEST_USER_2.getUsername()).build()).build())
@@ -454,42 +424,7 @@ public class FamilyServiceImplTest {
   @Test
   public void when_transfer_ownership_and_family_doesnt_exist_then_family_not_found_exception_thrown() {
     /* Given */
-    when(authService.getSessionUserDetails()).thenReturn(new UserDetails() {
-      @Override
-      public Collection<? extends GrantedAuthority> getAuthorities() {
-        return null;
-      }
-
-      @Override
-      public String getPassword() {
-        return TEST_USER_1.getPassword();
-      }
-
-      @Override
-      public String getUsername() {
-        return TEST_USER_1.getUsername();
-      }
-
-      @Override
-      public boolean isAccountNonExpired() {
-        return false;
-      }
-
-      @Override
-      public boolean isAccountNonLocked() {
-        return false;
-      }
-
-      @Override
-      public boolean isCredentialsNonExpired() {
-        return false;
-      }
-
-      @Override
-      public boolean isEnabled() {
-        return false;
-      }
-    });
+    when(userService.getRequestingUser()).thenReturn(TEST_USER_1);
     FamilyDto request = new FamilyDtoBuilder().withId(5l)
         .withOwner(new FamilyMemberDtoBuilder()
             .withUser(new UserDtoBuilder().withUsername(TEST_USER_2.getUsername()).build()).build())
@@ -504,42 +439,7 @@ public class FamilyServiceImplTest {
   @Test
   public void when_transfer_ownership_and_user_not_in_family_then_authorization_exception_thrown() {
     /* Given */
-    when(authService.getSessionUserDetails()).thenReturn(new UserDetails() {
-      @Override
-      public Collection<? extends GrantedAuthority> getAuthorities() {
-        return null;
-      }
-
-      @Override
-      public String getPassword() {
-        return TEST_USER_1.getPassword();
-      }
-
-      @Override
-      public String getUsername() {
-        return TEST_USER_1.getUsername();
-      }
-
-      @Override
-      public boolean isAccountNonExpired() {
-        return false;
-      }
-
-      @Override
-      public boolean isAccountNonLocked() {
-        return false;
-      }
-
-      @Override
-      public boolean isCredentialsNonExpired() {
-        return false;
-      }
-
-      @Override
-      public boolean isEnabled() {
-        return false;
-      }
-    });
+    when(userService.getRequestingUser()).thenReturn(TEST_USER_1);
     FamilyDto request = new FamilyDtoBuilder().withId(FAMILY_2.getId())
         .withOwner(new FamilyMemberDtoBuilder()
             .withUser(new UserDtoBuilder().withUsername(TEST_USER_1.getUsername()).build()).build())
@@ -554,42 +454,7 @@ public class FamilyServiceImplTest {
   @Test
   public void when_transfer_ownership_and_user_is_not_owner_then_authorization_exception_thrown() {
     /* Given */
-    when(authService.getSessionUserDetails()).thenReturn(new UserDetails() {
-      @Override
-      public Collection<? extends GrantedAuthority> getAuthorities() {
-        return null;
-      }
-
-      @Override
-      public String getPassword() {
-        return TEST_USER_2.getPassword();
-      }
-
-      @Override
-      public String getUsername() {
-        return TEST_USER_2.getUsername();
-      }
-
-      @Override
-      public boolean isAccountNonExpired() {
-        return false;
-      }
-
-      @Override
-      public boolean isAccountNonLocked() {
-        return false;
-      }
-
-      @Override
-      public boolean isCredentialsNonExpired() {
-        return false;
-      }
-
-      @Override
-      public boolean isEnabled() {
-        return false;
-      }
-    });
+    when(userService.getRequestingUser()).thenReturn(TEST_USER_2);
     FamilyDto request = new FamilyDtoBuilder().withId(FAMILY_3.getId())
         .withOwner(new FamilyMemberDtoBuilder()
             .withUser(new UserDtoBuilder().withUsername(TEST_USER_2.getUsername()).build()).build())
@@ -604,42 +469,7 @@ public class FamilyServiceImplTest {
   @Test
   public void when_transfer_ownership_and_new_owner_doesnt_exist_then_user_not_found_exception_thrown() {
     /* Given */
-    when(authService.getSessionUserDetails()).thenReturn(new UserDetails() {
-      @Override
-      public Collection<? extends GrantedAuthority> getAuthorities() {
-        return null;
-      }
-
-      @Override
-      public String getPassword() {
-        return TEST_USER_1.getPassword();
-      }
-
-      @Override
-      public String getUsername() {
-        return TEST_USER_1.getUsername();
-      }
-
-      @Override
-      public boolean isAccountNonExpired() {
-        return false;
-      }
-
-      @Override
-      public boolean isAccountNonLocked() {
-        return false;
-      }
-
-      @Override
-      public boolean isCredentialsNonExpired() {
-        return false;
-      }
-
-      @Override
-      public boolean isEnabled() {
-        return false;
-      }
-    });
+    when(userService.getRequestingUser()).thenReturn(TEST_USER_1);
     FamilyDto request = new FamilyDtoBuilder().withId(FAMILY_3.getId())
         .withOwner(new FamilyMemberDtoBuilder()
             .withUser(new UserDtoBuilder().withUsername("userthatdoesntexist").build()).build())
@@ -652,51 +482,16 @@ public class FamilyServiceImplTest {
   }
 
   @Test
-  public void when_transfer_ownership_and_new_owner_is_not_part_of_family_then_user_not_found_exception_thrown() {
+  public void when_transfer_ownership_and_new_owner_is_not_part_of_family_then_authorization_exception_thrown() {
     /* Given */
-    when(authService.getSessionUserDetails()).thenReturn(new UserDetails() {
-      @Override
-      public Collection<? extends GrantedAuthority> getAuthorities() {
-        return null;
-      }
-
-      @Override
-      public String getPassword() {
-        return TEST_USER_1.getPassword();
-      }
-
-      @Override
-      public String getUsername() {
-        return TEST_USER_1.getUsername();
-      }
-
-      @Override
-      public boolean isAccountNonExpired() {
-        return false;
-      }
-
-      @Override
-      public boolean isAccountNonLocked() {
-        return false;
-      }
-
-      @Override
-      public boolean isCredentialsNonExpired() {
-        return false;
-      }
-
-      @Override
-      public boolean isEnabled() {
-        return false;
-      }
-    });
+    when(userService.getRequestingUser()).thenReturn(TEST_USER_3);
     FamilyDto request = new FamilyDtoBuilder().withId(FAMILY_1.getId())
         .withOwner(new FamilyMemberDtoBuilder()
             .withUser(new UserDtoBuilder().withUsername(TEST_USER_2.getUsername()).build()).build())
         .build();
 
     /* Given */
-    assertThrows(UserNotFoundException.class, () -> {
+    assertThrows(AuthorizationException.class, () -> {
       familyService.transferOwnership(request);
     });
   }
