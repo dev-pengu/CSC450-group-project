@@ -6,10 +6,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -19,8 +19,6 @@ import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 import com.familyorg.familyorganizationapp.DTO.FamilyDto;
 import com.familyorg.familyorganizationapp.Exception.AuthorizationException;
 import com.familyorg.familyorganizationapp.Exception.FamilyNotFoundException;
@@ -151,43 +149,7 @@ public class InviteServiceImplTest {
   @Test
   public void when_permitted_and_create_one_time_code_then_code_generated() {
     /* Given */
-    when(authService.getSessionUserDetails()).thenReturn(new UserDetails() {
-      @Override
-      public Collection<? extends GrantedAuthority> getAuthorities() {
-        return null;
-      }
-
-      @Override
-      public String getPassword() {
-        return TEST_USER_1.getPassword();
-      }
-
-      @Override
-      public String getUsername() {
-        return TEST_USER_1.getUsername();
-      }
-
-      @Override
-      public boolean isAccountNonExpired() {
-        return false;
-      }
-
-      @Override
-      public boolean isAccountNonLocked() {
-        return false;
-      }
-
-      @Override
-      public boolean isCredentialsNonExpired() {
-        return false;
-      }
-
-      @Override
-      public boolean isEnabled() {
-        return false;
-      }
-    });
-
+    when(userService.getRequestingUser()).thenReturn(TEST_USER_1);
 
     /* When */
     MemberInvite generated =
@@ -204,42 +166,7 @@ public class InviteServiceImplTest {
   @Test
   public void when_permitted_and_create_one_time_with_role_then_code_generated() {
     /* Given */
-    when(authService.getSessionUserDetails()).thenReturn(new UserDetails() {
-      @Override
-      public Collection<? extends GrantedAuthority> getAuthorities() {
-        return null;
-      }
-
-      @Override
-      public String getPassword() {
-        return TEST_USER_1.getPassword();
-      }
-
-      @Override
-      public String getUsername() {
-        return TEST_USER_1.getUsername();
-      }
-
-      @Override
-      public boolean isAccountNonExpired() {
-        return false;
-      }
-
-      @Override
-      public boolean isAccountNonLocked() {
-        return false;
-      }
-
-      @Override
-      public boolean isCredentialsNonExpired() {
-        return false;
-      }
-
-      @Override
-      public boolean isEnabled() {
-        return false;
-      }
-    });
+    when(userService.getRequestingUser()).thenReturn(TEST_USER_1);
 
     /* When */
     MemberInvite generated = inviteService.createUniqueMemberInviteWithRole(FAMILY_1.getId(),
@@ -256,42 +183,7 @@ public class InviteServiceImplTest {
   @Test
   public void when_not_member_of_family_and_try_to_generate_code_then_authorization_exception_thrown() {
     /* Given */
-    when(authService.getSessionUserDetails()).thenReturn(new UserDetails() {
-      @Override
-      public Collection<? extends GrantedAuthority> getAuthorities() {
-        return null;
-      }
-
-      @Override
-      public String getPassword() {
-        return TEST_USER_2.getPassword();
-      }
-
-      @Override
-      public String getUsername() {
-        return TEST_USER_2.getUsername();
-      }
-
-      @Override
-      public boolean isAccountNonExpired() {
-        return false;
-      }
-
-      @Override
-      public boolean isAccountNonLocked() {
-        return false;
-      }
-
-      @Override
-      public boolean isCredentialsNonExpired() {
-        return false;
-      }
-
-      @Override
-      public boolean isEnabled() {
-        return false;
-      }
-    });
+    when(userService.getRequestingUser()).thenReturn(TEST_USER_2);
 
     /* When */
     assertThrows(AuthorizationException.class, () -> {
@@ -302,43 +194,7 @@ public class InviteServiceImplTest {
   @Test
   public void when_requesting_user_lt_adult_level_and_try_to_generate_code_then_authorization_exception_thrown() {
     /* Given */
-
-    when(authService.getSessionUserDetails()).thenReturn(new UserDetails() {
-      @Override
-      public Collection<? extends GrantedAuthority> getAuthorities() {
-        return null;
-      }
-
-      @Override
-      public String getPassword() {
-        return TEST_USER_3.getPassword();
-      }
-
-      @Override
-      public String getUsername() {
-        return TEST_USER_3.getUsername();
-      }
-
-      @Override
-      public boolean isAccountNonExpired() {
-        return false;
-      }
-
-      @Override
-      public boolean isAccountNonLocked() {
-        return false;
-      }
-
-      @Override
-      public boolean isCredentialsNonExpired() {
-        return false;
-      }
-
-      @Override
-      public boolean isEnabled() {
-        return false;
-      }
-    });
+    when(userService.getRequestingUser()).thenReturn(TEST_USER_3);
 
     /* When */
     assertThrows(AuthorizationException.class, () -> {
@@ -349,42 +205,7 @@ public class InviteServiceImplTest {
   @Test
   public void when_family_doesnt_exist_and_try_to_generate_code_then_familynotfound_exception_thrown() {
     /* Given */
-    when(authService.getSessionUserDetails()).thenReturn(new UserDetails() {
-      @Override
-      public Collection<? extends GrantedAuthority> getAuthorities() {
-        return null;
-      }
-
-      @Override
-      public String getPassword() {
-        return TEST_USER_1.getPassword();
-      }
-
-      @Override
-      public String getUsername() {
-        return TEST_USER_1.getUsername();
-      }
-
-      @Override
-      public boolean isAccountNonExpired() {
-        return false;
-      }
-
-      @Override
-      public boolean isAccountNonLocked() {
-        return false;
-      }
-
-      @Override
-      public boolean isCredentialsNonExpired() {
-        return false;
-      }
-
-      @Override
-      public boolean isEnabled() {
-        return false;
-      }
-    });
+    when(userService.getRequestingUser()).thenReturn(TEST_USER_1);
 
     /* When */
     assertThrows(FamilyNotFoundException.class, () -> {
@@ -395,42 +216,7 @@ public class InviteServiceImplTest {
   @Test
   public void when_permitted_and_try_to_generate_permanent_code_then_code_generated() {
     /* Given */
-    when(authService.getSessionUserDetails()).thenReturn(new UserDetails() {
-      @Override
-      public Collection<? extends GrantedAuthority> getAuthorities() {
-        return null;
-      }
-
-      @Override
-      public String getPassword() {
-        return TEST_USER_1.getPassword();
-      }
-
-      @Override
-      public String getUsername() {
-        return TEST_USER_1.getUsername();
-      }
-
-      @Override
-      public boolean isAccountNonExpired() {
-        return false;
-      }
-
-      @Override
-      public boolean isAccountNonLocked() {
-        return false;
-      }
-
-      @Override
-      public boolean isCredentialsNonExpired() {
-        return false;
-      }
-
-      @Override
-      public boolean isEnabled() {
-        return false;
-      }
-    });
+    when(userService.getRequestingUser()).thenReturn(TEST_USER_1);
 
     /* When */
     FamilyDto response = inviteService.generatePersistentMemberInvite(FAMILY_1.getId());
@@ -444,42 +230,7 @@ public class InviteServiceImplTest {
   @Test
   public void when_not_part_of_family_and_try_to_generate_permanent_invite_code_then_authorizationexception_thrown() {
     /* Given */
-    when(authService.getSessionUserDetails()).thenReturn(new UserDetails() {
-      @Override
-      public Collection<? extends GrantedAuthority> getAuthorities() {
-        return null;
-      }
-
-      @Override
-      public String getPassword() {
-        return TEST_USER_2.getPassword();
-      }
-
-      @Override
-      public String getUsername() {
-        return TEST_USER_2.getUsername();
-      }
-
-      @Override
-      public boolean isAccountNonExpired() {
-        return false;
-      }
-
-      @Override
-      public boolean isAccountNonLocked() {
-        return false;
-      }
-
-      @Override
-      public boolean isCredentialsNonExpired() {
-        return false;
-      }
-
-      @Override
-      public boolean isEnabled() {
-        return false;
-      }
-    });
+    when(userService.getRequestingUser()).thenReturn(TEST_USER_2);
 
     /* When */
     assertThrows(AuthorizationException.class, () -> {
@@ -490,42 +241,7 @@ public class InviteServiceImplTest {
   @Test
   public void when_not_admin_and_try_to_generate_permanent_invite_code_then_authorizationexception_thrown() {
     /* Given */
-    when(authService.getSessionUserDetails()).thenReturn(new UserDetails() {
-      @Override
-      public Collection<? extends GrantedAuthority> getAuthorities() {
-        return null;
-      }
-
-      @Override
-      public String getPassword() {
-        return TEST_USER_3.getPassword();
-      }
-
-      @Override
-      public String getUsername() {
-        return TEST_USER_3.getUsername();
-      }
-
-      @Override
-      public boolean isAccountNonExpired() {
-        return false;
-      }
-
-      @Override
-      public boolean isAccountNonLocked() {
-        return false;
-      }
-
-      @Override
-      public boolean isCredentialsNonExpired() {
-        return false;
-      }
-
-      @Override
-      public boolean isEnabled() {
-        return false;
-      }
-    });
+    when(userService.getRequestingUser()).thenReturn(TEST_USER_3);
 
     /* When */
     assertThrows(AuthorizationException.class, () -> {
@@ -536,42 +252,7 @@ public class InviteServiceImplTest {
   @Test
   public void when_family_doesnt_exist_and_try_to_generate_permanent_code_then_familynotfoundexception_thrown() {
     /* Given */
-    when(authService.getSessionUserDetails()).thenReturn(new UserDetails() {
-      @Override
-      public Collection<? extends GrantedAuthority> getAuthorities() {
-        return null;
-      }
-
-      @Override
-      public String getPassword() {
-        return TEST_USER_1.getPassword();
-      }
-
-      @Override
-      public String getUsername() {
-        return TEST_USER_1.getUsername();
-      }
-
-      @Override
-      public boolean isAccountNonExpired() {
-        return false;
-      }
-
-      @Override
-      public boolean isAccountNonLocked() {
-        return false;
-      }
-
-      @Override
-      public boolean isCredentialsNonExpired() {
-        return false;
-      }
-
-      @Override
-      public boolean isEnabled() {
-        return false;
-      }
-    });
+    when(userService.getRequestingUser()).thenReturn(TEST_USER_1);
 
     /* When */
     assertThrows(FamilyNotFoundException.class, () -> {
@@ -585,42 +266,7 @@ public class InviteServiceImplTest {
     FAMILY_1.setInviteCode("68e7fdfb-8f44-4ca1-96d9-d9c462bb19ba");
     InviteCode code = FAMILY_1.getInviteCodeObj();
     String eventColor = "ffffff";
-    when(authService.getSessionUserDetails()).thenReturn(new UserDetails() {
-      @Override
-      public Collection<? extends GrantedAuthority> getAuthorities() {
-        return null;
-      }
-
-      @Override
-      public String getPassword() {
-        return TEST_USER_4.getPassword();
-      }
-
-      @Override
-      public String getUsername() {
-        return TEST_USER_4.getUsername();
-      }
-
-      @Override
-      public boolean isAccountNonExpired() {
-        return false;
-      }
-
-      @Override
-      public boolean isAccountNonLocked() {
-        return false;
-      }
-
-      @Override
-      public boolean isCredentialsNonExpired() {
-        return false;
-      }
-
-      @Override
-      public boolean isEnabled() {
-        return false;
-      }
-    });
+    when(userService.getRequestingUser()).thenReturn(TEST_USER_4);
 
     /* When */
     inviteService.verifyMemberInvite(code, eventColor);
@@ -636,42 +282,7 @@ public class InviteServiceImplTest {
     /* Given */
     InviteCode code = FAMILY_1.getInviteCodeObj();
     String eventColor = "ffffff";
-    when(authService.getSessionUserDetails()).thenReturn(new UserDetails() {
-      @Override
-      public Collection<? extends GrantedAuthority> getAuthorities() {
-        return null;
-      }
-
-      @Override
-      public String getPassword() {
-        return null;
-      }
-
-      @Override
-      public String getUsername() {
-        return null;
-      }
-
-      @Override
-      public boolean isAccountNonExpired() {
-        return false;
-      }
-
-      @Override
-      public boolean isAccountNonLocked() {
-        return false;
-      }
-
-      @Override
-      public boolean isCredentialsNonExpired() {
-        return false;
-      }
-
-      @Override
-      public boolean isEnabled() {
-        return false;
-      }
-    });
+    doThrow(AuthorizationException.class).when(userService).getRequestingUser();
 
     /* When */
     assertThrows(AuthorizationException.class, () -> {
@@ -687,43 +298,9 @@ public class InviteServiceImplTest {
       code = new InviteCode(true);
     }
     String eventColor = "ffffff";
-    when(authService.getSessionUserDetails()).thenReturn(new UserDetails() {
-      @Override
-      public Collection<? extends GrantedAuthority> getAuthorities() {
-        return null;
-      }
-
-      @Override
-      public String getPassword() {
-        return TEST_USER_4.getPassword();
-      }
-
-      @Override
-      public String getUsername() {
-        return TEST_USER_4.getUsername();
-      }
-
-      @Override
-      public boolean isAccountNonExpired() {
-        return false;
-      }
-
-      @Override
-      public boolean isAccountNonLocked() {
-        return false;
-      }
-
-      @Override
-      public boolean isCredentialsNonExpired() {
-        return false;
-      }
-
-      @Override
-      public boolean isEnabled() {
-        return false;
-      }
-    });
+    when(userService.getRequestingUser()).thenReturn(TEST_USER_4);
     InviteCode finalCode = code;
+
     /* When */
     assertThrows(InviteCodeNotFoundException.class, () -> {
       inviteService.verifyMemberInvite(finalCode, eventColor);
@@ -735,42 +312,7 @@ public class InviteServiceImplTest {
     /* Given */
     InviteCode code = INVITE_1.getInviteCodeObj();
     String eventColor = "ffffff";
-    when(authService.getSessionUserDetails()).thenReturn(new UserDetails() {
-      @Override
-      public Collection<? extends GrantedAuthority> getAuthorities() {
-        return null;
-      }
-
-      @Override
-      public String getPassword() {
-        return TEST_USER_2.getPassword();
-      }
-
-      @Override
-      public String getUsername() {
-        return TEST_USER_2.getUsername();
-      }
-
-      @Override
-      public boolean isAccountNonExpired() {
-        return false;
-      }
-
-      @Override
-      public boolean isAccountNonLocked() {
-        return false;
-      }
-
-      @Override
-      public boolean isCredentialsNonExpired() {
-        return false;
-      }
-
-      @Override
-      public boolean isEnabled() {
-        return false;
-      }
-    });
+    when(userService.getRequestingUser()).thenReturn(TEST_USER_2);
 
     /* When */
     inviteService.verifyMemberInvite(code, eventColor);
@@ -790,42 +332,7 @@ public class InviteServiceImplTest {
       code = new InviteCode(false);
     }
     String eventColor = "ffffff";
-    when(authService.getSessionUserDetails()).thenReturn(new UserDetails() {
-      @Override
-      public Collection<? extends GrantedAuthority> getAuthorities() {
-        return null;
-      }
-
-      @Override
-      public String getPassword() {
-        return TEST_USER_2.getPassword();
-      }
-
-      @Override
-      public String getUsername() {
-        return TEST_USER_2.getUsername();
-      }
-
-      @Override
-      public boolean isAccountNonExpired() {
-        return false;
-      }
-
-      @Override
-      public boolean isAccountNonLocked() {
-        return false;
-      }
-
-      @Override
-      public boolean isCredentialsNonExpired() {
-        return false;
-      }
-
-      @Override
-      public boolean isEnabled() {
-        return false;
-      }
-    });
+    when(userService.getRequestingUser()).thenReturn(TEST_USER_2);
 
     InviteCode finalCode = code;
     /* When */
@@ -839,42 +346,7 @@ public class InviteServiceImplTest {
     /* Given */
     InviteCode code = INVITE_1.getInviteCodeObj();
     String eventColor = "ffffff";
-    when(authService.getSessionUserDetails()).thenReturn(new UserDetails() {
-      @Override
-      public Collection<? extends GrantedAuthority> getAuthorities() {
-        return null;
-      }
-
-      @Override
-      public String getPassword() {
-        return TEST_USER_4.getPassword();
-      }
-
-      @Override
-      public String getUsername() {
-        return TEST_USER_4.getUsername();
-      }
-
-      @Override
-      public boolean isAccountNonExpired() {
-        return false;
-      }
-
-      @Override
-      public boolean isAccountNonLocked() {
-        return false;
-      }
-
-      @Override
-      public boolean isCredentialsNonExpired() {
-        return false;
-      }
-
-      @Override
-      public boolean isEnabled() {
-        return false;
-      }
-    });
+    when(userService.getRequestingUser()).thenReturn(TEST_USER_4);
 
     /* When */
     assertThrows(AuthorizationException.class, () -> {
@@ -887,42 +359,7 @@ public class InviteServiceImplTest {
     /* Given */
     InviteCode code = INVITE_3.getInviteCodeObj();
     String eventColor = "ffffff";
-    when(authService.getSessionUserDetails()).thenReturn(new UserDetails() {
-      @Override
-      public Collection<? extends GrantedAuthority> getAuthorities() {
-        return null;
-      }
-
-      @Override
-      public String getPassword() {
-        return TEST_USER_2.getPassword();
-      }
-
-      @Override
-      public String getUsername() {
-        return TEST_USER_2.getUsername();
-      }
-
-      @Override
-      public boolean isAccountNonExpired() {
-        return false;
-      }
-
-      @Override
-      public boolean isAccountNonLocked() {
-        return false;
-      }
-
-      @Override
-      public boolean isCredentialsNonExpired() {
-        return false;
-      }
-
-      @Override
-      public boolean isEnabled() {
-        return false;
-      }
-    });
+    when(userService.getRequestingUser()).thenReturn(TEST_USER_2);
 
     /* When */
     assertThrows(FamilyNotFoundException.class, () -> {

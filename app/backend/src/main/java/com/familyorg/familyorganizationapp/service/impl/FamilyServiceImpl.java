@@ -9,7 +9,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import com.familyorg.familyorganizationapp.DTO.FamilyDto;
 import com.familyorg.familyorganizationapp.DTO.FamilyMemberDto;
@@ -24,7 +23,6 @@ import com.familyorg.familyorganizationapp.domain.User;
 import com.familyorg.familyorganizationapp.domain.id.FamilyMemberId;
 import com.familyorg.familyorganizationapp.repository.FamilyMemberRepository;
 import com.familyorg.familyorganizationapp.repository.FamilyRepository;
-import com.familyorg.familyorganizationapp.service.AuthService;
 import com.familyorg.familyorganizationapp.service.FamilyService;
 import com.familyorg.familyorganizationapp.service.UserService;
 import com.familyorg.familyorganizationapp.util.ColorUtil;
@@ -39,21 +37,12 @@ public class FamilyServiceImpl implements FamilyService {
   FamilyMemberRepository familyMemberRepository;
   @Autowired
   UserService userService;
-  @Autowired
-  AuthService authService;
 
   @Override
   @Transactional
   public FamilyDto createFamily(FamilyDto familyRequest)
       throws BadRequestException, UserNotFoundException {
-    UserDetails userDetails = authService.getSessionUserDetails();
-    if (userDetails.getUsername() == null) {
-      throw new AuthorizationException("No authenticated user found", true);
-    }
-    User ownerUser = userService.getUserByUsername(userDetails.getUsername());
-    if (ownerUser == null) {
-      throw new UserNotFoundException("User not found");
-    }
+    User ownerUser = userService.getRequestingUser();
     if (familyRequest.getEventColor() == null || familyRequest.getName() == null
         || familyRequest.getOwner() == null || familyRequest.getTimezone() == null) {
       throw new BadRequestException("Request is missing one or more required fields");
@@ -92,15 +81,7 @@ public class FamilyServiceImpl implements FamilyService {
     if (family.isEmpty()) {
       throw new FamilyNotFoundException("Family not found");
     }
-    UserDetails userDetails = authService.getSessionUserDetails();
-    if (userDetails.getUsername() == null) {
-      throw new AuthorizationException("No authenticated user found", true);
-    }
-    User requestingUser = userService.getUserByUsername(userDetails.getUsername());
-
-    if (requestingUser == null) {
-      throw new UserNotFoundException("User not found");
-    }
+    User requestingUser = userService.getRequestingUser();
     final Long requestingUserId = requestingUser.getId();
     family.get().getMembers().stream()
         .filter(familyMember -> familyMember.getUser().getId().equals(requestingUserId)).findAny()
@@ -116,15 +97,12 @@ public class FamilyServiceImpl implements FamilyService {
 
   @Override
   public List<FamilyDto> getFamiliesByUser(Long userId) throws UserNotFoundException {
-    UserDetails userDetails = authService.getSessionUserDetails();
-    if (userDetails.getUsername() == null) {
-      throw new AuthorizationException("No authenticated user found", true);
-    }
+    User requestingUser = userService.getRequestingUser();
     User user = userService.getUserById(userId);
     if (user == null) {
       throw new UserNotFoundException("User with id " + userId + " not found");
     }
-    if (!user.getUsername().equals(userDetails.getUsername())) {
+    if (!user.getUsername().equals(requestingUser.getUsername())) {
       throw new AuthorizationException("User supplied does not match current authenticated user",
           false);
     }
@@ -141,14 +119,7 @@ public class FamilyServiceImpl implements FamilyService {
   @Transactional
   public FamilyDto updateFamily(FamilyDto familyRequest)
       throws FamilyNotFoundException, AuthorizationException, UserNotFoundException {
-    UserDetails userDetails = authService.getSessionUserDetails();
-    if (userDetails.getUsername() == null) {
-      throw new AuthorizationException("No authenticated user found", true);
-    }
-    User user = userService.getUserByUsername(userDetails.getUsername());
-    if (user == null) {
-      throw new UserNotFoundException("User not found");
-    }
+    User user = userService.getRequestingUser();
 
     Optional<Family> family = familyRepository.findById(familyRequest.getId());
     if (family.isEmpty()) {
@@ -194,14 +165,7 @@ public class FamilyServiceImpl implements FamilyService {
   @Override
   @Transactional
   public void deleteFamily(Long id) throws FamilyNotFoundException, AuthorizationException {
-    UserDetails userDetails = authService.getSessionUserDetails();
-    if (userDetails.getUsername() == null) {
-      throw new AuthorizationException("No authenticated user found", true);
-    }
-    User user = userService.getUserByUsername(userDetails.getUsername());
-    if (user == null) {
-      throw new UserNotFoundException("User not found");
-    }
+    User user = userService.getRequestingUser();
     Optional<FamilyMembers> familyRelation =
         familyMemberRepository.findById(new FamilyMemberId(user.getId(), id));
     if (familyRelation.isEmpty()) {
@@ -294,15 +258,6 @@ public class FamilyServiceImpl implements FamilyService {
    */
   void setUserService(UserService userService) {
     this.userService = userService;
-  }
-
-  /**
-   * This should only be called for testing to mock the injected class
-   *
-   * @param authService
-   */
-  void setAuthService(AuthService authService) {
-    this.authService = authService;
   }
 
 }

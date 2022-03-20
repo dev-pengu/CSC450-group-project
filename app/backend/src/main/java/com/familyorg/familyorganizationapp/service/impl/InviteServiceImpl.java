@@ -6,14 +6,12 @@ import javax.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import com.familyorg.familyorganizationapp.DTO.FamilyDto;
 import com.familyorg.familyorganizationapp.Exception.AuthorizationException;
 import com.familyorg.familyorganizationapp.Exception.BadRequestException;
 import com.familyorg.familyorganizationapp.Exception.FamilyNotFoundException;
 import com.familyorg.familyorganizationapp.Exception.InviteCodeNotFoundException;
-import com.familyorg.familyorganizationapp.Exception.UserNotFoundException;
 import com.familyorg.familyorganizationapp.domain.Family;
 import com.familyorg.familyorganizationapp.domain.FamilyMembers;
 import com.familyorg.familyorganizationapp.domain.InviteCode;
@@ -48,12 +46,9 @@ public class InviteServiceImpl implements InviteService {
     if (family.isEmpty()) {
       throw new FamilyNotFoundException("Family with id " + familyId + " not found");
     }
-    UserDetails userDetails = authService.getSessionUserDetails();
-    if (userDetails.getUsername() == null) {
-      throw new AuthorizationException("No authenticated user found", true);
-    }
+    User requestingUser = userService.getRequestingUser();
     FamilyMembers userMemberEntry = family.get().getMembers().stream()
-        .filter(member -> member.getUser().getUsername().equals(userDetails.getUsername())
+        .filter(member -> member.getUser().getUsername().equals(requestingUser.getUsername())
             && member.getRole().getLevel() >= Role.ADULT.getLevel())
         .findFirst().orElseThrow(AuthorizationException::new);
     MemberInvite invite = new MemberInvite(family.get(), userEmail);
@@ -69,12 +64,9 @@ public class InviteServiceImpl implements InviteService {
     if (family.isEmpty()) {
       throw new FamilyNotFoundException("Family with id " + familyId + " not found");
     }
-    UserDetails userDetails = authService.getSessionUserDetails();
-    if (userDetails.getUsername() == null) {
-      throw new AuthorizationException("No authenticated user found", true);
-    }
+    User requestingUser = userService.getRequestingUser();
     FamilyMembers userMemberEntry = family.get().getMembers().stream()
-        .filter(member -> member.getUser().getUsername().equals(userDetails.getUsername())
+        .filter(member -> member.getUser().getUsername().equals(requestingUser.getUsername())
             && member.getRole().getLevel() >= Role.ADULT.getLevel())
         .findFirst().orElseThrow(AuthorizationException::new);
     MemberInvite invite = new MemberInvite(family.get(), userEmail, role);
@@ -90,12 +82,9 @@ public class InviteServiceImpl implements InviteService {
     if (family.isEmpty()) {
       throw new FamilyNotFoundException("Family with id " + familyId + " not found");
     }
-    UserDetails userDetails = authService.getSessionUserDetails();
-    if (userDetails.getUsername() == null) {
-      throw new AuthorizationException("No authenticated user found", true);
-    }
+    User requestingUser = userService.getRequestingUser();
     FamilyMembers userMemberEntry = family.get().getMembers().stream()
-        .filter(member -> member.getUser().getUsername().equals(userDetails.getUsername())
+        .filter(member -> member.getUser().getUsername().equals(requestingUser.getUsername())
             && member.getRole().getLevel() >= Role.ADMIN.getLevel())
         .findFirst().orElseThrow(AuthorizationException::new);
 
@@ -103,7 +92,7 @@ public class InviteServiceImpl implements InviteService {
     family.get().setInviteCode(inviteCode);
     Family updatedFamily = familyService.updateFamily(family.get());
     return FamilyDto.fromFamilyObj(updatedFamily,
-        userService.getUserByUsername(userDetails.getUsername()));
+        userService.getUserByUsername(requestingUser.getUsername()));
   }
 
   @Override
@@ -111,15 +100,7 @@ public class InviteServiceImpl implements InviteService {
   public void verifyMemberInvite(InviteCode invite, String eventColor)
       throws AuthorizationException, FamilyNotFoundException, InviteCodeNotFoundException {
     // Get the currently signed in user
-    UserDetails userDetails = authService.getSessionUserDetails();
-    if (userDetails.getUsername() == null) {
-      throw new AuthorizationException("No authenticated user found", true);
-    }
-    // Get the user object associated with the currently signed in user
-    User user = userService.getUserByUsername(userDetails.getUsername());
-    if (user == null) {
-      throw new UserNotFoundException("User not found with username " + userDetails.getUsername());
-    }
+    User requestingUser = userService.getRequestingUser();
     if (!ColorUtil.isValidHexCode(eventColor)) {
       throw new BadRequestException("Event color is not a valid hexcode");
     }
@@ -130,7 +111,7 @@ public class InviteServiceImpl implements InviteService {
         throw new InviteCodeNotFoundException("Invalid invite code");
       }
       // Add the user to the family
-      FamilyMembers member = new FamilyMembers(user, family, Role.CHILD, eventColor);
+      FamilyMembers member = new FamilyMembers(requestingUser, family, Role.CHILD, eventColor);
       family.addMember(member);
       familyService.updateFamily(family);
     } else {
@@ -139,7 +120,7 @@ public class InviteServiceImpl implements InviteService {
       if (memberInvite == null) {
         throw new InviteCodeNotFoundException("Invalid invite code");
       }
-      if (!memberInvite.getUserEmail().equals(user.getEmail())) {
+      if (!memberInvite.getUserEmail().equals(requestingUser.getEmail())) {
         throw new AuthorizationException("You are not authorized to use this invite code", false);
       }
       // Get the family from the invite
@@ -150,7 +131,7 @@ public class InviteServiceImpl implements InviteService {
       }
       // Add the user to the family
       FamilyMembers member =
-          new FamilyMembers(user, family.get(), memberInvite.getRole(), eventColor);
+          new FamilyMembers(requestingUser, family.get(), memberInvite.getRole(), eventColor);
       family.get().addMember(member);
       familyService.updateFamily(family.get());
       // The code has been used, so remove it
@@ -160,10 +141,16 @@ public class InviteServiceImpl implements InviteService {
 
   @Override
   public List<MemberInvite> getInvites(Long familyId) throws FamilyNotFoundException {
+    User requestingUser = userService.getRequestingUser();
+
     Optional<Family> family = familyService.getFamilyById(familyId);
     if (family.isEmpty()) {
       throw new FamilyNotFoundException("Family with id " + familyId + " not found");
     }
+    FamilyMembers userMemberEntry = family.get().getMembers().stream()
+        .filter(member -> member.getUser().getUsername().equals(requestingUser.getUsername())
+            && member.getRole().getLevel() >= Role.ADULT.getLevel())
+        .findFirst().orElseThrow(AuthorizationException::new);
 
     return memberInviteRepository.getByFamilyId(family.get().getId());
   }
