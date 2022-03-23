@@ -15,6 +15,7 @@
     "core-js": "^3.6.5",
     "vue": "^2.6.14",
     "vue-router": "^3.5.3",
+    "vuetify": "^2.6.0",
     "vuex": "^3.6.2",
     "vuex-persistedstate": "^4.1.0"
   },
@@ -31,13 +32,20 @@
     "babel-core": "^6.26.3",
     "babel-eslint": "^10.1.0",
     "eslint": "^6.7.2",
+    "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-import": "^2.20.2",
     "eslint-plugin-vue": "^7.0.0",
+    "less": "^4.1.2",
+    "less-loader": "^10.2.0",
     "lint-staged": "^12.3.3",
     "prettier": "^2.5.1",
+    "sass": "~1.32.0",
+    "sass-loader": "^10.0.0",
     "typescript": "~3.9.3",
+    "vue-cli-plugin-vuetify": "~2.4.7",
     "vue-jest": "^3.0.7",
     "vue-template-compiler": "^2.6.14",
+    "vuetify-loader": "^1.7.0",
     "webpack": "^5.68.0"
   },
   "gitHooks": {

@@ -19,7 +19,7 @@ public class CustomLogoutSuccessHandler implements LogoutSuccessHandler, Seriali
 
 	private static final long serialVersionUID = -1862221542887044893L;
 	private Logger LOG = LoggerFactory.getLogger(CustomLogoutSuccessHandler.class);
-	
+
 	@Override
 	public void onLogoutSuccess(HttpServletRequest request, HttpServletResponse response,
 			Authentication authentication) throws IOException, ServletException {
@@ -27,12 +27,12 @@ public class CustomLogoutSuccessHandler implements LogoutSuccessHandler, Seriali
 			SecurityContextHolder.getContext().setAuthentication(null);
 			SecurityContextHolder.clearContext();
 			response.setStatus(HttpServletResponse.SC_ACCEPTED);
-			response.addHeader("Content-Type", "applicatin/json");
+			response.addHeader("Content-Type", "application/json");
 			response.getWriter().write("success");
 		} catch (Exception e) {
 			try {
 				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-				response.addHeader("Content-Type", "applicatin/json");
+				response.addHeader("Content-Type", "application/json");
 				response.getWriter().write("failed");
 			} catch (IOException ioe) {
 				LOG.error("Error", ioe);

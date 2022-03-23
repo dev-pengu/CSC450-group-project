@@ -1,14 +1,50 @@
 <template>
-    <div class="login">
-        <img alt="Logo" src="../assets/logo.png">
-        <form @submit.prevent="submit()">
-            <p>Dont have an account? <router-link to="/signup">Sign up!</router-link></p>
-            <input v-model="formData.username" placeholder="Username"/>
-            <input v-model="formData.password" type="password" placeholder="Password"/>
-            <button type="submit">Login</button>
-            <p v-if="error" class="error" v-text="errors.join('<br/>')"></p>
-        </form>
-    </div>
+  <div class="login">
+    <v-img height="250" contain src="../assets/logo.png"></v-img>
+    <v-row justify="center">
+      <v-col cols="10" md="4">
+        <v-card elevation="4">
+          <v-card-text>
+            <v-form>
+              <v-row>
+                <v-col cols="12">
+                  <v-text-field v-model="formData.username" prepend-icon="mdi-account" label="Username" />
+                </v-col>
+              </v-row>
+              <v-row>
+                <v-col cols="12">
+                  <v-text-field
+                    v-model="formData.password"
+                    prepend-icon="mdi-lock"
+                    type="password"
+                    label="Password"
+                    @keyup.enter="submit"
+                  />
+                </v-col>
+              </v-row>
+            </v-form>
+            <v-row>
+              <v-col cols="12" class="py-0">
+                <v-alert v-if="error" class="mb-0" text type="error">{{ errorMsg }}</v-alert>
+              </v-col>
+            </v-row>
+          </v-card-text>
+          <v-card-actions>
+            <v-row justify="center">
+              <v-col cols="12" sm="6">
+                <v-btn block color="primary" elevation="2" :loading="loading" :disabled="loading" @click="submit"
+                  >Login</v-btn
+                >
+              </v-col>
+            </v-row>
+          </v-card-actions>
+          <v-card-text>
+            <p class="ma-0 text-center">Don't have an account? <router-link to="/signup">Sign up now!</router-link></p>
+          </v-card-text>
+        </v-card>
+      </v-col>
+    </v-row>
+  </div>
 </template>
 
 <script>
@@ -23,14 +59,17 @@ export default {
       password: '',
     },
     error: false,
-    errors: [],
+    errorMsg: '',
+    loading: false,
   }),
   methods: {
     ...mapActions(['login']),
     async submit() {
+      this.loading = true;
       this.error = false;
       this.errors = [];
       if (this.formData.username === '' || this.formData.password === '') {
+        this.loading = false;
         return;
       }
       try {
@@ -38,32 +77,24 @@ export default {
         if (res.status === 200) {
           this.$router.push('/');
         } else {
-          this.errors.push('Error with credentials');
           this.error = true;
+          console.log('test');
+          this.errorMsg('Username or password is incorrect');
         }
       } catch (err) {
+        this.error = true;
         const error = { err };
         if (error.err.isAxiosError) {
-          this.errors.push(error.err.response.data);
+          this.errorMsg = error.err.response.data;
         } else {
-          this.errors.push(err);
+          this.errorMsg = err;
         }
-        this.error = true;
       }
+
+      this.loading = false;
     },
   },
 };
 </script>
 
-<style>
-    .login form input{
-        display: block;
-        width: 100%;
-        margin-left: auto;
-        margin-right: auto;
-        width: min(50%, 250px);
-        margin-bottom: 1rem;
-        font-size: 16px;
-        padding: 5px;
-    }
-</style>
+<style scoped lang="less"></style>

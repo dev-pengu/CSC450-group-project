@@ -1,7 +1,12 @@
 package com.familyorg.familyorganizationapp.DTO;
 
+import com.familyorg.familyorganizationapp.DTO.builder.FamilyDtoBuilder;
+import com.familyorg.familyorganizationapp.domain.Family;
+import com.familyorg.familyorganizationapp.domain.User;
+
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class FamilyDto {
 	private Long id;
@@ -12,8 +17,8 @@ public class FamilyDto {
 	private Set<FamilyMemberDto> members;
 	private FamilyMemberDto owner;
 	private UserDto requestingUser;
-	
-	public FamilyDto(Long id, String name, String eventColor, String timezone, String inviteCode, 
+
+	public FamilyDto(Long id, String name, String eventColor, String timezone, String inviteCode,
 			FamilyMemberDto owner, Set<FamilyMemberDto> members, UserDto requestingUser) {
 		super();
 		this.id = id;
@@ -45,7 +50,7 @@ public class FamilyDto {
 	public Set<FamilyMemberDto> getMembers() {
 		return members;
 	}
-	
+
 	public FamilyMemberDto getOwner() {
 		return owner;
 	}
@@ -53,9 +58,29 @@ public class FamilyDto {
 	public String getTimezone() {
 		return timezone;
 	}
-	
+
 	public UserDto getRequestingUser() {
 		return requestingUser;
+	}
+
+	public static FamilyDto fromFamilyObj(Family family, User requestingUser) {
+		return new FamilyDtoBuilder()
+				.withId(family.getId())
+				.withEventColor(family.getEventColor())
+				.withMembers(
+						family.getMembers()
+						.stream()
+						.map(familyMember -> {
+							FamilyMemberDto memberDto
+									= FamilyMemberDto.fromFamilyMemberObj(familyMember);
+							return memberDto;
+						})
+						.collect(Collectors.toSet()))
+				.withName(family.getName())
+				.withTimezone(family.getTimezone())
+				.withRequestingUser(UserDto.fromUserObj(requestingUser))
+				.withInviteCode(family.getInviteCodeObj().getInviteCodeString())
+				.build();
 	}
 
 	@Override
@@ -83,6 +108,6 @@ public class FamilyDto {
 				&& Objects.equals(name, other.name) && Objects.equals(timezone, other.timezone)
 				&& Objects.equals(requestingUser, other.requestingUser);
 	}
-	
-	
+
+
 }

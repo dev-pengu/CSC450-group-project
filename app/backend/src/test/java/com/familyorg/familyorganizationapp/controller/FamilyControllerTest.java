@@ -1,59 +1,78 @@
 package com.familyorg.familyorganizationapp.controller;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-
-import com.familyorg.familyorganizationapp.DTO.FamilyMemberDto;
-import com.familyorg.familyorganizationapp.DTO.UserDto;
-import com.familyorg.familyorganizationapp.DTO.builder.FamilyDtoBuilder;
-import com.familyorg.familyorganizationapp.DTO.builder.FamilyMemberDtoBuilder;
-import com.familyorg.familyorganizationapp.DTO.builder.UserDtoBuilder;
-import com.familyorg.familyorganizationapp.Exception.AuthorizationException;
-import com.familyorg.familyorganizationapp.Exception.BadRequestException;
-import com.familyorg.familyorganizationapp.Exception.FamilyNotFoundException;
-import com.familyorg.familyorganizationapp.Exception.UserNotFoundException;
-import com.familyorg.familyorganizationapp.service.impl.FamilyServiceImpl;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-import org.springframework.http.ResponseEntity;
-
-import com.familyorg.familyorganizationapp.DTO.FamilyDto;
-import com.familyorg.familyorganizationapp.domain.Role;
-import com.familyorg.familyorganizationapp.service.FamilyService;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import javax.mail.MessagingException;
+import javax.mail.internet.AddressException;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.springframework.http.ResponseEntity;
+import com.familyorg.familyorganizationapp.DTO.ErrorDto;
+import com.familyorg.familyorganizationapp.DTO.FamilyDto;
+import com.familyorg.familyorganizationapp.DTO.FamilyMemberDto;
+import com.familyorg.familyorganizationapp.DTO.MemberInviteDto;
+import com.familyorg.familyorganizationapp.DTO.UserDto;
+import com.familyorg.familyorganizationapp.DTO.builder.FamilyDtoBuilder;
+import com.familyorg.familyorganizationapp.DTO.builder.FamilyMemberDtoBuilder;
+import com.familyorg.familyorganizationapp.DTO.builder.MemberInviteDtoBuilder;
+import com.familyorg.familyorganizationapp.DTO.builder.UserDtoBuilder;
+import com.familyorg.familyorganizationapp.Exception.AuthorizationException;
+import com.familyorg.familyorganizationapp.Exception.BadRequestException;
+import com.familyorg.familyorganizationapp.Exception.FamilyNotFoundException;
+import com.familyorg.familyorganizationapp.Exception.InviteCodeNotFoundException;
+import com.familyorg.familyorganizationapp.Exception.UserNotFoundException;
+import com.familyorg.familyorganizationapp.domain.Family;
+import com.familyorg.familyorganizationapp.domain.FamilyMembers;
+import com.familyorg.familyorganizationapp.domain.InviteCode;
+import com.familyorg.familyorganizationapp.domain.MemberInvite;
+import com.familyorg.familyorganizationapp.domain.Role;
+import com.familyorg.familyorganizationapp.domain.User;
+import com.familyorg.familyorganizationapp.service.FamilyService;
+import com.familyorg.familyorganizationapp.service.InviteService;
+import com.familyorg.familyorganizationapp.service.MessagingService;
+import com.familyorg.familyorganizationapp.service.impl.FamilyServiceImpl;
+import com.familyorg.familyorganizationapp.service.impl.InviteServiceImpl;
+import com.familyorg.familyorganizationapp.service.impl.MessagingServiceImpl;
 
 public class FamilyControllerTest {
 
-	static FamilyService familyService;
+  static FamilyService familyService;
   static FamilyController familyController;
+  static InviteService inviteService;
+  static MessagingService messagingService;
 
   @BeforeAll
-  public static void setup() {
+  public static void setup() throws AddressException, MessagingException {
     familyService = mock(FamilyServiceImpl.class);
-    familyController = new FamilyController(familyService);
+    inviteService = mock(InviteServiceImpl.class);
+    messagingService = mock(MessagingServiceImpl.class);
+    when(messagingService.buildInviteContent(any(String.class), any(String.class)))
+        .thenReturn("test");
+    doNothing().when(messagingService).sendHtmlEmail(any(String.class), any(String.class),
+        any(String.class));
+    familyController = new FamilyController(familyService, inviteService, messagingService);
   }
 
   @Test
   public void getFamily_success() throws Exception {
     /* Given */
     when(familyService.getFamily(any(FamilyDto.class))).thenAnswer(
-        invocation -> mockServiceResponse(
-            invocation.getArgument(0), false, false, false, false));
-    FamilyDto request =
-        new FamilyDtoBuilder()
-            .withRequestingUser(new UserDtoBuilder().withUsername("testuser").build())
-            .withId(1l)
-            .build();
+        invocation -> mockServiceResponse(invocation.getArgument(0), false, false, false, false));
+    FamilyDto request = new FamilyDtoBuilder()
+        .withRequestingUser(new UserDtoBuilder().withUsername("testuser").build()).withId(1l)
+        .build();
 
     /* When */
     ResponseEntity<?> response = familyController.getFamily(request);
@@ -69,13 +88,8 @@ public class FamilyControllerTest {
   public void when_get_family_and_user_doesnt_exist_then_404_returned() {
     /* Given */
     when(familyService.getFamily(any(FamilyDto.class))).thenAnswer(
-        invocation -> mockServiceResponse(
-            invocation.getArgument(0), true, false, false, false));
-    FamilyDto request =
-        new FamilyDtoBuilder()
-            .withRequestingUser(new UserDtoBuilder().withUsername("userthatdoesntexist").build())
-            .withId(1l)
-            .build();
+        invocation -> mockServiceResponse(invocation.getArgument(0), true, false, false, false));
+    FamilyDto request = new FamilyDtoBuilder().withId(1l).build();
 
     /* When */
     ResponseEntity<?> response = familyController.getFamily(request);
@@ -83,19 +97,17 @@ public class FamilyControllerTest {
     /* Then */
     assertNotNull(response);
     assertEquals(404, response.getStatusCodeValue());
+    assertTrue(response.getBody() instanceof ErrorDto);
   }
 
   @Test
   public void when_get_family_and_family_doesnt_exist_then_404_returned() {
     /* Given */
     when(familyService.getFamily(any(FamilyDto.class))).thenAnswer(
-        invocation -> mockServiceResponse(
-            invocation.getArgument(0), false, true, false, false));
-    FamilyDto request =
-        new FamilyDtoBuilder()
-            .withRequestingUser(new UserDtoBuilder().withUsername("testuser").build())
-            .withId(4l)
-            .build();
+        invocation -> mockServiceResponse(invocation.getArgument(0), false, true, false, false));
+    FamilyDto request = new FamilyDtoBuilder()
+        .withRequestingUser(new UserDtoBuilder().withUsername("testuser").build()).withId(4l)
+        .build();
 
     /* When */
     ResponseEntity<?> response = familyController.getFamily(request);
@@ -103,19 +115,17 @@ public class FamilyControllerTest {
     /* Then */
     assertNotNull(response);
     assertEquals(404, response.getStatusCodeValue());
+    assertTrue(response.getBody() instanceof ErrorDto);
   }
 
   @Test
   public void when_get_family_and_user_not_part_of_family_then_401_returned() {
     /* Given */
     when(familyService.getFamily(any(FamilyDto.class))).thenAnswer(
-        invocation -> mockServiceResponse(
-            invocation.getArgument(0), false, false, true, false));
-    FamilyDto request =
-        new FamilyDtoBuilder()
-            .withRequestingUser(new UserDtoBuilder().withUsername("testuser").build())
-            .withId(2l)
-            .build();
+        invocation -> mockServiceResponse(invocation.getArgument(0), false, false, true, false));
+    FamilyDto request = new FamilyDtoBuilder()
+        .withRequestingUser(new UserDtoBuilder().withUsername("testuser").build()).withId(2l)
+        .build();
 
     /* When */
     ResponseEntity<?> response = familyController.getFamily(request);
@@ -123,13 +133,14 @@ public class FamilyControllerTest {
     /* Then */
     assertNotNull(response);
     assertEquals(401, response.getStatusCodeValue());
+    assertTrue(response.getBody() instanceof ErrorDto);
   }
 
   @Test
   public void getFamilies_success() {
     /* Given */
-    when(familyService.getFamiliesByUser(any(Long.class))).thenAnswer(
-        invocation -> mockServiceResponse(invocation.getArgument(0), 2, false));
+    when(familyService.getFamiliesByUser(any(Long.class)))
+        .thenAnswer(invocation -> mockServiceResponse(invocation.getArgument(0), 2, false));
     Long userId = 1l;
 
     /* When */
@@ -145,8 +156,8 @@ public class FamilyControllerTest {
   @Test
   public void when_get_families_and_user_doesnt_exist_then_404_returned() {
     /* Given */
-    when(familyService.getFamiliesByUser(any(Long.class))).thenAnswer(
-        invocation -> mockServiceResponse(invocation.getArgument(0), 2, true));
+    when(familyService.getFamiliesByUser(any(Long.class)))
+        .thenAnswer(invocation -> mockServiceResponse(invocation.getArgument(0), 2, true));
     Long userId = 1l;
 
     /* When */
@@ -155,23 +166,20 @@ public class FamilyControllerTest {
     /* Then */
     assertNotNull(response);
     assertEquals(404, response.getStatusCodeValue());
+    assertTrue(response.getBody() instanceof ErrorDto);
   }
 
   @Test
   public void createFamily_success() {
     /* Given */
     when(familyService.createFamily(any(FamilyDto.class))).thenAnswer(
-        invocation -> mockServiceResponse(
-            invocation.getArgument(0), false, false, false, false));
-    FamilyDto request =
-        new FamilyDtoBuilder()
-            .withName("Test Family")
-            .withEventColor("fffff")
-            .withTimezone("America/Chicago")
-            .withOwner(new FamilyMemberDtoBuilder()
-                .withUser(new UserDtoBuilder().withUsername("testuser").build())
-                .withEventColor("ffffff").build())
-            .build();
+        invocation -> mockServiceResponse(invocation.getArgument(0), false, false, false, false));
+    FamilyDto request = new FamilyDtoBuilder().withName("Test Family").withEventColor("fffff")
+        .withTimezone("America/Chicago")
+        .withOwner(new FamilyMemberDtoBuilder()
+            .withUser(new UserDtoBuilder().withUsername("testuser").build())
+            .withEventColor("ffffff").build())
+        .build();
 
     /* When */
     ResponseEntity<?> response = familyController.createFamily(request);
@@ -186,12 +194,9 @@ public class FamilyControllerTest {
   public void when_create_family_and_missing_required_fields_then_400_returned() {
     /* Given */
     when(familyService.createFamily(any(FamilyDto.class))).thenAnswer(
-        invocation -> mockServiceResponse(
-            invocation.getArgument(0), false, false, false, true));
+        invocation -> mockServiceResponse(invocation.getArgument(0), false, false, false, true));
     FamilyDto request =
-        new FamilyDtoBuilder()
-            .withEventColor("fffff")
-            .withTimezone("America/Chicago")
+        new FamilyDtoBuilder().withEventColor("fffff").withTimezone("America/Chicago")
             .withOwner(new FamilyMemberDtoBuilder()
                 .withUser(new UserDtoBuilder().withUsername("testuser").build())
                 .withEventColor("ffffff").build())
@@ -203,23 +208,20 @@ public class FamilyControllerTest {
     /* Then */
     assertNotNull(response);
     assertEquals(400, response.getStatusCodeValue());
+    assertTrue(response.getBody() instanceof ErrorDto);
   }
 
   @Test
   public void when_create_family_and_user_doesnt_exist_then_404_returned() {
     /* Given */
     when(familyService.createFamily(any(FamilyDto.class))).thenAnswer(
-        invocation -> mockServiceResponse(
-            invocation.getArgument(0), true, false, false, false));
-    FamilyDto request =
-        new FamilyDtoBuilder()
-            .withEventColor("fffff")
-            .withTimezone("America/Chicago")
-            .withName("Test Family")
-            .withOwner(new FamilyMemberDtoBuilder()
-                .withUser(new UserDtoBuilder().withUsername("testuser").build())
-                .withEventColor("ffffff").build())
-            .build();
+        invocation -> mockServiceResponse(invocation.getArgument(0), true, false, false, false));
+    FamilyDto request = new FamilyDtoBuilder().withEventColor("fffff")
+        .withTimezone("America/Chicago").withName("Test Family")
+        .withOwner(new FamilyMemberDtoBuilder()
+            .withUser(new UserDtoBuilder().withUsername("testuser").build())
+            .withEventColor("ffffff").build())
+        .build();
 
     /* When */
     ResponseEntity<?> response = familyController.createFamily(request);
@@ -227,20 +229,17 @@ public class FamilyControllerTest {
     /* Then */
     assertNotNull(response);
     assertEquals(404, response.getStatusCodeValue());
+    assertTrue(response.getBody() instanceof ErrorDto);
   }
 
   @Test
   public void updateFamily_success() {
     /* Given */
     when(familyService.updateFamily(any(FamilyDto.class))).thenAnswer(
-        invocation -> mockServiceResponse(
-            invocation.getArgument(0), false, false, false, false));
-    FamilyDto request =
-        new FamilyDtoBuilder()
-            .withId(1l)
-            .withRequestingUser(new UserDtoBuilder().withUsername("testuser").build())
-            .withEventColor("000000")
-            .build();
+        invocation -> mockServiceResponse(invocation.getArgument(0), false, false, false, false));
+    FamilyDto request = new FamilyDtoBuilder().withId(1l)
+        .withRequestingUser(new UserDtoBuilder().withUsername("testuser").build())
+        .withEventColor("000000").build();
 
     /* When */
     ResponseEntity<?> response = familyController.updateFamily(request);
@@ -255,14 +254,10 @@ public class FamilyControllerTest {
   public void when_update_family_and_user_doesnt_exist_then_404_returned() {
     /* Given */
     when(familyService.updateFamily(any(FamilyDto.class))).thenAnswer(
-        invocation -> mockServiceResponse(
-            invocation.getArgument(0), true, false, false, false));
-    FamilyDto request =
-        new FamilyDtoBuilder()
-            .withId(1l)
-            .withRequestingUser(new UserDtoBuilder().withUsername("testuser").build())
-            .withEventColor("000000")
-            .build();
+        invocation -> mockServiceResponse(invocation.getArgument(0), true, false, false, false));
+    FamilyDto request = new FamilyDtoBuilder().withId(1l)
+        .withRequestingUser(new UserDtoBuilder().withUsername("testuser").build())
+        .withEventColor("000000").build();
 
     /* When */
     ResponseEntity<?> response = familyController.updateFamily(request);
@@ -270,20 +265,17 @@ public class FamilyControllerTest {
     /* Then */
     assertNotNull(response);
     assertEquals(404, response.getStatusCodeValue());
+    assertTrue(response.getBody() instanceof ErrorDto);
   }
 
   @Test
   public void when_update_family_and_family_doesnt_exist_then_404_returned() {
     /* Given */
     when(familyService.updateFamily(any(FamilyDto.class))).thenAnswer(
-        invocation -> mockServiceResponse(
-            invocation.getArgument(0), false, true, false, false));
-    FamilyDto request =
-        new FamilyDtoBuilder()
-            .withId(1l)
-            .withRequestingUser(new UserDtoBuilder().withUsername("testuser").build())
-            .withEventColor("000000")
-            .build();
+        invocation -> mockServiceResponse(invocation.getArgument(0), false, true, false, false));
+    FamilyDto request = new FamilyDtoBuilder().withId(1l)
+        .withRequestingUser(new UserDtoBuilder().withUsername("testuser").build())
+        .withEventColor("000000").build();
 
     /* When */
     ResponseEntity<?> response = familyController.updateFamily(request);
@@ -291,20 +283,17 @@ public class FamilyControllerTest {
     /* Then */
     assertNotNull(response);
     assertEquals(404, response.getStatusCodeValue());
+    assertTrue(response.getBody() instanceof ErrorDto);
   }
 
   @Test
   public void when_update_family_and_user_not_authorized_then_401_returned() {
     /* Given */
     when(familyService.updateFamily(any(FamilyDto.class))).thenAnswer(
-        invocation -> mockServiceResponse(
-            invocation.getArgument(0), false, false, true, false));
-    FamilyDto request =
-        new FamilyDtoBuilder()
-            .withId(1l)
-            .withRequestingUser(new UserDtoBuilder().withUsername("testuser").build())
-            .withEventColor("000000")
-            .build();
+        invocation -> mockServiceResponse(invocation.getArgument(0), false, false, true, false));
+    FamilyDto request = new FamilyDtoBuilder().withId(1l)
+        .withRequestingUser(new UserDtoBuilder().withUsername("testuser").build())
+        .withEventColor("000000").build();
 
     /* When */
     ResponseEntity<?> response = familyController.updateFamily(request);
@@ -312,16 +301,16 @@ public class FamilyControllerTest {
     /* Then */
     assertNotNull(response);
     assertEquals(401, response.getStatusCodeValue());
+    assertTrue(response.getBody() instanceof ErrorDto);
   }
 
   @Test
   public void deleteFamily_success() {
-    doNothing().when(familyService).deleteFamily(any(Long.class), any(String.class));
+    doNothing().when(familyService).deleteFamily(any(Long.class));
     Long familyId = 1l;
-    String username = "testuser";
 
     /* When */
-    ResponseEntity<?> response = familyController.deleteFamily(familyId, username);
+    ResponseEntity<?> response = familyController.deleteFamily(familyId);
 
     /* Then */
     assertNotNull(response);
@@ -330,47 +319,385 @@ public class FamilyControllerTest {
 
   @Test
   public void when_delete_family_and_user_doesnt_exist_then_404_returned() {
-    doThrow(UserNotFoundException.class).when(familyService).deleteFamily(any(Long.class), any(String.class));
+    doThrow(UserNotFoundException.class).when(familyService).deleteFamily(any(Long.class));
     Long familyId = 1l;
-    String username = "testuser";
 
     /* When */
-    ResponseEntity<?> response = familyController.deleteFamily(familyId, username);
+    ResponseEntity<?> response = familyController.deleteFamily(familyId);
 
     /* Then */
     assertNotNull(response);
     assertEquals(404, response.getStatusCodeValue());
+    assertTrue(response.getBody() instanceof ErrorDto);
   }
 
   @Test
   public void when_delete_family_and_family_doesnt_exist_then_404_returned() {
-    doThrow(FamilyNotFoundException.class).when(familyService).deleteFamily(any(Long.class), any(String.class));
+    doThrow(FamilyNotFoundException.class).when(familyService).deleteFamily(any(Long.class));
     Long familyId = 1l;
-    String username = "testuser";
 
     /* When */
-    ResponseEntity<?> response = familyController.deleteFamily(familyId, username);
+    ResponseEntity<?> response = familyController.deleteFamily(familyId);
 
     /* Then */
     assertNotNull(response);
     assertEquals(404, response.getStatusCodeValue());
+    assertTrue(response.getBody() instanceof ErrorDto);
   }
 
   @Test
   public void when_delete_family_and_user_unauthorized_then_401_returned() {
-    doThrow(AuthorizationException.class).when(familyService).deleteFamily(any(Long.class), any(String.class));
+    doThrow(AuthorizationException.class).when(familyService).deleteFamily(any(Long.class));
     Long familyId = 1l;
-    String username = "testuser";
 
     /* When */
-    ResponseEntity<?> response = familyController.deleteFamily(familyId, username);
+    ResponseEntity<?> response = familyController.deleteFamily(familyId);
 
     /* Then */
     assertNotNull(response);
     assertEquals(401, response.getStatusCodeValue());
+    assertTrue(response.getBody() instanceof ErrorDto);
   }
 
-  private FamilyDto mockServiceResponse(FamilyDto request, boolean throwUser, boolean throwFamily, boolean throwAuth, boolean throwBadRequest)
+  @Test
+  public void when_generate_non_persistent_invite_then_200_status_returned() {
+    /* Given */
+    when(inviteService.createUniqueMemberInvite(any(Long.class), any(String.class)))
+        .thenAnswer(invocation -> {
+          User user =
+              new User(1l, "Test", "User", "testuser", "password", "testemail@test.com", null);
+          Family family = new Family(invocation.getArgument(0), "Test", "ffffff", "America/Chicago",
+              null, null);
+          FamilyMembers owner = new FamilyMembers(user, family, Role.OWNER, "ffffff");
+          user.setFamilies(new HashSet<>(Collections.singleton(owner)));
+          family.setMembers(new HashSet<>(Collections.singleton(owner)));
+          return new MemberInvite(family, invocation.getArgument(1));
+        });
+    MemberInviteDto request = new MemberInviteDtoBuilder().withFamilyId(1l).withPersistence(false)
+        .withRecipientEmail("testemail@test.com").build();
+
+    /* When */
+    ResponseEntity<?> response = familyController.generateInvite(request);
+
+    /* Then */
+    assertNotNull(response);
+    assertEquals(200, response.getStatusCodeValue());
+  }
+
+  @Test
+  public void when_generate_non_persistent_invite_with_role_then_200_status_returned() {
+    /* Given */
+    when(inviteService.createUniqueMemberInviteWithRole(any(Long.class), any(String.class),
+        any(Role.class))).thenAnswer(invocation -> {
+          User user =
+              new User(1l, "Test", "User", "testuser", "password", "testemail@test.com", null);
+          Family family = new Family(invocation.getArgument(0), "Test", "ffffff", "America/Chicago",
+              null, null);
+          FamilyMembers owner = new FamilyMembers(user, family, Role.OWNER, "ffffff");
+          user.setFamilies(new HashSet<>(Collections.singleton(owner)));
+          family.setMembers(new HashSet<>(Collections.singleton(owner)));
+          return new MemberInvite(family, invocation.getArgument(1), invocation.getArgument(2));
+        });
+    MemberInviteDto request = new MemberInviteDtoBuilder().withFamilyId(1l).withPersistence(false)
+        .withRecipientEmail("testemail@test.com").withInitialRole(Role.ADULT).build();
+
+    /* When */
+    ResponseEntity<?> response = familyController.generateInvite(request);
+
+    /* Then */
+    assertNotNull(response);
+    assertEquals(200, response.getStatusCodeValue());
+  }
+
+  @Test
+  public void when_generate_persistent_invite_then_invite_code_populated_on_response() {
+    /* Given */
+    when(inviteService.generatePersistentMemberInvite(any(Long.class))).thenAnswer(invocation -> {
+      Family family =
+          new Family(invocation.getArgument(0), "Test", "ffffff", "America/Chicago", null, null);
+      User user = new User(1l, "Test", "User", "testuser", "password", "testemail@test.com", null);
+      FamilyMembers member = new FamilyMembers(user, family, Role.OWNER, "eaeaea");
+      family.addMember(member);
+      user.setFamilies(Collections.singleton(member));
+      InviteCode invite = new InviteCode(true);
+      family.setInviteCode(invite);
+      return FamilyDto.fromFamilyObj(family, user);
+    });
+    MemberInviteDto request =
+        new MemberInviteDtoBuilder().withFamilyId(1l).withPersistence(true).build();
+
+    /* When */
+    ResponseEntity<?> response = familyController.generateInvite(request);
+
+    /* Then */
+    assertNotNull(response);
+    assertEquals(200, response.getStatusCodeValue());
+    assertTrue(response.getBody() instanceof FamilyDto);
+    assertNotNull(((FamilyDto) response.getBody()).getInviteCode());
+  }
+
+  @Test
+  public void when_generate_invite_and_authorization_exception_thrown_then_401_returned() {
+    /* Given */
+    doThrow(AuthorizationException.class).when(inviteService)
+        .generatePersistentMemberInvite(any(Long.class));
+    MemberInviteDto request =
+        new MemberInviteDtoBuilder().withFamilyId(1l).withPersistence(true).build();
+
+    /* When */
+    ResponseEntity<?> response = familyController.generateInvite(request);
+
+    /* Then */
+    assertNotNull(response);
+    assertEquals(401, response.getStatusCodeValue());
+    assertTrue(response.getBody() instanceof ErrorDto);
+  }
+
+  @Test
+  public void when_generate_invite_and_family_not_found_exception_thrown_then_404_returned() {
+    /* Given */
+    doThrow(FamilyNotFoundException.class).when(inviteService)
+        .generatePersistentMemberInvite(any(Long.class));
+    MemberInviteDto request =
+        new MemberInviteDtoBuilder().withFamilyId(1l).withPersistence(true).build();
+
+    /* When */
+    ResponseEntity<?> response = familyController.generateInvite(request);
+
+    /* Then */
+    assertNotNull(response);
+    assertEquals(404, response.getStatusCodeValue());
+    assertTrue(response.getBody() instanceof ErrorDto);
+  }
+
+  @SuppressWarnings("unchecked")
+  @Test
+  public void when_get_list_of_invites_then_list_of_invites_returned() {
+    /* Given */
+    List<MemberInvite> invites = new ArrayList<>();
+    Family family = new Family(1l, "Test", "ffffff", "America/Chicago", null, mock(HashSet.class));
+    invites.add(new MemberInvite(family, "testemail@test.com"));
+    invites.add(new MemberInvite(family, "testemail2@test.com"));
+    when(inviteService.getInvites(any(Long.class))).thenReturn(invites);
+
+    /* When */
+    ResponseEntity<?> response = familyController.getInvites(family.getId());
+
+    /* Then */
+    assertNotNull(response);
+    assertEquals(200, response.getStatusCodeValue());
+    assertTrue(response.getBody() instanceof List);
+    assertEquals(2, ((List<MemberInvite>) response.getBody()).size());
+  }
+
+  @Test
+  public void when_join_then_success() {
+    /* Given */
+    doNothing().when(inviteService).verifyMemberInvite(any(InviteCode.class), any(String.class));
+    String inviteCode = new InviteCode(false).getInviteCodeString();
+    String color = "ffffff";
+
+    /* When */
+    ResponseEntity<?> response = familyController.joinFamily(inviteCode, color);
+
+    /* Then */
+    assertNotNull(response);
+    assertEquals(200, response.getStatusCodeValue());
+  }
+
+  @Test
+  public void when_join_and_authorization_exception_thrown_with_redirect_then_error_response_returned() {
+    /* Given */
+    AuthorizationException authException = new AuthorizationException("Error", true);
+    doThrow(authException).when(inviteService).verifyMemberInvite(any(InviteCode.class),
+        any(String.class));
+    String inviteCode = new InviteCode(false).getInviteCodeString();
+    String color = "ffffff";
+
+    /* When */
+    ResponseEntity<?> response = familyController.joinFamily(inviteCode, color);
+
+    /* Then */
+    assertNotNull(response);
+    assertTrue(response.getBody() instanceof ErrorDto);
+    assertEquals(401, response.getStatusCodeValue());
+    ErrorDto responseBody = (ErrorDto) response.getBody();
+    assertTrue(responseBody.isRedirect());
+    assertEquals(401, responseBody.getErrorCode());
+    assertNotNull(responseBody.getRedirectUrl());
+  }
+
+  @Test
+  public void when_join_and_authorization_exception_thrown_without_redirect_then_error_response_returned() {
+    /* Given */
+    AuthorizationException authException = new AuthorizationException("Error");
+    doThrow(authException).when(inviteService).verifyMemberInvite(any(InviteCode.class),
+        any(String.class));
+    String inviteCode = new InviteCode(false).getInviteCodeString();
+    String color = "ffffff";
+
+    /* When */
+    ResponseEntity<?> response = familyController.joinFamily(inviteCode, color);
+
+    /* Then */
+    assertNotNull(response);
+    assertTrue(response.getBody() instanceof ErrorDto);
+    assertEquals(401, response.getStatusCodeValue());
+    ErrorDto responseBody = (ErrorDto) response.getBody();
+    assertFalse(responseBody.isRedirect());
+    assertNull(responseBody.getRedirectUrl());
+    assertEquals(401, responseBody.getErrorCode());
+  }
+
+  @Test
+  public void when_join_and_invite_test_not_found_exception_thrown_then_verify_response() {
+    /* Given */
+    doThrow(InviteCodeNotFoundException.class).when(inviteService)
+        .verifyMemberInvite(any(InviteCode.class), any(String.class));
+    String inviteCode = new InviteCode(false).getInviteCodeString();
+    String color = "fffff";
+
+    /* When */
+    ResponseEntity<?> response = familyController.joinFamily(inviteCode, color);
+
+    /* Then */
+    assertNotNull(response);
+    assertTrue(response.getBody() instanceof ErrorDto);
+    assertEquals(404, response.getStatusCodeValue());
+    ErrorDto responseBody = (ErrorDto) response.getBody();
+    assertEquals(404, responseBody.getErrorCode());
+  }
+
+  @Test
+  public void when_join_and_user_not_found_exception_thrown_then_verifiy_response() {
+    /* Given */
+    doThrow(UserNotFoundException.class).when(inviteService)
+        .verifyMemberInvite(any(InviteCode.class), any(String.class));
+    String inviteCode = new InviteCode(false).getInviteCodeString();
+    String color = "ffffff";
+
+    /* When */
+    ResponseEntity<?> response = familyController.joinFamily(inviteCode, color);
+
+    /* Then */
+    assertNotNull(response);
+    assertTrue(response.getBody() instanceof ErrorDto);
+    assertEquals(404, response.getStatusCodeValue());
+    ErrorDto responseBody = (ErrorDto) response.getBody();
+    assertEquals(404, responseBody.getErrorCode());
+    assertTrue(responseBody.isRedirect());
+    assertNotNull(responseBody.getRedirectUrl());
+  }
+
+  @Test
+  public void when_join_and_family_not_found_exception_thown_then_verify_response() {
+    /* Given */
+    doThrow(FamilyNotFoundException.class).when(inviteService)
+        .verifyMemberInvite(any(InviteCode.class), any(String.class));
+    String inviteCode = new InviteCode(false).getInviteCodeString();
+    String color = "ffffff";
+
+    /* When */
+    ResponseEntity<?> response = familyController.joinFamily(inviteCode, color);
+
+    /* Then */
+    assertNotNull(response);
+    assertTrue(response.getBody() instanceof ErrorDto);
+    assertEquals(404, response.getStatusCodeValue());
+    ErrorDto responseBody = (ErrorDto) response.getBody();
+    assertEquals(404, responseBody.getErrorCode());
+  }
+
+  @Test
+  public void transferOwnership_success() {
+    /* Given */
+    when(familyService.transferOwnership(any(FamilyDto.class))).thenAnswer(
+        invocation -> mockServiceResponse(invocation.getArgument(0), false, false, false, false));
+    FamilyDto request = new FamilyDtoBuilder().withId(1l).withOwner(new FamilyMemberDtoBuilder()
+        .withUser(new UserDtoBuilder().withUsername("testuser").build()).build()).build();
+
+    /* When */
+    ResponseEntity<?> response = familyController.transferOwnership(request);
+
+    /* Then */
+    assertNotNull(response);
+    assertTrue(response.getBody() instanceof FamilyDto);
+    assertEquals(200, response.getStatusCodeValue());
+  }
+
+  @Test
+  public void when_transfer_ownership_and_user_not_found_exception_thrown_then_404_returned() {
+    /* Given */
+    doThrow(UserNotFoundException.class).when(familyService)
+        .transferOwnership(any(FamilyDto.class));
+    FamilyDto request = new FamilyDtoBuilder().withId(1l).withOwner(new FamilyMemberDtoBuilder()
+        .withUser(new UserDtoBuilder().withUsername("testuser").build()).build()).build();
+
+    /* When */
+    ResponseEntity<?> response = familyController.transferOwnership(request);
+
+    /* Then */
+    assertNotNull(response);
+    assertTrue(response.getBody() instanceof ErrorDto);
+    assertEquals(404, response.getStatusCodeValue());
+    assertEquals(404, ((ErrorDto) response.getBody()).getErrorCode());
+  }
+
+  @Test
+  public void when_transfer_ownership_and_authorization_exception_thrown_then_401_returned() {
+    /* Given */
+    doThrow(AuthorizationException.class).when(familyService)
+        .transferOwnership(any(FamilyDto.class));
+    FamilyDto request = new FamilyDtoBuilder().withId(1l).withOwner(new FamilyMemberDtoBuilder()
+        .withUser(new UserDtoBuilder().withUsername("testuser").build()).build()).build();
+
+    /* When */
+    ResponseEntity<?> response = familyController.transferOwnership(request);
+
+    /* Then */
+    assertNotNull(response);
+    assertTrue(response.getBody() instanceof ErrorDto);
+    assertEquals(401, response.getStatusCodeValue());
+    assertEquals(401, ((ErrorDto) response.getBody()).getErrorCode());
+  }
+
+  @Test
+  public void when_transfer_ownership_and_family_not_found_exception_thrown_then_404_returned() {
+    /* Given */
+    doThrow(FamilyNotFoundException.class).when(familyService)
+        .transferOwnership(any(FamilyDto.class));
+    FamilyDto request = new FamilyDtoBuilder().withId(1l).withOwner(new FamilyMemberDtoBuilder()
+        .withUser(new UserDtoBuilder().withUsername("testuser").build()).build()).build();
+
+    /* When */
+    ResponseEntity<?> response = familyController.transferOwnership(request);
+
+    /* Then */
+    assertNotNull(response);
+    assertTrue(response.getBody() instanceof ErrorDto);
+    assertEquals(404, response.getStatusCodeValue());
+    assertEquals(404, ((ErrorDto) response.getBody()).getErrorCode());
+  }
+
+  @Test
+  public void when_transfer_ownership_and_bad_request_exception_thrown_then_400_returned() {
+    /* Given */
+    doThrow(BadRequestException.class).when(familyService).transferOwnership(any(FamilyDto.class));
+    FamilyDto request = new FamilyDtoBuilder().withId(1l).withOwner(new FamilyMemberDtoBuilder()
+        .withUser(new UserDtoBuilder().withUsername("testuser").build()).build()).build();
+
+    /* When */
+    ResponseEntity<?> response = familyController.transferOwnership(request);
+
+    /* Then */
+    assertNotNull(response);
+    assertTrue(response.getBody() instanceof ErrorDto);
+    assertEquals(400, response.getStatusCodeValue());
+    assertEquals(400, ((ErrorDto) response.getBody()).getErrorCode());
+  }
+
+  private FamilyDto mockServiceResponse(FamilyDto request, boolean throwUser, boolean throwFamily,
+      boolean throwAuth, boolean throwBadRequest)
       throws UserNotFoundException, FamilyNotFoundException, AuthorizationException {
     if (throwUser) {
       throw new UserNotFoundException();
@@ -385,24 +712,20 @@ public class FamilyControllerTest {
     if (throwBadRequest) {
       throw new BadRequestException();
     }
-    UserDto requestingUser =
-        new UserDtoBuilder()
-            .withFirstName("Test")
-            .withLastName("User")
-            .withUsername("testuser")
-            .withId(1l)
-            .withEmail("testuser@test.com")
-            .build();
-    return new FamilyDtoBuilder()
-        .withId(1l)
-        .withEventColor("ffffff")
-        .withInviteCode(null)
-        .withName("Test Family")
-        .withTimezone("America/Chicago")
-        .withRequestingUser(requestingUser)
+    UserDto requestingUser = new UserDtoBuilder().withFirstName("Test").withLastName("User")
+        .withUsername("testuser").withId(1l).withEmail("testuser@test.com").build();
+    return new FamilyDtoBuilder().withId(1l).withEventColor("ffffff").withInviteCode(null)
+        .withName("Test Family").withTimezone("America/Chicago").withRequestingUser(requestingUser)
         .withOwner(new FamilyMemberDto(requestingUser, "ffffff", 1l, Role.OWNER))
-        .withMembers(new HashSet<>(Collections.singleton(new FamilyMemberDto(requestingUser, "ffffff", 1l, Role.OWNER))))
-        .build();
+        .withMembers(new HashSet<>() {
+          {
+            add(new FamilyMemberDto(requestingUser, "ffffff", 1l, Role.OWNER));
+            add(new FamilyMemberDto(
+                new UserDtoBuilder().withId(2l).withEmail("testuser2@test.com")
+                    .withFirstName("Test").withLastName("User2").withUsername("testuser2").build(),
+                "eaeaea", 1l, Role.ADMIN));
+          }
+        }).build();
   }
 
   private List<FamilyDto> mockServiceResponse(Long userId, int numResponse, boolean throwUser)
@@ -410,27 +733,17 @@ public class FamilyControllerTest {
     if (throwUser) {
       throw new UserNotFoundException();
     }
-    UserDto requestingUser =
-        new UserDtoBuilder()
-            .withFirstName("Test")
-            .withLastName("User")
-            .withUsername("testuser")
-            .withId(userId)
-            .withEmail("testuser@test.com")
-            .build();
+    UserDto requestingUser = new UserDtoBuilder().withFirstName("Test").withLastName("User")
+        .withUsername("testuser").withId(userId).withEmail("testuser@test.com").build();
     List<FamilyDto> response = new ArrayList<>();
     for (int i = 1; i <= numResponse; i++) {
-      response.add(
-          new FamilyDtoBuilder()
-              .withId(Long.valueOf(i))
-              .withEventColor("ffffff")
-              .withInviteCode(null)
-              .withName("Test Family " + i)
-              .withTimezone("America/Chicago")
-              .withRequestingUser(requestingUser)
-              .withOwner(new FamilyMemberDto(requestingUser, "ffffff", Long.valueOf(i),Role.OWNER))
-              .withMembers(new HashSet<>(Collections.singleton(new FamilyMemberDto(requestingUser, "ffffff", Long.valueOf(i),Role.OWNER))))
-              .build());
+      response.add(new FamilyDtoBuilder().withId(Long.valueOf(i)).withEventColor("ffffff")
+          .withInviteCode(null).withName("Test Family " + i).withTimezone("America/Chicago")
+          .withRequestingUser(requestingUser)
+          .withOwner(new FamilyMemberDto(requestingUser, "ffffff", Long.valueOf(i), Role.OWNER))
+          .withMembers(new HashSet<>(Collections.singleton(
+              new FamilyMemberDto(requestingUser, "ffffff", Long.valueOf(i), Role.OWNER))))
+          .build());
     }
     return response;
   }

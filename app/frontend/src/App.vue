@@ -1,13 +1,12 @@
 <template>
-  <div id="app">
-    <div v-if="this.$store && this.$store.getters.isLoggedIn">
+  <v-app>
+    <div v-if="$store && $store.getters.isLoggedIn">
       <NavBar />
-      <router-view/>
     </div>
-    <div v-else>
-      <router-view/>
-    </div>
-  </div>
+    <v-main>
+      <router-view />
+    </v-main>
+  </v-app>
 </template>
 
 <script>
@@ -30,7 +29,6 @@ export default {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-align: center;
   color: #2c3e50;
 }
 

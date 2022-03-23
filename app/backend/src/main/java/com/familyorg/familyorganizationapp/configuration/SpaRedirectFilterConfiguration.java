@@ -16,10 +16,10 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 @Configuration
 public class SpaRedirectFilterConfiguration {
-	
+
 	@Bean
 	public FilterRegistrationBean spaRedirectFilter() {
-		FilterRegistrationBean<OncePerRequestFilter> registration = 
+		FilterRegistrationBean<OncePerRequestFilter> registration =
 				new FilterRegistrationBean<>();
 		registration.setFilter(createRedirectFilter());
 		registration.addUrlPatterns("/*");
@@ -27,7 +27,7 @@ public class SpaRedirectFilterConfiguration {
 		registration.setOrder(1);
 		return registration;
 	}
-	
+
 	private OncePerRequestFilter createRedirectFilter() {
 		return new OncePerRequestFilter() {
 			private final String REGEX = "(?!/actuator|/api|/_nuxt|/static|/index\\\\.html|/200\\\\.html|/favicon\\\\.ico|/sw\\\\.js).*$";
