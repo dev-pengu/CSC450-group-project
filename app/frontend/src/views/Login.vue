@@ -2,44 +2,43 @@
   <div class="login">
     <v-img height="250" contain src="../assets/logo.png"></v-img>
     <v-row justify="center">
-      <v-col cols="10" md="4">
+      <v-col cols="10" sm="5" md="4">
         <v-card elevation="4">
-          <v-card-text>
+          <v-card-text class="pb-0">
             <v-form>
-              <v-row>
-                <v-col cols="12">
-                  <v-text-field v-model="formData.username" prepend-icon="mdi-account" label="Username" />
-                </v-col>
-              </v-row>
-              <v-row>
-                <v-col cols="12">
-                  <v-text-field
-                    v-model="formData.password"
-                    prepend-icon="mdi-lock"
-                    type="password"
-                    label="Password"
-                    @keyup.enter="submit"
-                  />
-                </v-col>
-              </v-row>
+              <v-text-field
+                v-model="formData.username"
+                color="foa_button"
+                prepend-icon="mdi-account"
+                label="Username"
+              />
+              <v-text-field
+                v-model="formData.password"
+                color="foa_button"
+                prepend-icon="mdi-lock"
+                type="password"
+                label="Password"
+                @keyup.enter="submit"
+              />
             </v-form>
-            <v-row>
-              <v-col cols="12" class="py-0">
-                <v-alert v-if="error" class="mb-0" text type="error">{{ errorMsg }}</v-alert>
-              </v-col>
-            </v-row>
+            <v-alert v-if="error" class="mb-2" text type="error">{{ errorMsg }}</v-alert>
           </v-card-text>
-          <v-card-actions>
-            <v-row justify="center">
-              <v-col cols="12" sm="6">
-                <v-btn block color="primary" elevation="2" :loading="loading" :disabled="loading" @click="submit"
-                  >Login</v-btn
-                >
-              </v-col>
-            </v-row>
+          <v-card-actions class="justify-center">
+            <v-btn
+              class="foa_button_fg--text"
+              color="foa_button"
+              elevation="2"
+              width="50%"
+              :loading="loading"
+              :disabled="loading"
+              @click="submit"
+              >Login</v-btn
+            >
           </v-card-actions>
           <v-card-text>
-            <p class="ma-0 text-center">Don't have an account? <router-link to="/signup">Sign up now!</router-link></p>
+            <div class="text-center">
+              Don't have an account? <router-link to="/signup" class="foa_link--text">Sign up now!</router-link>
+            </div>
           </v-card-text>
         </v-card>
       </v-col>
@@ -97,4 +96,4 @@ export default {
 };
 </script>
 
-<style scoped lang="less"></style>
+<style scoped></style>
