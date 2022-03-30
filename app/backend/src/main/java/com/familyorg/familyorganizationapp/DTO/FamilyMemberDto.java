@@ -4,10 +4,13 @@ import java.util.Objects;
 import com.familyorg.familyorganizationapp.domain.FamilyMembers;
 import com.familyorg.familyorganizationapp.domain.Role;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 public class FamilyMemberDto {
   private String eventColor;
   private UserDto user;
+  @JsonInclude(Include.NON_NULL)
   private Long familyId;
   private Role role;
 

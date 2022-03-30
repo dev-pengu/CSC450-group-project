@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.familyorg.familyorganizationapp.DTO.FamilyDto;
+import com.familyorg.familyorganizationapp.DTO.FamilyRoleUpdateRequest;
 import com.familyorg.familyorganizationapp.DTO.MemberInviteDto;
 import com.familyorg.familyorganizationapp.domain.FamilyMembers;
 import com.familyorg.familyorganizationapp.domain.InviteCode;
@@ -123,6 +124,11 @@ public class FamilyController {
     InviteCode inviteCodeObj = InviteCode.parseFromCodeString(inviteCode);
     inviteService.verifyMemberInvite(inviteCodeObj, eventColor);
     return new ResponseEntity<String>("Success", HttpStatus.OK);
+  }
 
+  @PostMapping("/admin/roles")
+  public ResponseEntity<String> updateRoles(@RequestBody FamilyRoleUpdateRequest request) {
+    familyService.updateMemberRoles(request);
+    return new ResponseEntity<String>("Member roles successfully updated.", HttpStatus.OK);
   }
 }

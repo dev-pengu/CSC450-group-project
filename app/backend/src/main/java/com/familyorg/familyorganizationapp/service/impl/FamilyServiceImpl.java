@@ -1,8 +1,10 @@
 package com.familyorg.familyorganizationapp.service.impl;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import javax.transaction.Transactional;
 import org.slf4j.Logger;
@@ -12,6 +14,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import com.familyorg.familyorganizationapp.DTO.FamilyDto;
 import com.familyorg.familyorganizationapp.DTO.FamilyMemberDto;
+import com.familyorg.familyorganizationapp.DTO.FamilyRoleUpdateRequest;
 import com.familyorg.familyorganizationapp.Exception.AuthorizationException;
 import com.familyorg.familyorganizationapp.Exception.BadRequestException;
 import com.familyorg.familyorganizationapp.Exception.FamilyNotFoundException;
@@ -265,6 +268,39 @@ public class FamilyServiceImpl implements FamilyService {
   @Override
   public List<Family> getFamiliesByUser(String username) {
     return familyRepository.getFamiliesByUser(username);
+  }
+
+  @Override
+  public void updateMemberRoles(FamilyRoleUpdateRequest request) {
+    User requestingUser = userService.getRequestingUser();
+    if (request.getFamilyId() == null) {
+      throw new BadRequestException("Family id may not be null.");
+    }
+    if (request.getMembers() == null || request.getMembers().isEmpty()) {
+      throw new BadRequestException("Family members to update must be specified.");
+    }
+    Optional<Family> family = familyRepository.findById(request.getFamilyId());
+    if (family.isEmpty()) {
+      throw new FamilyNotFoundException("Family with id " + request.getFamilyId() + " not found.");
+    }
+
+    // check to see if user is ADMIN or higher
+    Set<FamilyMembers> membersToUpdate = new HashSet<>();
+    request.getMembers().forEach(member -> {
+      FamilyMemberId id = new FamilyMemberId(member.getUser().getId(), family.get().getId());
+      Optional<FamilyMembers> familyMemberOpt = familyMemberRepository.findById(id);
+      if (familyMemberOpt.isEmpty()) {
+        throw new UserNotFoundException("User with id " + member.getUser().getId() + " not found.");
+      }
+      FamilyMembers familyMember = familyMemberOpt.get();
+      if (member.getRole() != Role.OWNER || familyMember.getRole() != Role.OWNER) {
+        familyMember.setRole(member.getRole());
+        membersToUpdate.add(familyMember);
+      }
+    });
+    if (!membersToUpdate.isEmpty()) {
+      familyMemberRepository.saveAll(membersToUpdate);
+    }
   }
 
 }
