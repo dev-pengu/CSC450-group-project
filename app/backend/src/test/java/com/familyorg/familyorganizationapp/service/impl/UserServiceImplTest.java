@@ -11,18 +11,22 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import com.familyorg.familyorganizationapp.DTO.UserDto;
 import com.familyorg.familyorganizationapp.Exception.AuthorizationException;
 import com.familyorg.familyorganizationapp.Exception.UserNotFoundException;
 import com.familyorg.familyorganizationapp.domain.User;
 import com.familyorg.familyorganizationapp.repository.UserRepository;
 import com.familyorg.familyorganizationapp.service.AuthService;
+import com.familyorg.familyorganizationapp.service.SecurityService;
 
 public class UserServiceImplTest {
   private UserServiceImpl userService;
 
   private UserRepository userRepository;
   private AuthService authService;
+  private SecurityService securityService;
+  private BCryptPasswordEncoder bCryptPasswordEncoder;
 
   static User TEST_USER_1 =
       new User(1l, "Test", "User", "testuser", "password", "testuser@test.com", null);
@@ -36,10 +40,11 @@ public class UserServiceImplTest {
   public void before() {
     authService = mock(AuthService.class);
     userRepository = mock(UserRepository.class);
+    securityService = mock(SecurityService.class);
+    bCryptPasswordEncoder = mock(BCryptPasswordEncoder.class);
 
-    userService = new UserServiceImpl();
-    userService.setAuthService(authService);
-    userService.setUserRepository(userRepository);
+    userService =
+        new UserServiceImpl(userRepository, authService, securityService, bCryptPasswordEncoder);
   }
 
   @Test

@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
+import com.familyorg.familyorganizationapp.Exception.BadRequestException;
 import com.familyorg.familyorganizationapp.service.MessagingService;
 
 @Service
@@ -57,34 +58,45 @@ public class MessagingServiceImpl implements MessagingService {
     }
   }
 
-  public void sendHtmlEmail(String recipient, String subject, String content)
-      throws AddressException, MessagingException {
+  public void sendHtmlEmail(String recipient, String subject, String content) {
+
     Objects.requireNonNull(recipient);
     Objects.requireNonNull(subject);
     Objects.requireNonNull(content);
 
-    Message message = new MimeMessage(getSession());
-    message.setFrom(new InternetAddress(env.getProperty("messaging.email")));
-    message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(recipient));
-    message.setSubject(subject);
-    message.setContent(content, "text/html");
+    try {
+      Message message = new MimeMessage(getSession());
+      message.setFrom(new InternetAddress(env.getProperty("messaging.email")));
+      message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(recipient));
+      message.setSubject(subject);
+      message.setContent(content, "text/html");
 
-    Transport.send(message);
+      Transport.send(message);
+    } catch (AddressException e) {
+      throw new BadRequestException("Recipient email is malformed.");
+    } catch (MessagingException e) {
+      throw new BadRequestException("Error sending email to recipient");
+    }
   }
 
-  public void sendPlainTextEmail(String recipient, String subject, String content)
-      throws AddressException, MessagingException {
+  public void sendPlainTextEmail(String recipient, String subject, String content) {
     Objects.requireNonNull(recipient);
     Objects.requireNonNull(subject);
     Objects.requireNonNull(content);
 
-    Message message = new MimeMessage(getSession());
-    message.setFrom(new InternetAddress(env.getProperty("messaging.email")));
-    message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(recipient));
-    message.setSubject(subject);
-    message.setText(content);
+    try {
+      Message message = new MimeMessage(getSession());
+      message.setFrom(new InternetAddress(env.getProperty("messaging.email")));
+      message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(recipient));
+      message.setSubject(subject);
+      message.setText(content);
 
-    Transport.send(message);
+      Transport.send(message);
+    } catch (AddressException e) {
+      throw new BadRequestException("Recipient email is malformed.");
+    } catch (MessagingException e) {
+      throw new BadRequestException("Error sending email to recipient");
+    }
   }
 
   public String buildInviteContent(String inviteCode, String owner) {

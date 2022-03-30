@@ -8,6 +8,7 @@ public class UserDtoBuilder implements DtoBuilder<UserDto> {
   private String lastName;
   private String email;
   private String username;
+  private String timezone;
 
   public UserDtoBuilder withId(Long id) {
     this.id = id;
@@ -34,9 +35,14 @@ public class UserDtoBuilder implements DtoBuilder<UserDto> {
     return this;
   }
 
+  public UserDtoBuilder withTimezone(String timezone) {
+    this.timezone = timezone;
+    return this;
+  }
+
   @Override
   public UserDto build() {
     return new UserDto(this.id, this.firstName, this.lastName, this.email, this.username, null,
-        null);
+        null, this.timezone);
   }
 }

@@ -15,12 +15,15 @@ import com.familyorg.familyorganizationapp.DTO.FamilyMemberDto;
 import com.familyorg.familyorganizationapp.Exception.AuthorizationException;
 import com.familyorg.familyorganizationapp.Exception.BadRequestException;
 import com.familyorg.familyorganizationapp.Exception.FamilyNotFoundException;
+import com.familyorg.familyorganizationapp.Exception.ResourceNotFoundException;
 import com.familyorg.familyorganizationapp.Exception.UserNotFoundException;
+import com.familyorg.familyorganizationapp.domain.Calendar;
 import com.familyorg.familyorganizationapp.domain.Family;
 import com.familyorg.familyorganizationapp.domain.FamilyMembers;
 import com.familyorg.familyorganizationapp.domain.Role;
 import com.familyorg.familyorganizationapp.domain.User;
 import com.familyorg.familyorganizationapp.domain.id.FamilyMemberId;
+import com.familyorg.familyorganizationapp.repository.CalendarRepository;
 import com.familyorg.familyorganizationapp.repository.FamilyMemberRepository;
 import com.familyorg.familyorganizationapp.repository.FamilyRepository;
 import com.familyorg.familyorganizationapp.service.FamilyService;
@@ -31,12 +34,20 @@ import com.familyorg.familyorganizationapp.util.ColorUtil;
 public class FamilyServiceImpl implements FamilyService {
   Logger LOG = LoggerFactory.getLogger(FamilyServiceImpl.class);
 
-  @Autowired
   FamilyRepository familyRepository;
-  @Autowired
   FamilyMemberRepository familyMemberRepository;
-  @Autowired
+  CalendarRepository calendarRepository;
   UserService userService;
+
+  @Autowired
+  public FamilyServiceImpl(FamilyRepository familyRepository,
+      FamilyMemberRepository familyMemberRepository, CalendarRepository calendarRepository,
+      UserService userService) {
+    this.familyRepository = familyRepository;
+    this.familyMemberRepository = familyMemberRepository;
+    this.calendarRepository = calendarRepository;
+    this.userService = userService;
+  }
 
   @Override
   @Transactional
@@ -64,6 +75,12 @@ public class FamilyServiceImpl implements FamilyService {
     } catch (DataIntegrityViolationException e) {
       throw new BadRequestException("Request is missing one or more required fields.");
     }
+    Calendar calendar = new Calendar();
+    calendar.setDefault(true);
+    calendar.setDescription("Family Calendar");
+    calendar.setFamily(family);
+    Calendar savedCalendar = calendarRepository.save(calendar);
+    savedFamily.addCalendar(savedCalendar);
     FamilyMembers ownerRelation = new FamilyMembers();
     ownerRelation.setFamily(savedFamily);
     ownerRelation.setEventColor(owner.getEventColor());
@@ -71,6 +88,7 @@ public class FamilyServiceImpl implements FamilyService {
     ownerRelation.setUser(ownerUser);
     familyMemberRepository.save(ownerRelation);
     savedFamily.addMember(ownerRelation);
+    familyRepository.save(savedFamily);
     return FamilyDto.fromFamilyObj(savedFamily, ownerUser);
   }
 
@@ -79,12 +97,15 @@ public class FamilyServiceImpl implements FamilyService {
     Optional<Family> family = familyRepository.findById(familyRequest.getId());
 
     if (family.isEmpty()) {
-      throw new FamilyNotFoundException("Family not found");
+      throw new ResourceNotFoundException("Family not found");
     }
     User requestingUser = userService.getRequestingUser();
     final Long requestingUserId = requestingUser.getId();
-    family.get().getMembers().stream()
-        .filter(familyMember -> familyMember.getUser().getId().equals(requestingUserId)).findAny()
+    family.get()
+        .getMembers()
+        .stream()
+        .filter(familyMember -> familyMember.getUser().getId().equals(requestingUserId))
+        .findAny()
         .orElseThrow(AuthorizationException::new);
     Family familyObj = family.get();
     return FamilyDto.fromFamilyObj(familyObj, requestingUser);
@@ -111,7 +132,8 @@ public class FamilyServiceImpl implements FamilyService {
       return Collections.emptyList();
     }
 
-    return families.stream().map(family -> FamilyDto.fromFamilyObj(family, user))
+    return families.stream()
+        .map(family -> FamilyDto.fromFamilyObj(family, user))
         .collect(Collectors.toList());
   }
 
@@ -123,7 +145,7 @@ public class FamilyServiceImpl implements FamilyService {
 
     Optional<Family> family = familyRepository.findById(familyRequest.getId());
     if (family.isEmpty()) {
-      throw new FamilyNotFoundException("Unable to find family with given id");
+      throw new ResourceNotFoundException("Unable to find family with given id");
     }
     if (familyRequest.getInviteCode() != null) {
       family.get().setInviteCode(familyRequest.getInviteCode());
@@ -185,7 +207,7 @@ public class FamilyServiceImpl implements FamilyService {
     User user = userService.getRequestingUser();
     Optional<Family> family = familyRepository.findById(request.getId());
     if (family.isEmpty()) {
-      throw new FamilyNotFoundException("Family with id " + request.getId() + " not found.");
+      throw new ResourceNotFoundException("Family with id " + request.getId() + " not found.");
     }
     Optional<FamilyMembers> familyRelation =
         familyMemberRepository.findById(new FamilyMemberId(user.getId(), family.get().getId()));
@@ -226,31 +248,23 @@ public class FamilyServiceImpl implements FamilyService {
     return familyRepository.findByInviteCode(inviteCode);
   }
 
-  /**
-   * This should only be called for testing to mock the injected class
-   *
-   * @param familyRepository
-   */
-  void setFamilyRepository(FamilyRepository familyRepository) {
-    this.familyRepository = familyRepository;
+  @Override
+  public boolean verfiyMinimumRoleSecurity(Family family, User user, Role minimumRole) {
+    return family.getMembers()
+        .stream()
+        .filter(member -> member.getUser().getUsername().equals(user.getUsername())
+            && member.getRole().getLevel() >= minimumRole.getLevel())
+        .count() > 0;
   }
 
-  /**
-   * This should only be called for testing to mock the injected class
-   *
-   * @param familyMemberRepository
-   */
-  void setFamilyMemberRepository(FamilyMemberRepository familyMemberRepository) {
-    this.familyMemberRepository = familyMemberRepository;
+  @Override
+  public List<Long> getFamilyIdsByUser(String username) {
+    return familyRepository.getFamilyIdsByUser(username);
   }
 
-  /**
-   * This should only be called for testing to mock the injected class
-   *
-   * @param userService
-   */
-  void setUserService(UserService userService) {
-    this.userService = userService;
+  @Override
+  public List<Family> getFamiliesByUser(String username) {
+    return familyRepository.getFamiliesByUser(username);
   }
 
 }

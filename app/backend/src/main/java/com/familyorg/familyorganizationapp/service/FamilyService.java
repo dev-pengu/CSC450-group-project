@@ -8,6 +8,8 @@ import com.familyorg.familyorganizationapp.Exception.BadRequestException;
 import com.familyorg.familyorganizationapp.Exception.FamilyNotFoundException;
 import com.familyorg.familyorganizationapp.Exception.UserNotFoundException;
 import com.familyorg.familyorganizationapp.domain.Family;
+import com.familyorg.familyorganizationapp.domain.Role;
+import com.familyorg.familyorganizationapp.domain.User;
 
 public interface FamilyService {
   FamilyDto createFamily(FamilyDto familyRequest) throws BadRequestException, UserNotFoundException;
@@ -30,4 +32,10 @@ public interface FamilyService {
       UserNotFoundException, FamilyNotFoundException, BadRequestException;
 
   Family getFamilyByInviteCode(String inviteCode);
+
+  boolean verfiyMinimumRoleSecurity(Family family, User user, Role minimumRole);
+
+  List<Long> getFamilyIdsByUser(String username);
+
+  List<Family> getFamiliesByUser(String username);
 }
