@@ -23,7 +23,8 @@ export default {
   actions: {
     login({ commit }, formData) {
       return new Promise((resolve, reject) => {
-        api.login(formData)
+        api
+          .login(formData)
           .then((res) => {
             if (res.status === 200) {
               commit('login_success', {
@@ -42,10 +43,9 @@ export default {
       });
     },
     logout({ commit }) {
-      api.logout()
-        .then(() => {
-          commit('logout_success');
-        });
+      api.logout().then(() => {
+        commit('logout_success');
+      });
     },
   },
   getters: {

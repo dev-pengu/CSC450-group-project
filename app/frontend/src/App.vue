@@ -1,21 +1,30 @@
 <template>
   <v-app>
-    <div v-if="$store && $store.getters.isLoggedIn">
-      <NavBar />
-    </div>
+    <NavDrawer v-if="isLoggedIn" />
+    <AppBar v-if="isLoggedIn" />
     <v-main>
-      <router-view />
+      <v-container>
+        <router-view />
+      </v-container>
     </v-main>
+    <v-footer app></v-footer>
   </v-app>
 </template>
 
 <script>
-import NavBar from '@/components/NavBar.vue';
+import NavDrawer from '@/components/NavDrawer.vue';
+import AppBar from '@/components/AppBar.vue';
 import api from './api';
 
 export default {
   components: {
-    NavBar,
+    NavDrawer,
+    AppBar,
+  },
+  computed: {
+    isLoggedIn() {
+      return this.$store.getters.isLoggedIn;
+    },
   },
   mounted: () => {
     window.onunload = () => {
@@ -26,22 +35,8 @@ export default {
 </script>
 <style>
 #app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
+  font-family: Roboto, Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  color: #2c3e50;
-}
-
-#nav {
-  padding: 30px;
-}
-
-#nav a {
-  font-weight: bold;
-  color: #2c3e50;
-}
-
-#nav a.router-link-exact-active {
-  color: #42b983;
 }
 </style>
