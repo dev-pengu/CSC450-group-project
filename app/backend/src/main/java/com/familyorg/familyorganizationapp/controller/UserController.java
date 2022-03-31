@@ -34,7 +34,6 @@ public class UserController {
   public ResponseEntity<String> deleteUser(@RequestParam("username") String username) {
     userService.deleteUser(username);
     return new ResponseEntity<>("Success", HttpStatus.OK);
-
   }
 
   /**
@@ -61,4 +60,15 @@ public class UserController {
   }
 
 
+  @GetMapping("/settings")
+  public ResponseEntity<UserDto> getCurrentUserSettings() {
+    UserDto response = userService.getSettingsForUser();
+    return new ResponseEntity<UserDto>(response, HttpStatus.OK);
+  }
+
+  @PatchMapping("/settings")
+  public ResponseEntity<UserDto> updateCurrentUserSettings(@RequestBody UserDto user) {
+    UserDto response = userService.updateUserSettingsAndData(user);
+    return new ResponseEntity<UserDto>(response, HttpStatus.OK);
+  }
 }

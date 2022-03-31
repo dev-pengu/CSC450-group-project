@@ -1,20 +1,31 @@
 package com.familyorg.familyorganizationapp.service.impl;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.familyorg.familyorganizationapp.DTO.ColorDto;
 import com.familyorg.familyorganizationapp.DTO.UserDto;
+import com.familyorg.familyorganizationapp.DTO.builder.ColorDtoBuilder;
+import com.familyorg.familyorganizationapp.DTO.builder.UserDtoBuilder;
 import com.familyorg.familyorganizationapp.Exception.AuthorizationException;
 import com.familyorg.familyorganizationapp.Exception.BadRequestException;
 import com.familyorg.familyorganizationapp.Exception.ExistingUserException;
 import com.familyorg.familyorganizationapp.Exception.UserNotFoundException;
+import com.familyorg.familyorganizationapp.domain.FamilyMembers;
 import com.familyorg.familyorganizationapp.domain.User;
+import com.familyorg.familyorganizationapp.domain.id.FamilyMemberId;
+import com.familyorg.familyorganizationapp.repository.FamilyMemberRepository;
 import com.familyorg.familyorganizationapp.repository.UserRepository;
 import com.familyorg.familyorganizationapp.service.AuthService;
 import com.familyorg.familyorganizationapp.service.SecurityService;
 import com.familyorg.familyorganizationapp.service.UserService;
+import com.familyorg.familyorganizationapp.util.ColorUtil;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -22,16 +33,21 @@ public class UserServiceImpl implements UserService {
   UserRepository userRepository;
   AuthService authService;
   SecurityService securityService;
+  FamilyMemberRepository memberRepository;
 
   BCryptPasswordEncoder bCryptPasswordEncoder;
 
+  @Autowired
   public UserServiceImpl(UserRepository userRepository, AuthService authService,
-      SecurityService securityService, BCryptPasswordEncoder bCryptPasswordEncoder) {
+      SecurityService securityService, BCryptPasswordEncoder bCryptPasswordEncoder,
+      FamilyMemberRepository memberRepository) {
     super();
     this.userRepository = userRepository;
     this.authService = authService;
     this.securityService = securityService;
     this.bCryptPasswordEncoder = bCryptPasswordEncoder;
+    this.memberRepository = memberRepository;
+
   }
 
   @Override
@@ -74,7 +90,11 @@ public class UserServiceImpl implements UserService {
     if (user == null) {
       throw new UserNotFoundException("User not found");
     }
-    userRepository.delete(user);
+    if (authService.hasAuthenticatedForSensitiveActions(username)) {
+      userRepository.delete(user);
+    } else {
+      throw new AuthorizationException("Users must reauthenticate to perform this action.");
+    }
   }
 
   @Override
@@ -91,11 +111,73 @@ public class UserServiceImpl implements UserService {
     }
     UserDetails reauthenticatedUser =
         securityService.reauthenticate(request.getUsername(), request.getOldPassword());
-    if (!requestingUser.getUsername().equals(reauthenticatedUser.getUsername())) {
+    if (reauthenticatedUser == null
+        || !requestingUser.getUsername().equals(reauthenticatedUser.getUsername())) {
       throw new AuthorizationException("User is not authorized to complete this action");
     }
     requestingUser.setPassword(bCryptPasswordEncoder.encode(request.getNewPassword()));
     userRepository.save(requestingUser);
+  }
+
+  @Override
+  public UserDto getSettingsForUser() {
+    User requestingUser = getRequestingUser();
+
+    List<ColorDto> colorsByFamily = memberRepository.getColorsByUser(requestingUser.getId());
+    return new UserDtoBuilder()
+        .fromUserObj(requestingUser)
+        .withColorsByFamily(colorsByFamily)
+        .build();
+  }
+
+  @Override
+  public UserDto updateUserSettingsAndData(UserDto request) {
+    User requestingUser = getRequestingUser();
+    if (!requestingUser.getId().equals(request.getId())) {
+      throw new AuthorizationException(
+          "User id on request does not match currently logged in user.");
+    }
+
+    if (!requestingUser.getFirstName().equals(request.getFirstName())) {
+      requestingUser.setFirstName(request.getFirstName());
+    }
+    if (!requestingUser.getLastName().equals(request.getLastName())) {
+      requestingUser.setLastName(request.getLastName());
+    }
+    if (!requestingUser.useDarkMode() != request.getUseDarkMode()) {
+      requestingUser.setDarkMode(request.getUseDarkMode());
+    }
+
+    List<ColorDto> colors = new ArrayList<>();
+    if (request.getColorsByFamily() != null) {
+
+      List<FamilyMembers> updated = request.getColorsByFamily().stream().map(color -> {
+        if (!ColorUtil.isValidHexCode(color.getColor())) {
+          throw new BadRequestException(
+              "Color for family " + color.getFamily() + " is not a valid hexcode");
+        }
+        Optional<FamilyMembers> familyMembers = memberRepository
+            .findById(new FamilyMemberId(requestingUser.getId(), color.getFamilyId()));
+
+        if (familyMembers.isPresent()) {
+          familyMembers.get().setEventColor(color.getColor());
+          return familyMembers.get();
+        }
+        return null;
+      }).filter(member -> member != null).collect(Collectors.toList());
+
+      Iterable<FamilyMembers> savedMembers = memberRepository.saveAll(updated);
+
+      savedMembers.forEach(member -> {
+        colors.add(new ColorDtoBuilder().withFamily(member.getFamily().getName())
+            .withFamilyId(member.getFamily().getId())
+            .withUserId(requestingUser.getId())
+            .withColor(member.getEventColor())
+            .build());
+      });
+    }
+    User savedUser = userRepository.save(requestingUser);
+    return new UserDtoBuilder().fromUserObj(savedUser).withColorsByFamily(colors).build();
   }
 
   /**

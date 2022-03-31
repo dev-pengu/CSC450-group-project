@@ -11,6 +11,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
+import com.familyorg.familyorganizationapp.repository.UserRepository;
 import com.familyorg.familyorganizationapp.service.SecurityService;
 
 @Service
@@ -20,6 +21,8 @@ public class SecurityServiceImpl implements SecurityService {
 
   @Autowired
   private UserDetailsService userDetailsService;
+  @Autowired
+  private UserRepository userRepository;
 
   private Logger LOG = LoggerFactory.getLogger(SecurityServiceImpl.class);
 
@@ -32,6 +35,7 @@ public class SecurityServiceImpl implements SecurityService {
 
     authenticationManager.authenticate(usernamePasswordAuthenticationToken);
     if (usernamePasswordAuthenticationToken.isAuthenticated()) {
+      userRepository.updateLastLoggedIn(username);
       SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
     }
   }
@@ -59,6 +63,7 @@ public class SecurityServiceImpl implements SecurityService {
 
     authenticationManager.authenticate(usernamePasswordAuthenticationToken);
     if (usernamePasswordAuthenticationToken.isAuthenticated()) {
+      userRepository.updateLastLoggedIn(username);
       return userDetails;
     }
     return null;

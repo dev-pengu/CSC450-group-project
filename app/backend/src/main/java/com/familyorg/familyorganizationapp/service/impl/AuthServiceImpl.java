@@ -1,5 +1,8 @@
 package com.familyorg.familyorganizationapp.service.impl;
 
+import java.time.Instant;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.regex.Pattern;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,9 +33,6 @@ public class AuthServiceImpl implements AuthService {
       throw new UserNotFoundException("Username not found");
     }
     List<GrantedAuthority> auth = AuthorityUtils.commaSeparatedStringToAuthorityList("ROLE_USER");
-    if (username.equals("admin")) {
-      auth = AuthorityUtils.commaSeparatedStringToAuthorityList("ROLE_ADMIN");
-    }
     String password = user.getPassword();
     return new org.springframework.security.core.userdetails.User(username, password, auth);
   }
@@ -54,5 +54,17 @@ public class AuthServiceImpl implements AuthService {
       return false;
     }
     return passwordPattern.matcher(password).matches();
+  }
+
+  @Override
+  public boolean hasAuthenticatedForSensitiveActions(String username) {
+    User user = userRepository.findByUsername(username);
+    Calendar cal = Calendar.getInstance();
+    cal.setTime(Date.from(Instant.now()));
+    cal.add(Calendar.MINUTE, -15);
+    if (user.getLastLoggedIn().compareTo(cal.getTime()) > 0) {
+      return true;
+    }
+    return false;
   }
 }

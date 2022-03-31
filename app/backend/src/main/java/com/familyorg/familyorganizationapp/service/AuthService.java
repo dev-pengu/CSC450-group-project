@@ -7,4 +7,6 @@ public interface AuthService extends UserDetailsService {
   UserDetails getSessionUserDetails();
 
   boolean verifyPasswordRequirements(String password);
+
+  boolean hasAuthenticatedForSensitiveActions(String username);
 }
