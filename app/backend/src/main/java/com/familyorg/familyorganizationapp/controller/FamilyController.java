@@ -58,8 +58,8 @@ public class FamilyController {
   }
 
   @GetMapping("/get-family")
-  public ResponseEntity<List<FamilyDto>> getFamilies(@RequestParam("userId") Long userId) {
-    List<FamilyDto> families = familyService.getFamiliesByUser(userId);
+  public ResponseEntity<List<FamilyDto>> getFamilies() {
+    List<FamilyDto> families = familyService.getFamiliesByUser();
     return new ResponseEntity<List<FamilyDto>>(families, HttpStatus.OK);
   }
 

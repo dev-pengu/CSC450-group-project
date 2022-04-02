@@ -20,7 +20,7 @@ public interface FamilyService {
 
   Optional<Family> getFamilyById(Long id);
 
-  List<FamilyDto> getFamiliesByUser(Long userId) throws UserNotFoundException;
+  List<FamilyDto> getFamiliesByUser() throws UserNotFoundException;
 
   FamilyDto updateFamily(FamilyDto familyRequest)
       throws AuthorizationException, FamilyNotFoundException, UserNotFoundException;

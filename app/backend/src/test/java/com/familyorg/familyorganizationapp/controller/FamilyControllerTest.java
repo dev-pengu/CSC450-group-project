@@ -55,8 +55,9 @@ public class FamilyControllerTest {
     messagingService = mock(MessagingServiceImpl.class);
     when(messagingService.buildInviteContent(any(String.class), any(String.class)))
         .thenReturn("test");
-    doNothing().when(messagingService).sendHtmlEmail(any(String.class), any(String.class),
-        any(String.class));
+    doNothing().when(messagingService)
+        .sendHtmlEmail(any(String.class), any(String.class),
+            any(String.class));
     familyController = new FamilyController(familyService, inviteService, messagingService);
   }
 
@@ -66,7 +67,8 @@ public class FamilyControllerTest {
     when(familyService.getFamily(any(FamilyDto.class))).thenAnswer(
         invocation -> mockServiceResponse(invocation.getArgument(0), false, false, false, false));
     FamilyDto request = new FamilyDtoBuilder()
-        .withRequestingUser(new UserDtoBuilder().withUsername("testuser").build()).withId(1l)
+        .withRequestingUser(new UserDtoBuilder().withUsername("testuser").build())
+        .withId(1l)
         .build();
 
     /* When */
@@ -82,12 +84,11 @@ public class FamilyControllerTest {
   @Test
   public void getFamilies_success() {
     /* Given */
-    when(familyService.getFamiliesByUser(any(Long.class)))
-        .thenAnswer(invocation -> mockServiceResponse(invocation.getArgument(0), 2, false));
-    Long userId = 1l;
+    when(familyService.getFamiliesByUser())
+        .thenAnswer(invocation -> mockServiceResponse(1l, 2, false));
 
     /* When */
-    ResponseEntity<?> response = familyController.getFamilies(userId);
+    ResponseEntity<?> response = familyController.getFamilies();
 
     /* Then */
     assertNotNull(response);
@@ -101,11 +102,13 @@ public class FamilyControllerTest {
     /* Given */
     when(familyService.createFamily(any(FamilyDto.class))).thenAnswer(
         invocation -> mockServiceResponse(invocation.getArgument(0), false, false, false, false));
-    FamilyDto request = new FamilyDtoBuilder().withName("Test Family").withEventColor("fffff")
+    FamilyDto request = new FamilyDtoBuilder().withName("Test Family")
+        .withEventColor("fffff")
         .withTimezone("America/Chicago")
         .withOwner(new FamilyMemberDtoBuilder()
             .withUser(new UserDtoBuilder().withUsername("testuser").build())
-            .withEventColor("ffffff").build())
+            .withEventColor("ffffff")
+            .build())
         .build();
 
     /* When */
@@ -124,7 +127,8 @@ public class FamilyControllerTest {
         invocation -> mockServiceResponse(invocation.getArgument(0), false, false, false, false));
     FamilyDto request = new FamilyDtoBuilder().withId(1l)
         .withRequestingUser(new UserDtoBuilder().withUsername("testuser").build())
-        .withEventColor("000000").build();
+        .withEventColor("000000")
+        .build();
 
     /* When */
     ResponseEntity<?> response = familyController.updateFamily(request);
@@ -162,8 +166,10 @@ public class FamilyControllerTest {
           family.setMembers(new HashSet<>(Collections.singleton(owner)));
           return new MemberInvite(family, invocation.getArgument(1));
         });
-    MemberInviteDto request = new MemberInviteDtoBuilder().withFamilyId(1l).withPersistence(false)
-        .withRecipientEmail("testemail@test.com").build();
+    MemberInviteDto request = new MemberInviteDtoBuilder().withFamilyId(1l)
+        .withPersistence(false)
+        .withRecipientEmail("testemail@test.com")
+        .build();
 
     /* When */
     ResponseEntity<?> response = familyController.generateInvite(request);
@@ -187,8 +193,11 @@ public class FamilyControllerTest {
           family.setMembers(new HashSet<>(Collections.singleton(owner)));
           return new MemberInvite(family, invocation.getArgument(1), invocation.getArgument(2));
         });
-    MemberInviteDto request = new MemberInviteDtoBuilder().withFamilyId(1l).withPersistence(false)
-        .withRecipientEmail("testemail@test.com").withInitialRole(Role.ADULT).build();
+    MemberInviteDto request = new MemberInviteDtoBuilder().withFamilyId(1l)
+        .withPersistence(false)
+        .withRecipientEmail("testemail@test.com")
+        .withInitialRole(Role.ADULT)
+        .build();
 
     /* When */
     ResponseEntity<?> response = familyController.generateInvite(request);
@@ -265,8 +274,11 @@ public class FamilyControllerTest {
     /* Given */
     when(familyService.transferOwnership(any(FamilyDto.class))).thenAnswer(
         invocation -> mockServiceResponse(invocation.getArgument(0), false, false, false, false));
-    FamilyDto request = new FamilyDtoBuilder().withId(1l).withOwner(new FamilyMemberDtoBuilder()
-        .withUser(new UserDtoBuilder().withUsername("testuser").build()).build()).build();
+    FamilyDto request = new FamilyDtoBuilder().withId(1l)
+        .withOwner(new FamilyMemberDtoBuilder()
+            .withUser(new UserDtoBuilder().withUsername("testuser").build())
+            .build())
+        .build();
 
     /* When */
     ResponseEntity<?> response = familyController.transferOwnership(request);
@@ -293,20 +305,33 @@ public class FamilyControllerTest {
     if (throwBadRequest) {
       throw new BadRequestException();
     }
-    UserDto requestingUser = new UserDtoBuilder().withFirstName("Test").withLastName("User")
-        .withUsername("testuser").withId(1l).withEmail("testuser@test.com").build();
-    return new FamilyDtoBuilder().withId(1l).withEventColor("ffffff").withInviteCode(null)
-        .withName("Test Family").withTimezone("America/Chicago").withRequestingUser(requestingUser)
+    UserDto requestingUser = new UserDtoBuilder().withFirstName("Test")
+        .withLastName("User")
+        .withUsername("testuser")
+        .withId(1l)
+        .withEmail("testuser@test.com")
+        .build();
+    return new FamilyDtoBuilder().withId(1l)
+        .withEventColor("ffffff")
+        .withInviteCode(null)
+        .withName("Test Family")
+        .withTimezone("America/Chicago")
+        .withRequestingUser(requestingUser)
         .withOwner(new FamilyMemberDto(requestingUser, "ffffff", 1l, Role.OWNER))
         .withMembers(new HashSet<>() {
           {
             add(new FamilyMemberDto(requestingUser, "ffffff", 1l, Role.OWNER));
             add(new FamilyMemberDto(
-                new UserDtoBuilder().withId(2l).withEmail("testuser2@test.com")
-                    .withFirstName("Test").withLastName("User2").withUsername("testuser2").build(),
+                new UserDtoBuilder().withId(2l)
+                    .withEmail("testuser2@test.com")
+                    .withFirstName("Test")
+                    .withLastName("User2")
+                    .withUsername("testuser2")
+                    .build(),
                 "eaeaea", 1l, Role.ADMIN));
           }
-        }).build();
+        })
+        .build();
   }
 
   private List<FamilyDto> mockServiceResponse(Long userId, int numResponse, boolean throwUser)
@@ -314,12 +339,19 @@ public class FamilyControllerTest {
     if (throwUser) {
       throw new UserNotFoundException();
     }
-    UserDto requestingUser = new UserDtoBuilder().withFirstName("Test").withLastName("User")
-        .withUsername("testuser").withId(userId).withEmail("testuser@test.com").build();
+    UserDto requestingUser = new UserDtoBuilder().withFirstName("Test")
+        .withLastName("User")
+        .withUsername("testuser")
+        .withId(userId)
+        .withEmail("testuser@test.com")
+        .build();
     List<FamilyDto> response = new ArrayList<>();
     for (int i = 1; i <= numResponse; i++) {
-      response.add(new FamilyDtoBuilder().withId(Long.valueOf(i)).withEventColor("ffffff")
-          .withInviteCode(null).withName("Test Family " + i).withTimezone("America/Chicago")
+      response.add(new FamilyDtoBuilder().withId(Long.valueOf(i))
+          .withEventColor("ffffff")
+          .withInviteCode(null)
+          .withName("Test Family " + i)
+          .withTimezone("America/Chicago")
           .withRequestingUser(requestingUser)
           .withOwner(new FamilyMemberDto(requestingUser, "ffffff", Long.valueOf(i), Role.OWNER))
           .withMembers(new HashSet<>(Collections.singleton(
