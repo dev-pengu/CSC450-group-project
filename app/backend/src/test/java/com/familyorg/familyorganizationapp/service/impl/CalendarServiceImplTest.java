@@ -11,11 +11,13 @@ import static org.mockito.Mockito.when;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -210,12 +212,16 @@ public class CalendarServiceImplTest {
   @Order(3)
   public void test_add_calendar_event() {
     /* Given */
+    java.util.Calendar cal = java.util.Calendar.getInstance();
+    cal.add(java.util.Calendar.DAY_OF_YEAR, 6);
+    String requestDate = DateUtil.toTimezone(Date.from(cal.toInstant()),
+        TimeZone.getTimeZone("America/Chicago"), TimeZone.getTimeZone("America/Chicago"));
     CalendarEventDto request = new CalendarEventDtoBuilder().withCalendarId(1l)
         .setIsAllDay(true)
         .setIsFamilyEvent(true)
-        .withStartDate("2022-04-01 00:00")
+        .withStartDate(requestDate)
         .withDescription("Test event")
-        .withEndDate("2022-04-01 00:00")
+        .withEndDate(requestDate)
         .withNotes("")
         .build();
 
@@ -240,11 +246,15 @@ public class CalendarServiceImplTest {
   @Order(4)
   public void test_add_calendar_event_with_recurring_schedule() {
     /* Given */
+    java.util.Calendar cal = java.util.Calendar.getInstance();
+    cal.add(java.util.Calendar.DAY_OF_YEAR, 6);
+    String requestDate = DateUtil.toTimezone(Date.from(cal.toInstant()),
+        TimeZone.getTimeZone("America/Chicago"), TimeZone.getTimeZone("America/Chicago"));
     CalendarEventDto request = new CalendarEventDtoBuilder().withCalendarId(1l)
         .setIsAllDay(false)
         .setIsFamilyEvent(false)
-        .withStartDate("2022-04-01 18:00")
-        .withEndDate("2022-04-01 19:00")
+        .withStartDate(requestDate)
+        .withEndDate(requestDate)
         .withDescription("Test Recurring Event")
         .withNotes("")
         .withRepetitionSchedule(
@@ -276,12 +286,16 @@ public class CalendarServiceImplTest {
   @Test
   public void test_update_non_recurring_event() {
     /* Given */
+    java.util.Calendar cal = java.util.Calendar.getInstance();
+    cal.add(java.util.Calendar.DAY_OF_YEAR, 6);
+    String requestDate = DateUtil.toTimezone(Date.from(cal.toInstant()),
+        TimeZone.getTimeZone("America/Chicago"), TimeZone.getTimeZone("America/Chicago"));
     CalendarEventDto request = new CalendarEventDtoBuilder().withCalendarId(1l)
         .setIsAllDay(true)
         .setIsFamilyEvent(true)
-        .withStartDate("2022-04-01 00:00")
+        .withStartDate(requestDate)
         .withDescription("Updated Test event")
-        .withEndDate("2022-04-01 00:00")
+        .withEndDate(requestDate)
         .withNotes("")
         .withId(1l)
         .setRecurringEvent(false)
@@ -301,13 +315,17 @@ public class CalendarServiceImplTest {
   @Test
   public void test_update_recurring_event() {
     /* Given */
+    java.util.Calendar cal = java.util.Calendar.getInstance();
+    cal.add(java.util.Calendar.DAY_OF_YEAR, 6);
+    String requestDate = DateUtil.toTimezone(Date.from(cal.toInstant()),
+        TimeZone.getTimeZone("America/Chicago"), TimeZone.getTimeZone("America/Chicago"));
     CalendarEventDto request =
         new CalendarEventDtoBuilder().withRecurringId(1l)
             .setRecurringEvent(true)
             .setIsAllDay(false)
             .setIsFamilyEvent(false)
-            .withStartDate("2022-04-01 19:00")
-            .withEndDate("2022-04-01 20:00")
+            .withStartDate(requestDate)
+            .withEndDate(requestDate)
             .withDescription("Test Recurring Event")
             .withNotes("")
             .withId(null)
