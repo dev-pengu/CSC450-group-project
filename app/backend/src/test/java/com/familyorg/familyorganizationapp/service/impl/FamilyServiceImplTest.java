@@ -31,13 +31,14 @@ import com.familyorg.familyorganizationapp.DTO.builder.FamilyMemberDtoBuilder;
 import com.familyorg.familyorganizationapp.DTO.builder.UserDtoBuilder;
 import com.familyorg.familyorganizationapp.Exception.AuthorizationException;
 import com.familyorg.familyorganizationapp.Exception.BadRequestException;
-import com.familyorg.familyorganizationapp.Exception.FamilyNotFoundException;
+import com.familyorg.familyorganizationapp.Exception.ResourceNotFoundException;
 import com.familyorg.familyorganizationapp.Exception.UserNotFoundException;
 import com.familyorg.familyorganizationapp.domain.Family;
 import com.familyorg.familyorganizationapp.domain.FamilyMembers;
 import com.familyorg.familyorganizationapp.domain.Role;
 import com.familyorg.familyorganizationapp.domain.User;
 import com.familyorg.familyorganizationapp.domain.id.FamilyMemberId;
+import com.familyorg.familyorganizationapp.repository.CalendarRepository;
 import com.familyorg.familyorganizationapp.repository.FamilyMemberRepository;
 import com.familyorg.familyorganizationapp.repository.FamilyRepository;
 import com.familyorg.familyorganizationapp.service.UserService;
@@ -50,6 +51,7 @@ public class FamilyServiceImplTest {
   private FamilyMemberRepository familyMemberRepository;
   private FamilyRepository familyRepository;
   private UserService userService;
+  private CalendarRepository calendarRepository;
 
   static User TEST_USER_1 =
       new User(1l, "Test", "User", "testuser", "password", "testuser@test.com", null);
@@ -140,10 +142,9 @@ public class FamilyServiceImplTest {
       return family;
     });
     familyMemberRepository = mock(FamilyMemberRepository.class);
-    familyService = new FamilyServiceImpl();
-    familyService.setFamilyMemberRepository(familyMemberRepository);
-    familyService.setFamilyRepository(familyRepository);
-    familyService.setUserService(userService);
+    calendarRepository = mock(CalendarRepository.class);
+    familyService = new FamilyServiceImpl(familyRepository, familyMemberRepository,
+        calendarRepository, userService);
 
     when(userService.getUserByEmail(any(String.class)))
         .thenAnswer(invocation -> usersByEmail.get(invocation.getArgument(0)));
@@ -160,7 +161,9 @@ public class FamilyServiceImplTest {
       return Optional.of(family);
     });
     when(familyRepository.getFamiliesByUserId(any(Long.class)))
-        .thenAnswer(invocation -> usersById.get(invocation.getArgument(0)).getFamilies().stream()
+        .thenAnswer(invocation -> usersById.get(invocation.getArgument(0))
+            .getFamilies()
+            .stream()
             .map(familyMember -> familiesById.get(familyMember.getFamily().getId()))
             .collect(Collectors.toList()));
     when(familyMemberRepository.findById(any(FamilyMemberId.class))).thenAnswer(invocation -> {
@@ -178,9 +181,12 @@ public class FamilyServiceImplTest {
     /* Given */
     when(userService.getRequestingUser()).thenReturn(TEST_USER_1);
     FamilyDto request = new FamilyDtoBuilder().withId(1l).build();
-    FamilyDto expected = new FamilyDtoBuilder().withId(FAMILY_1.getId()).withInviteCode(null)
-        .withEventColor(FAMILY_1.getEventColor()).withName(FAMILY_1.getName())
-        .withTimezone(FAMILY_1.getTimezone()).withRequestingUser(UserDto.fromUserObj(TEST_USER_1))
+    FamilyDto expected = new FamilyDtoBuilder().withId(FAMILY_1.getId())
+        .withInviteCode(null)
+        .withEventColor(FAMILY_1.getEventColor())
+        .withName(FAMILY_1.getName())
+        .withTimezone(FAMILY_1.getTimezone())
+        .withRequestingUser(UserDto.fromUserObj(TEST_USER_1))
         .withOwner(FamilyMemberDto.fromFamilyMemberObj(familyOneMembers.get(0)))
         .withMembers(familyOneMembers.stream()
             .map(familyMember -> FamilyMemberDto.fromFamilyMemberObj(familyMember))
@@ -213,17 +219,23 @@ public class FamilyServiceImplTest {
     /* Given */
     when(userService.getRequestingUser()).thenReturn(TEST_USER_1);
     List<FamilyDto> expectedFamilyDtos = new ArrayList<>();
-    expectedFamilyDtos.add(new FamilyDtoBuilder().withId(FAMILY_1.getId()).withInviteCode(null)
-        .withEventColor(FAMILY_1.getEventColor()).withName(FAMILY_1.getName())
-        .withTimezone(FAMILY_1.getTimezone()).withRequestingUser(UserDto.fromUserObj(TEST_USER_1))
+    expectedFamilyDtos.add(new FamilyDtoBuilder().withId(FAMILY_1.getId())
+        .withInviteCode(null)
+        .withEventColor(FAMILY_1.getEventColor())
+        .withName(FAMILY_1.getName())
+        .withTimezone(FAMILY_1.getTimezone())
+        .withRequestingUser(UserDto.fromUserObj(TEST_USER_1))
         .withOwner(FamilyMemberDto.fromFamilyMemberObj(familyOneMembers.get(0)))
         .withMembers(familyOneMembers.stream()
             .map(familyMember -> FamilyMemberDto.fromFamilyMemberObj(familyMember))
             .collect(Collectors.toSet()))
         .build());
-    expectedFamilyDtos.add(new FamilyDtoBuilder().withId(FAMILY_3.getId()).withInviteCode(null)
-        .withEventColor(FAMILY_3.getEventColor()).withName(FAMILY_3.getName())
-        .withTimezone(FAMILY_3.getTimezone()).withRequestingUser(UserDto.fromUserObj(TEST_USER_1))
+    expectedFamilyDtos.add(new FamilyDtoBuilder().withId(FAMILY_3.getId())
+        .withInviteCode(null)
+        .withEventColor(FAMILY_3.getEventColor())
+        .withName(FAMILY_3.getName())
+        .withTimezone(FAMILY_3.getTimezone())
+        .withRequestingUser(UserDto.fromUserObj(TEST_USER_1))
         .withOwner(FamilyMemberDto.fromFamilyMemberObj(familyThreeMembers.get(0)))
         .withMembers(familyThreeMembers.stream()
             .map(familyMember -> FamilyMemberDto.fromFamilyMemberObj(familyMember))
@@ -254,16 +266,24 @@ public class FamilyServiceImplTest {
   public void when_create_with_required_params_then_familydto_returned() {
     /* Given */
     when(userService.getRequestingUser()).thenReturn(TEST_USER_1);
-    FamilyDto request = new FamilyDtoBuilder().withEventColor("ffffff").withName("Test Family")
+    FamilyDto request = new FamilyDtoBuilder().withEventColor("ffffff")
+        .withName("Test Family")
         .withTimezone("America/Chicago")
-        .withOwner(new FamilyMemberDtoBuilder().withEventColor("aeaeae").build()).build();
+        .withOwner(new FamilyMemberDtoBuilder().withEventColor("aeaeae").build())
+        .build();
     FamilyMemberDto expectedFamilyMemberObj =
-        new FamilyMemberDtoBuilder().withUser(UserDto.fromUserObj(TEST_USER_1)).withFamilyId(3l)
-            .withEventColor("aeaeae").withRole(Role.OWNER).build();
-    FamilyDto expected = new FamilyDtoBuilder().withId(3l).withEventColor("ffffff")
-        .withName("Test Family").withTimezone("America/Chicago")
+        new FamilyMemberDtoBuilder().withUser(UserDto.fromUserObj(TEST_USER_1))
+            .withFamilyId(3l)
+            .withEventColor("aeaeae")
+            .withRole(Role.OWNER)
+            .build();
+    FamilyDto expected = new FamilyDtoBuilder().withId(3l)
+        .withEventColor("ffffff")
+        .withName("Test Family")
+        .withTimezone("America/Chicago")
         .withMembers(new HashSet<>(Collections.singleton(expectedFamilyMemberObj)))
-        .withOwner(expectedFamilyMemberObj).withRequestingUser(UserDto.fromUserObj(TEST_USER_1))
+        .withOwner(expectedFamilyMemberObj)
+        .withRequestingUser(UserDto.fromUserObj(TEST_USER_1))
         .build();
 
     /* When */
@@ -279,8 +299,10 @@ public class FamilyServiceImplTest {
     /* Given */
     when(userService.getRequestingUser()).thenReturn(TEST_USER_1);
     FamilyDto request =
-        new FamilyDtoBuilder().withEventColor("ffffff").withTimezone("America/Chicago")
-            .withOwner(new FamilyMemberDtoBuilder().withEventColor("aeaeae").build()).build();
+        new FamilyDtoBuilder().withEventColor("ffffff")
+            .withTimezone("America/Chicago")
+            .withOwner(new FamilyMemberDtoBuilder().withEventColor("aeaeae").build())
+            .build();
 
     /* When */
     assertThrows(BadRequestException.class, () -> {
@@ -322,7 +344,7 @@ public class FamilyServiceImplTest {
     FamilyDto request = new FamilyDtoBuilder().withId(4l).withEventColor("01c89e").build();
 
     /* When */
-    assertThrows(FamilyNotFoundException.class, () -> {
+    assertThrows(ResourceNotFoundException.class, () -> {
       familyService.updateFamily(request);
     });
   }
@@ -406,7 +428,8 @@ public class FamilyServiceImplTest {
     when(userService.getRequestingUser()).thenReturn(TEST_USER_1);
     FamilyDto request = new FamilyDtoBuilder().withId(FAMILY_3.getId())
         .withOwner(new FamilyMemberDtoBuilder()
-            .withUser(new UserDtoBuilder().withUsername(TEST_USER_2.getUsername()).build()).build())
+            .withUser(new UserDtoBuilder().withUsername(TEST_USER_2.getUsername()).build())
+            .build())
         .build();
 
     /* When */
@@ -415,7 +438,8 @@ public class FamilyServiceImplTest {
     /* Then */
     assertNotNull(response);
     assertEquals(TEST_USER_2.getId(), response.getOwner().getUser().getId());
-    assertTrue(response.getMembers().stream()
+    assertTrue(response.getMembers()
+        .stream()
         .filter(member -> member.getUser().getId().equals(TEST_USER_1.getId())
             && member.getRole().equals(Role.ADMIN))
         .count() > 0);
@@ -427,11 +451,12 @@ public class FamilyServiceImplTest {
     when(userService.getRequestingUser()).thenReturn(TEST_USER_1);
     FamilyDto request = new FamilyDtoBuilder().withId(5l)
         .withOwner(new FamilyMemberDtoBuilder()
-            .withUser(new UserDtoBuilder().withUsername(TEST_USER_2.getUsername()).build()).build())
+            .withUser(new UserDtoBuilder().withUsername(TEST_USER_2.getUsername()).build())
+            .build())
         .build();
 
     /* Given */
-    assertThrows(FamilyNotFoundException.class, () -> {
+    assertThrows(ResourceNotFoundException.class, () -> {
       familyService.transferOwnership(request);
     });
   }
@@ -442,7 +467,8 @@ public class FamilyServiceImplTest {
     when(userService.getRequestingUser()).thenReturn(TEST_USER_1);
     FamilyDto request = new FamilyDtoBuilder().withId(FAMILY_2.getId())
         .withOwner(new FamilyMemberDtoBuilder()
-            .withUser(new UserDtoBuilder().withUsername(TEST_USER_1.getUsername()).build()).build())
+            .withUser(new UserDtoBuilder().withUsername(TEST_USER_1.getUsername()).build())
+            .build())
         .build();
 
     /* Given */
@@ -457,7 +483,8 @@ public class FamilyServiceImplTest {
     when(userService.getRequestingUser()).thenReturn(TEST_USER_2);
     FamilyDto request = new FamilyDtoBuilder().withId(FAMILY_3.getId())
         .withOwner(new FamilyMemberDtoBuilder()
-            .withUser(new UserDtoBuilder().withUsername(TEST_USER_2.getUsername()).build()).build())
+            .withUser(new UserDtoBuilder().withUsername(TEST_USER_2.getUsername()).build())
+            .build())
         .build();
 
     /* Given */
@@ -472,7 +499,8 @@ public class FamilyServiceImplTest {
     when(userService.getRequestingUser()).thenReturn(TEST_USER_1);
     FamilyDto request = new FamilyDtoBuilder().withId(FAMILY_3.getId())
         .withOwner(new FamilyMemberDtoBuilder()
-            .withUser(new UserDtoBuilder().withUsername("userthatdoesntexist").build()).build())
+            .withUser(new UserDtoBuilder().withUsername("userthatdoesntexist").build())
+            .build())
         .build();
 
     /* Given */
@@ -487,7 +515,8 @@ public class FamilyServiceImplTest {
     when(userService.getRequestingUser()).thenReturn(TEST_USER_3);
     FamilyDto request = new FamilyDtoBuilder().withId(FAMILY_1.getId())
         .withOwner(new FamilyMemberDtoBuilder()
-            .withUser(new UserDtoBuilder().withUsername(TEST_USER_2.getUsername()).build()).build())
+            .withUser(new UserDtoBuilder().withUsername(TEST_USER_2.getUsername()).build())
+            .build())
         .build();
 
     /* Given */

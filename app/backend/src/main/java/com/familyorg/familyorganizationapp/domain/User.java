@@ -21,7 +21,8 @@ public class User implements Serializable {
   private static final long serialVersionUID = -4364743442691665173L;
 
   @Id
-  @GeneratedValue(strategy = GenerationType.AUTO)
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Column(name = "user_id", columnDefinition = "BIGSERIAL")
   private Long id;
 
   @Column(name = "first_name", columnDefinition = "VARCHAR(50)", nullable = false)
@@ -39,6 +40,9 @@ public class User implements Serializable {
   @Column(name = "email", columnDefinition = "VARCHAR(70)", nullable = false, unique = true)
   private String email;
 
+  @Column(name = "timezone", columnDefinition = "VARCHAR(256)", nullable = true)
+  private String timezone;
+
   @JsonIgnore
   @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, orphanRemoval = true,
       cascade = CascadeType.ALL)
@@ -51,6 +55,11 @@ public class User implements Serializable {
 
   public User(Long id, String firstName, String lastName, String username, String password,
       String email, Set<FamilyMembers> families) {
+    this(id, firstName, lastName, username, password, email, null, families);
+  }
+
+  public User(Long id, String firstName, String lastName, String username, String password,
+      String email, String timezone, Set<FamilyMembers> families) {
     this.id = id;
     this.firstName = firstName;
     this.lastName = lastName;
@@ -58,16 +67,23 @@ public class User implements Serializable {
     this.password = password;
     this.email = email;
     this.families = families;
+    this.timezone = timezone;
   }
 
   public User(String firstName, String lastName, String username, String password, String email,
       Set<FamilyMembers> families) {
+    this(firstName, lastName, username, password, email, null, families);
+  }
+
+  public User(String firstName, String lastName, String username, String password, String email,
+      String timezone, Set<FamilyMembers> families) {
     this.firstName = firstName;
     this.lastName = lastName;
     this.username = username;
     this.password = password;
     this.email = email;
     this.families = families;
+    this.timezone = timezone;
   }
 
   public Long getId() {
@@ -130,10 +146,20 @@ public class User implements Serializable {
     return this.firstName + " " + this.lastName;
   }
 
+  public String getTimezone() {
+    return timezone;
+  }
+
+
+  public void setTimezone(String timezone) {
+    this.timezone = timezone;
+  }
+
+
   @Override
   public String toString() {
     return "User [id=" + id + ", firstName=" + firstName + ", lastName=" + lastName + ", username="
-        + username + ", email=" + email + "]";
+        + username + ", email=" + email + ", timezone=" + timezone + "]";
   }
 
   @Override

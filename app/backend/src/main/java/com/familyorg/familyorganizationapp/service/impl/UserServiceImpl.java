@@ -1,7 +1,6 @@
 package com.familyorg.familyorganizationapp.service.impl;
 
 import java.util.Optional;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -20,15 +19,20 @@ import com.familyorg.familyorganizationapp.service.UserService;
 @Service
 public class UserServiceImpl implements UserService {
 
-  @Autowired
   UserRepository userRepository;
-  @Autowired
   AuthService authService;
-  @Autowired
   SecurityService securityService;
 
-  @Autowired
   BCryptPasswordEncoder bCryptPasswordEncoder;
+
+  public UserServiceImpl(UserRepository userRepository, AuthService authService,
+      SecurityService securityService, BCryptPasswordEncoder bCryptPasswordEncoder) {
+    super();
+    this.userRepository = userRepository;
+    this.authService = authService;
+    this.securityService = securityService;
+    this.bCryptPasswordEncoder = bCryptPasswordEncoder;
+  }
 
   @Override
   public UserDto getUserData() throws AuthorizationException, UserNotFoundException {
@@ -130,12 +134,13 @@ public class UserServiceImpl implements UserService {
     return user;
   }
 
-  void setUserRepository(UserRepository userRepository) {
-    this.userRepository = userRepository;
+  @Override
+  public UserDto updateUser(UserDto request) {
+    User requestingUser = getRequestingUser();
+    requestingUser.setFirstName(request.getFirstName());
+    requestingUser.setLastName(requestingUser.getLastName());
+    requestingUser.setTimezone(request.getTimezone());
+    User savedUser = userRepository.save(requestingUser);
+    return UserDto.fromUserObj(savedUser);
   }
-
-  void setAuthService(AuthService authService) {
-    this.authService = authService;
-  }
-
 }
