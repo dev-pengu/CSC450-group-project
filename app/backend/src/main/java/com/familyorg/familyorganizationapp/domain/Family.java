@@ -170,6 +170,12 @@ public class Family implements Serializable {
     this.calendars.add(calendar);
   }
 
+  public boolean isMember(User user) {
+    return this.members.stream()
+        .filter(member -> member.getUser().getId().equals(user.getId()))
+        .count() > 0;
+  }
+
   @Override
   public String toString() {
     return "Family [id=" + id + ", name=" + name + ", eventColor=" + eventColor + ", timezone="
