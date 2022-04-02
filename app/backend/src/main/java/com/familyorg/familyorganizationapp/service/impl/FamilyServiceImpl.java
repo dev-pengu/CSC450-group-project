@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.stream.Collectors;
 import javax.transaction.Transactional;
 import org.slf4j.Logger;
@@ -303,6 +304,12 @@ public class FamilyServiceImpl implements FamilyService {
         .filter(member -> member.getUser().getUsername().equals(user.getUsername())
             && member.getRole().getLevel() >= minimumRole.getLevel())
         .count() > 0;
+  }
+
+  @Override
+  public TimeZone getUserTimeZoneOrDefault(User requestingUser, Family family) {
+    return requestingUser.getTimezone() != null ? TimeZone.getTimeZone(requestingUser.getTimezone())
+        : TimeZone.getTimeZone(family.getTimezone());
   }
 
   @Override

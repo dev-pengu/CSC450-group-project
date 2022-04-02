@@ -27,7 +27,6 @@ import com.familyorg.familyorganizationapp.service.MessagingService;
 
 @RestController
 @RequestMapping("/api/v1/family")
-
 public class FamilyController {
 
   private static final Logger logger = LoggerFactory.getLogger(FamilyController.class);
@@ -78,7 +77,7 @@ public class FamilyController {
   }
 
   @DeleteMapping("/admin/delete")
-  public ResponseEntity<String> deleteFamily(@RequestParam("familyId") Long familyId) {
+  public ResponseEntity<String> deleteFamily(@RequestParam("id") Long familyId) {
     familyService.deleteFamily(familyId);
     return new ResponseEntity<String>("Family successfully deleted", HttpStatus.OK);
 
