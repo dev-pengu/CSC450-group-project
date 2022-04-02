@@ -63,32 +63,40 @@ public class FamilyController {
     return new ResponseEntity<List<FamilyDto>>(families, HttpStatus.OK);
   }
 
-  @PatchMapping()
+  @GetMapping("/invite/join")
+  public ResponseEntity<String> joinFamily(@RequestParam("code") String inviteCode,
+      @RequestParam("eventColor") String eventColor) {
+    InviteCode inviteCodeObj = InviteCode.parseFromCodeString(inviteCode);
+    inviteService.verifyMemberInvite(inviteCodeObj, eventColor);
+    return new ResponseEntity<String>("Success", HttpStatus.OK);
+  }
+
+  @PatchMapping("/admin/update")
   public ResponseEntity<FamilyDto> updateFamily(@RequestBody FamilyDto familyRequest) {
     FamilyDto family = familyService.updateFamily(familyRequest);
     return new ResponseEntity<FamilyDto>(family, HttpStatus.OK);
   }
 
-  @DeleteMapping("/delete")
+  @DeleteMapping("/admin/delete")
   public ResponseEntity<String> deleteFamily(@RequestParam("familyId") Long familyId) {
     familyService.deleteFamily(familyId);
     return new ResponseEntity<String>("Family successfully deleted", HttpStatus.OK);
 
   }
 
-  @PatchMapping("/transferOwnership")
+  @PatchMapping("/admin/transferOwnership")
   public ResponseEntity<FamilyDto> transferOwnership(@RequestBody FamilyDto familyRequest) {
     FamilyDto response = familyService.transferOwnership(familyRequest);
     return new ResponseEntity<FamilyDto>(response, HttpStatus.OK);
   }
 
-  @GetMapping("/invite")
+  @GetMapping("/admin/invites")
   public ResponseEntity<List<MemberInvite>> getInvites(@RequestParam("id") Long familyId) {
     List<MemberInvite> invites = inviteService.getInvites(familyId);
     return new ResponseEntity<List<MemberInvite>>(invites, HttpStatus.OK);
   }
 
-  @PostMapping("/invite/generate")
+  @PostMapping("/admin/invites/generate")
   public ResponseEntity<?> generateInvite(@RequestBody MemberInviteDto memberInvite) {
     if (memberInvite.isPersistent()) {
       FamilyDto familyWithInviteCode =
@@ -116,14 +124,6 @@ public class FamilyController {
       // status
       return new ResponseEntity<String>("Success", HttpStatus.OK);
     }
-  }
-
-  @GetMapping("/invite/join")
-  public ResponseEntity<String> joinFamily(@RequestParam("code") String inviteCode,
-      @RequestParam("eventColor") String eventColor) {
-    InviteCode inviteCodeObj = InviteCode.parseFromCodeString(inviteCode);
-    inviteService.verifyMemberInvite(inviteCodeObj, eventColor);
-    return new ResponseEntity<String>("Success", HttpStatus.OK);
   }
 
   @PostMapping("/admin/roles")
