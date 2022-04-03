@@ -26,10 +26,18 @@ export default {
       return this.$store.getters.isLoggedIn;
     },
   },
-  mounted: () => {
+  mounted() {
     window.onunload = () => {
       api.logout();
     };
+
+    const theme = localStorage.getItem('darkMode');
+    if (theme) {
+      this.$vuetify.theme.dark = theme !== 'false';
+    } else {
+      this.$vuetify.theme.dark = false;
+      localStorage.setItem('darkMode', this.$vuetify.theme.dark.toString());
+    }
   },
 };
 </script>
