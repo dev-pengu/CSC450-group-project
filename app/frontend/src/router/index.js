@@ -13,6 +13,7 @@ const routes = [
     component: Home,
     meta: {
       requiresAuth: true,
+      title: 'Home',
     },
   },
   {

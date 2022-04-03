@@ -4,13 +4,13 @@ import createPersistedState from 'vuex-persistedstate';
 
 // store modules
 import auth from './modules/auth';
+import navDrawer from './modules/navDrawer';
 
 Vue.use(Vuex);
 export default new Vuex.Store({
   modules: {
     auth,
+    navDrawer,
   },
-  plugins: [
-    createPersistedState({ key: 'appStore', storage: window.sessionStorage }),
-  ],
+  plugins: [createPersistedState({ key: 'appStore', storage: window.sessionStorage })],
 });

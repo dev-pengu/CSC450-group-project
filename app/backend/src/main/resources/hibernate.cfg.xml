@@ -12,5 +12,9 @@
     <mapping class="com.familyorg.familyorganizationapp.domain.FamilyMembers" />
     <mapping class="com.familyorg.familyorganizationapp.domain.User" />
     <mapping class="com.familyorg.familyorganizationapp.domain.MemberInvite" />
+    <mapping class="com.familyorg.familyorganizationapp.domain.Calendar" />
+    <mapping class="com.familyorg.familyorganizationapp.domain.CalendarEvent" />
+    <mapping class="com.familyorg.familyorganizationapp.domain.RecurringCalendarEvent" />
+    <mapping class="com.familyorg.familyorganizationapp.domain.EventRepetitionSchedule" />
   </session-factory>
 </hibernate-configuration>

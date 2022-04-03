@@ -24,4 +24,10 @@ public interface UserService {
 
   void changePassword(UserDto request)
       throws AuthorizationException, UserNotFoundException, BadRequestException;
+
+  UserDto updateUser(UserDto request);
+
+  UserDto getSettingsForUser();
+
+  UserDto updateUserSettingsAndData(UserDto request);
 }
