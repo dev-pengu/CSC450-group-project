@@ -3,6 +3,7 @@ package com.familyorg.familyorganizationapp.service;
 import java.util.List;
 import java.util.Optional;
 import com.familyorg.familyorganizationapp.DTO.FamilyDto;
+import com.familyorg.familyorganizationapp.DTO.FamilyRoleUpdateRequest;
 import com.familyorg.familyorganizationapp.Exception.AuthorizationException;
 import com.familyorg.familyorganizationapp.Exception.BadRequestException;
 import com.familyorg.familyorganizationapp.Exception.FamilyNotFoundException;
@@ -19,7 +20,7 @@ public interface FamilyService {
 
   Optional<Family> getFamilyById(Long id);
 
-  List<FamilyDto> getFamiliesByUser(Long userId) throws UserNotFoundException;
+  List<FamilyDto> getFamiliesByUser() throws UserNotFoundException;
 
   FamilyDto updateFamily(FamilyDto familyRequest)
       throws AuthorizationException, FamilyNotFoundException, UserNotFoundException;
@@ -38,4 +39,6 @@ public interface FamilyService {
   List<Long> getFamilyIdsByUser(String username);
 
   List<Family> getFamiliesByUser(String username);
+
+  void updateMemberRoles(FamilyRoleUpdateRequest request);
 }
