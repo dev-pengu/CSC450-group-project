@@ -2,6 +2,7 @@ package com.familyorg.familyorganizationapp.service.impl;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -16,6 +17,7 @@ import com.familyorg.familyorganizationapp.DTO.UserDto;
 import com.familyorg.familyorganizationapp.Exception.AuthorizationException;
 import com.familyorg.familyorganizationapp.Exception.UserNotFoundException;
 import com.familyorg.familyorganizationapp.domain.User;
+import com.familyorg.familyorganizationapp.repository.FamilyMemberRepository;
 import com.familyorg.familyorganizationapp.repository.UserRepository;
 import com.familyorg.familyorganizationapp.service.AuthService;
 import com.familyorg.familyorganizationapp.service.SecurityService;
@@ -27,6 +29,7 @@ public class UserServiceImplTest {
   private AuthService authService;
   private SecurityService securityService;
   private BCryptPasswordEncoder bCryptPasswordEncoder;
+  private FamilyMemberRepository memberRepository;
 
   static User TEST_USER_1 =
       new User(1l, "Test", "User", "testuser", "password", "testuser@test.com", null);
@@ -42,9 +45,11 @@ public class UserServiceImplTest {
     userRepository = mock(UserRepository.class);
     securityService = mock(SecurityService.class);
     bCryptPasswordEncoder = mock(BCryptPasswordEncoder.class);
+    memberRepository = mock(FamilyMemberRepository.class);
 
     userService =
-        new UserServiceImpl(userRepository, authService, securityService, bCryptPasswordEncoder);
+        new UserServiceImpl(userRepository, authService, securityService, bCryptPasswordEncoder,
+            memberRepository);
   }
 
   @Test
@@ -229,6 +234,8 @@ public class UserServiceImplTest {
         return false;
       }
     });
+
+    when(authService.hasAuthenticatedForSensitiveActions(any(String.class))).thenReturn(true);
     when(userRepository.findByUsername(TEST_USER_1.getUsername())).thenReturn(TEST_USER_1);
     doNothing().when(userRepository).delete(TEST_USER_1);
 

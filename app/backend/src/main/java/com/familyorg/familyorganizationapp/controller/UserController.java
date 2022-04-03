@@ -34,7 +34,6 @@ public class UserController {
   public ResponseEntity<String> deleteUser(@RequestParam("username") String username) {
     userService.deleteUser(username);
     return new ResponseEntity<>("Success", HttpStatus.OK);
-
   }
 
   /**
@@ -48,17 +47,15 @@ public class UserController {
     return new ResponseEntity<>(user, HttpStatus.OK);
   }
 
-  /**
-   * Update user fields other than username, email, and password.
-   *
-   * @param request
-   * @return
-   */
-  @PatchMapping()
-  public ResponseEntity<UserDto> updateUser(@RequestBody UserDto request) {
-    UserDto response = userService.updateUser(request);
-    return new ResponseEntity<>(response, HttpStatus.OK);
+  @GetMapping("/settings")
+  public ResponseEntity<UserDto> getCurrentUserSettings() {
+    UserDto response = userService.getSettingsForUser();
+    return new ResponseEntity<UserDto>(response, HttpStatus.OK);
   }
 
-
+  @PatchMapping("/settings")
+  public ResponseEntity<UserDto> updateCurrentUserSettings(@RequestBody UserDto user) {
+    UserDto response = userService.updateUserSettingsAndData(user);
+    return new ResponseEntity<UserDto>(response, HttpStatus.OK);
+  }
 }

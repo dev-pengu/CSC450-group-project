@@ -1,5 +1,6 @@
 package com.familyorg.familyorganizationapp.DTO;
 
+import java.util.List;
 import java.util.Objects;
 import com.familyorg.familyorganizationapp.domain.User;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -16,9 +17,14 @@ public class UserDto {
   @JsonInclude(Include.NON_NULL)
   private String newPassword;
   private String timezone;
+  @JsonInclude(Include.NON_NULL)
+  private Boolean useDarkMode;
+  @JsonInclude(Include.NON_EMPTY)
+  private List<ColorDto> colorsByFamily;
 
   public UserDto(Long id, String firstName, String lastName, String email, String username,
-      String oldPassword, String newPassword, String timezone) {
+      String oldPassword, String newPassword, String timezone, Boolean useDarkMode,
+      List<ColorDto> colorsByFamily) {
     super();
     this.id = id;
     this.firstName = firstName;
@@ -28,6 +34,8 @@ public class UserDto {
     this.oldPassword = oldPassword;
     this.newPassword = newPassword;
     this.timezone = timezone;
+    this.useDarkMode = useDarkMode;
+    this.colorsByFamily = colorsByFamily;
   }
 
   public Long getId() {
@@ -62,10 +70,19 @@ public class UserDto {
     return timezone;
   }
 
+  public Boolean getUseDarkMode() {
+    return useDarkMode;
+  }
+
+  public List<ColorDto> getColorsByFamily() {
+    return colorsByFamily;
+  }
+
   @Override
   public String toString() {
     return "UserDto [id=" + id + ", firstName=" + firstName + ", lastName=" + lastName + ", email="
-        + email + ", username=" + username + ", timezone=" + timezone + "]";
+        + email + ", username=" + username + ", timezone=" + timezone + ", useDarkMode="
+        + useDarkMode + "]";
   }
 
   @Override
@@ -89,7 +106,7 @@ public class UserDto {
 
   public static UserDto fromUserObj(User user) {
     return new UserDto(user.getId(), user.getFirstName(), user.getLastName(), user.getEmail(),
-        user.getUsername(), null, null, user.getTimezone());
+        user.getUsername(), null, null, user.getTimezone(), user.useDarkMode(), null);
   }
 
 }

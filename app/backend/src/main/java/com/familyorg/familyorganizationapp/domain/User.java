@@ -1,6 +1,7 @@
 package com.familyorg.familyorganizationapp.domain;
 
 import java.io.Serializable;
+import java.sql.Timestamp;
 import java.util.Objects;
 import java.util.Set;
 import javax.persistence.CascadeType;
@@ -42,6 +43,11 @@ public class User implements Serializable {
 
   @Column(name = "timezone", columnDefinition = "VARCHAR(256)", nullable = true)
   private String timezone;
+  @Column(name = "dark_mode", columnDefinition = "BOOLEAN DEFAULT FALSE")
+  private Boolean darkMode;
+
+  @Column(name = "last_logged_in", columnDefinition = "TIMESTAMP")
+  private Timestamp lastLoggedIn;
 
   @JsonIgnore
   @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, orphanRemoval = true,
@@ -68,6 +74,7 @@ public class User implements Serializable {
     this.email = email;
     this.families = families;
     this.timezone = timezone;
+    this.darkMode = false;
   }
 
   public User(String firstName, String lastName, String username, String password, String email,
@@ -84,6 +91,7 @@ public class User implements Serializable {
     this.email = email;
     this.families = families;
     this.timezone = timezone;
+    this.darkMode = false;
   }
 
   public Long getId() {
@@ -150,9 +158,25 @@ public class User implements Serializable {
     return timezone;
   }
 
-
   public void setTimezone(String timezone) {
     this.timezone = timezone;
+  }
+
+  public void setDarkMode(Boolean useDarkMode) {
+    this.darkMode = useDarkMode;
+  }
+
+  public Boolean useDarkMode() {
+    return this.darkMode;
+  }
+
+  public Timestamp getLastLoggedIn() {
+    return lastLoggedIn;
+  }
+
+
+  public void setLastLoggedIn(Timestamp lastLoggedIn) {
+    this.lastLoggedIn = lastLoggedIn;
   }
 
 

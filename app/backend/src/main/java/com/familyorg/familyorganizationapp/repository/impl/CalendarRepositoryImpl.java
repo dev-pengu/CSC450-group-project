@@ -1,15 +1,12 @@
 package com.familyorg.familyorganizationapp.repository.impl;
 
 import java.util.List;
-import javax.persistence.EntityManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.repository.support.QuerydslRepositorySupport;
 import org.springframework.stereotype.Repository;
 import com.familyorg.familyorganizationapp.domain.Calendar;
 import com.familyorg.familyorganizationapp.domain.QCalendar;
-import com.familyorg.familyorganizationapp.domain.QCalendarEvent;
 import com.familyorg.familyorganizationapp.domain.QFamily;
 import com.familyorg.familyorganizationapp.domain.QFamilyMembers;
 import com.familyorg.familyorganizationapp.repository.custom.CalendarRepositoryCustom;
@@ -21,12 +18,8 @@ public class CalendarRepositoryImpl extends QuerydslRepositorySupport
   private Logger logger = LoggerFactory.getLogger(CalendarRepositoryImpl.class);
 
   private QCalendar calendarTable = QCalendar.calendar;
-  private QCalendarEvent eventTable = QCalendarEvent.calendarEvent;
   private QFamily familyTable = QFamily.family;
   private QFamilyMembers memberTable = QFamilyMembers.familyMembers;
-
-  @Autowired
-  EntityManager entityManager;
 
   public CalendarRepositoryImpl() {
     super(Calendar.class);

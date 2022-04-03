@@ -26,4 +26,8 @@ public interface UserService {
       throws AuthorizationException, UserNotFoundException, BadRequestException;
 
   UserDto updateUser(UserDto request);
+
+  UserDto getSettingsForUser();
+
+  UserDto updateUserSettingsAndData(UserDto request);
 }
