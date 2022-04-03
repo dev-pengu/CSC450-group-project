@@ -33,7 +33,7 @@ public class FamilyMemberRepositoryImpl extends QuerydslRepositorySupport
         .map(tuple -> new ColorDtoBuilder()
             .withFamilyId(tuple.get(0, Long.class))
             .withColor(tuple.get(1, String.class))
-            .withFamily(tuple.get(0, String.class))
+            .withFamily(tuple.get(2, String.class))
             .withUserId(userId)
             .build())
         .collect(Collectors.toList());

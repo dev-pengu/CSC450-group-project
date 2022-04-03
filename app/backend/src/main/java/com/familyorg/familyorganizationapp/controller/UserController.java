@@ -47,19 +47,6 @@ public class UserController {
     return new ResponseEntity<>(user, HttpStatus.OK);
   }
 
-  /**
-   * Update user fields other than username, email, and password.
-   *
-   * @param request
-   * @return
-   */
-  @PatchMapping()
-  public ResponseEntity<UserDto> updateUser(@RequestBody UserDto request) {
-    UserDto response = userService.updateUser(request);
-    return new ResponseEntity<>(response, HttpStatus.OK);
-  }
-
-
   @GetMapping("/settings")
   public ResponseEntity<UserDto> getCurrentUserSettings() {
     UserDto response = userService.getSettingsForUser();

@@ -62,6 +62,7 @@ public class UserDtoBuilder implements DtoBuilder<UserDto> {
     this.lastName = user.getLastName();
     this.email = user.getEmail();
     this.darkMode = user.useDarkMode();
+    this.timezone = user.getTimezone();
     return this;
   }
 

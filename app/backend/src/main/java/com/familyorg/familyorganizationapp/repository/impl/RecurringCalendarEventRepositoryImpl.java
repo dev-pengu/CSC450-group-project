@@ -7,8 +7,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.persistence.EntityManager;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.repository.support.QuerydslRepositorySupport;
 import org.springframework.stereotype.Repository;
 import com.familyorg.familyorganizationapp.domain.QRecurringCalendarEvent;
@@ -22,8 +20,7 @@ public class RecurringCalendarEventRepositoryImpl extends QuerydslRepositorySupp
 
   private QRecurringCalendarEvent recurringEventTable =
       QRecurringCalendarEvent.recurringCalendarEvent;
-  @Autowired
-  private EntityManager entityManager;
+
 
   public RecurringCalendarEventRepositoryImpl() {
     super(RecurringCalendarEvent.class);
@@ -34,7 +31,8 @@ public class RecurringCalendarEventRepositoryImpl extends QuerydslRepositorySupp
     List<RecurringCalendarEvent> events = from(recurringEventTable)
         .where(recurringEventTable.originatingEvent.id.eq(originatingId)
             .and(recurringEventTable.startDatetime.goe(Timestamp.from(Instant.now()))))
-        .orderBy(recurringEventTable.startDatetime.asc()).fetch();
+        .orderBy(recurringEventTable.startDatetime.asc())
+        .fetch();
     return events;
   }
 
@@ -42,13 +40,14 @@ public class RecurringCalendarEventRepositoryImpl extends QuerydslRepositorySupp
   public List<RecurringCalendarEvent> getOrderedEventsByOriginatingId(Long originatingId) {
     List<RecurringCalendarEvent> events =
         from(recurringEventTable).where(recurringEventTable.originatingEvent.id.eq(originatingId))
-            .orderBy(recurringEventTable.startDatetime.asc()).fetch();
+            .orderBy(recurringEventTable.startDatetime.asc())
+            .fetch();
     return events;
   }
 
   @Override
   public void removeFutureEvents(Long originatingId) {
-    new JPADeleteClause(entityManager, recurringEventTable)
+    new JPADeleteClause(getEntityManager(), recurringEventTable)
         .where(recurringEventTable.originatingEvent.id.eq(originatingId)
             .and(recurringEventTable.startDatetime.goe(Timestamp.from(Instant.now()))))
         .execute();
@@ -56,15 +55,17 @@ public class RecurringCalendarEventRepositoryImpl extends QuerydslRepositorySupp
 
   @Override
   public void removeRecurringByOriginatingId(Long originatingId) {
-    new JPADeleteClause(entityManager, recurringEventTable)
-        .where(recurringEventTable.originatingEvent.id.eq(originatingId)).execute();
+    new JPADeleteClause(getEntityManager(), recurringEventTable)
+        .where(recurringEventTable.originatingEvent.id.eq(originatingId))
+        .execute();
   }
 
   @Override
   public RecurringCalendarEvent getFirstOccurrence(Long originatingId) {
     RecurringCalendarEvent event =
         from(recurringEventTable).where(recurringEventTable.originatingEvent.id.eq(originatingId))
-            .orderBy(recurringEventTable.startDatetime.asc()).fetchFirst();
+            .orderBy(recurringEventTable.startDatetime.asc())
+            .fetchFirst();
     return event;
   }
 
@@ -74,7 +75,8 @@ public class RecurringCalendarEventRepositoryImpl extends QuerydslRepositorySupp
     Map<Long, List<RecurringCalendarEvent>> result = new HashMap<>();
     List<RecurringCalendarEvent> events =
         from(recurringEventTable).where(recurringEventTable.originatingEvent.calendar.id
-            .in(calendarIds).and(recurringEventTable.startDatetime.goe(start)
+            .in(calendarIds)
+            .and(recurringEventTable.startDatetime.goe(start)
                 .and(recurringEventTable.endDatetime.loe(end))))
             .fetch();
     events.forEach(event -> {
@@ -94,7 +96,8 @@ public class RecurringCalendarEventRepositoryImpl extends QuerydslRepositorySupp
 
   @Override
   public void removeById(Long id) {
-    new JPADeleteClause(entityManager, recurringEventTable).where(recurringEventTable.id.eq(id))
+    new JPADeleteClause(getEntityManager(), recurringEventTable)
+        .where(recurringEventTable.id.eq(id))
         .execute();
 
   }

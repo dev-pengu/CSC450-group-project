@@ -1,5 +1,6 @@
 package com.familyorg.familyorganizationapp.service.impl;
 
+import javax.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +28,7 @@ public class SecurityServiceImpl implements SecurityService {
   private Logger LOG = LoggerFactory.getLogger(SecurityServiceImpl.class);
 
   @Override
+  @Transactional
   public void autologin(String username, String password) {
     UserDetails userDetails = userDetailsService.loadUserByUsername(username);
     UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken =
@@ -55,6 +57,7 @@ public class SecurityServiceImpl implements SecurityService {
   }
 
   @Override
+  @Transactional
   public UserDetails reauthenticate(String username, String password) {
     UserDetails userDetails = userDetailsService.loadUserByUsername(username);
     UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken =

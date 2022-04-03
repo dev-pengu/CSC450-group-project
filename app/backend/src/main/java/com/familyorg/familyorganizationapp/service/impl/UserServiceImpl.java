@@ -144,7 +144,7 @@ public class UserServiceImpl implements UserService {
     if (!requestingUser.getLastName().equals(request.getLastName())) {
       requestingUser.setLastName(request.getLastName());
     }
-    if (!requestingUser.useDarkMode() != request.getUseDarkMode()) {
+    if (requestingUser.useDarkMode() != request.getUseDarkMode()) {
       requestingUser.setDarkMode(request.getUseDarkMode());
     }
 
