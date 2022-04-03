@@ -77,8 +77,7 @@ export default {
           this.$router.push('/');
         } else {
           this.error = true;
-          console.log('test');
-          this.errorMsg('Username or password is incorrect');
+          this.errorMsg = 'Your username or password was incorrect';
         }
       } catch (err) {
         this.error = true;
