@@ -25,7 +25,7 @@
           </v-card-text>
           <v-card-actions class="justify-center">
             <v-btn
-              class="foa_button_fg--text"
+              class="foa_button_text--text"
               color="foa_button"
               elevation="2"
               width="50%"

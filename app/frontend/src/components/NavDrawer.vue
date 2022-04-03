@@ -7,22 +7,22 @@
       </v-list-item-content>
     </v-list-item>
     <v-list nav>
-      <v-list-item-group color="foa_nav_link_active">
+      <v-list-item-group color="foa_nav_link">
         <v-list-item v-for="(item, i) in navItems" :key="i" :to="item.route">
           <v-list-item-icon>
-            <v-icon>{{ item.icon }}</v-icon>
+            <v-icon color="foa_nav_link">{{ item.icon }}</v-icon>
           </v-list-item-icon>
           <v-list-item-content>
-            <v-list-item-title>{{ item.title }}</v-list-item-title>
+            <v-list-item-title class="foa_nav_link--text">{{ item.title }}</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
       </v-list-item-group>
       <v-list-item @click="logout">
         <v-list-item-icon>
-          <v-icon>mdi-logout</v-icon>
+          <v-icon color="foa_nav_link">mdi-logout</v-icon>
         </v-list-item-icon>
         <v-list-item-content>
-          <v-list-item-title>Logout</v-list-item-title>
+          <v-list-item-title class="foa_nav_link--text">Logout</v-list-item-title>
         </v-list-item-content>
       </v-list-item>
     </v-list>

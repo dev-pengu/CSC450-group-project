@@ -1,24 +1,24 @@
 <template>
   <div class="home">
-    <div class="text-h4 foa_nav_link_active--text my-3">Welcome back, {{ userFirstName }}</div>
+    <div class="text-h4 foa_text_header--text my-3">Welcome back, {{ userFirstName }}</div>
     <v-row>
       <v-col cols="12" sm="8" md="6">
         <v-sheet color="foa_content_bg" rounded>
-          <div class="text-h5 foa_nav_link_active--text pl-4 py-3">
+          <div class="text-h5 foa_nav_link--text pl-4 py-3">
             My Families
             <v-btn class="pb-1" icon color="foa_button_dark"><v-icon>mdi-plus-box</v-icon></v-btn>
           </div>
           <v-carousel hide-delimiters cycle height="325">
             <v-carousel-item v-for="(family, i) in families" :key="i">
-              <v-card class="mx-auto" width="55%">
+              <v-card class="mx-auto" color="white" width="55%">
                 <v-card-text>
-                  <div class="text-subtitle-1">{{ family.name }}</div>
+                  <div class="text-subtitle-1 foa_text--text">{{ family.name }}</div>
                   <div class="pl-4">
-                    <div>Owner: {{ family.owner }}</div>
+                    <div class="foa_text--text">Owner: {{ family.owner }}</div>
                     <router-link class="d-block foa_link--text" :to="family.testRoute">Manage Members</router-link>
-                    <div class="d-flex align-center">
+                    <div class="d-flex align-center foa_text--text">
                       Invite code: {{ family.inviteCode }}
-                      <v-btn x-small color="foa_button" class="ml-2 foa_button_fg--text">Generate</v-btn>
+                      <v-btn x-small color="foa_button" class="ml-2 foa_button_text--text">Generate</v-btn>
                     </div>
                     <router-link class="d-block foa_link--text" :to="family.testRoute"
                       >Invite a Family Member</router-link
@@ -44,21 +44,21 @@
     </v-row>
     <v-row>
       <v-col cols="12" sm="6">
-        <div class="text-h5 foa_nav_link_active--text mb-3">
+        <div class="text-h5 foa_text_header--text mb-3">
           My Calendar
-          <v-btn class="pb-1" icon color="foa_button_dark"><v-icon>mdi-plus-box</v-icon></v-btn>
+          <v-btn class="pb-1" icon :color="btnColor"><v-icon>mdi-plus-box</v-icon></v-btn>
         </div>
         <v-sheet height="400">
           <v-calendar type="4day" :events="events"></v-calendar>
         </v-sheet>
       </v-col>
       <v-col cols="12" sm="6">
-        <div class="text-h5 foa_nav_link_active--text mb-3">
+        <div class="text-h5 foa_text_header--text mb-3">
           My To-Do List
-          <v-btn class="pb-1" icon color="foa_button_dark"><v-icon>mdi-plus-box</v-icon></v-btn>
+          <v-btn class="pb-1" icon :color="btnColor"><v-icon>mdi-plus-box</v-icon></v-btn>
         </div>
         <div v-for="(todo, i) in todos" :key="i" class="d-flex align-center">
-          <v-checkbox color="foa_nav_bg" :label="todo.title" hide-details>
+          <v-checkbox color="foa_button" :label="todo.title" hide-details>
             <template #prepend>
               <v-sheet height="24" width="8" :color="todo.familyColor"></v-sheet>
             </template>
@@ -96,5 +96,10 @@ export default {
       { title: 'Go to the store', familyColor: 'green' },
     ],
   }),
+  computed: {
+    btnColor() {
+      return this.$vuetify.theme.dark ? 'foa_button' : 'foa_button_dark';
+    },
+  },
 };
 </script>
