@@ -1,11 +1,15 @@
 package com.familyorg.familyorganizationapp.DTO;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import com.familyorg.familyorganizationapp.DTO.builder.FamilyDtoBuilder;
 import com.familyorg.familyorganizationapp.domain.Family;
+import com.familyorg.familyorganizationapp.domain.Role;
 import com.familyorg.familyorganizationapp.domain.User;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 public class FamilyDto {
   private Long id;
@@ -16,9 +20,12 @@ public class FamilyDto {
   private Set<FamilyMemberDto> members;
   private FamilyMemberDto owner;
   private UserDto requestingUser;
+  @JsonInclude(Include.NON_NULL)
+  private List<Role> availableRoles;
 
   public FamilyDto(Long id, String name, String eventColor, String timezone, String inviteCode,
-      FamilyMemberDto owner, Set<FamilyMemberDto> members, UserDto requestingUser) {
+      FamilyMemberDto owner, Set<FamilyMemberDto> members, UserDto requestingUser,
+      List<Role> availableRoles) {
     super();
     this.id = id;
     this.name = name;
@@ -28,6 +35,7 @@ public class FamilyDto {
     this.members = members;
     this.owner = owner;
     this.requestingUser = requestingUser;
+    this.availableRoles = availableRoles;
   }
 
   public Long getId() {
@@ -60,6 +68,10 @@ public class FamilyDto {
 
   public UserDto getRequestingUser() {
     return requestingUser;
+  }
+
+  public List<Role> getAvailableRoles() {
+    return availableRoles;
   }
 
   public static FamilyDto fromFamilyObj(Family family, User requestingUser) {

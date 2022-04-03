@@ -243,7 +243,7 @@ public class FamilyServiceImplTest {
         .build());
 
     /* When */
-    List<FamilyDto> response = familyService.getFamiliesByUser(TEST_USER_1.getId());
+    List<FamilyDto> response = familyService.getFamiliesByUser();
 
     /* Then */
     assertNotNull(response);
@@ -254,11 +254,10 @@ public class FamilyServiceImplTest {
   public void when_get_families_by_user_and_user_does_not_exist_then_user_not_found_exception_thrown() {
     /* Given */
     doThrow(UserNotFoundException.class).when(userService).getRequestingUser();
-    Long id = 3l;
 
     /* When */
     assertThrows(UserNotFoundException.class, () -> {
-      familyService.getFamiliesByUser(id);
+      familyService.getFamiliesByUser();
     });
   }
 
@@ -428,7 +427,9 @@ public class FamilyServiceImplTest {
     when(userService.getRequestingUser()).thenReturn(TEST_USER_1);
     FamilyDto request = new FamilyDtoBuilder().withId(FAMILY_3.getId())
         .withOwner(new FamilyMemberDtoBuilder()
-            .withUser(new UserDtoBuilder().withUsername(TEST_USER_2.getUsername()).build())
+            .withUser(new UserDtoBuilder().withUsername(TEST_USER_2.getUsername())
+                .withId(TEST_USER_2.getId())
+                .build())
             .build())
         .build();
 

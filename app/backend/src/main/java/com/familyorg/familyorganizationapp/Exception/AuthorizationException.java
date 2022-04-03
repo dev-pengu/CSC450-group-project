@@ -11,6 +11,7 @@ public class AuthorizationException extends RuntimeException {
 
   public AuthorizationException() {
     super();
+    this.redirect = false;
   }
 
   public AuthorizationException(boolean redirect) {
@@ -20,6 +21,7 @@ public class AuthorizationException extends RuntimeException {
 
   public AuthorizationException(String message) {
     super(message);
+    this.redirect = false;
   }
 
   public AuthorizationException(String message, boolean redirect) {
@@ -29,6 +31,7 @@ public class AuthorizationException extends RuntimeException {
 
   public AuthorizationException(String message, Throwable cause) {
     super(message, cause);
+    this.redirect = false;;
   }
 
   public AuthorizationException(String message, Throwable cause, boolean redirect) {

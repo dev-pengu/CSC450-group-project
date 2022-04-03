@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.familyorg.familyorganizationapp.DTO.FamilyDto;
+import com.familyorg.familyorganizationapp.DTO.FamilyRoleUpdateRequest;
 import com.familyorg.familyorganizationapp.DTO.MemberInviteDto;
 import com.familyorg.familyorganizationapp.domain.FamilyMembers;
 import com.familyorg.familyorganizationapp.domain.InviteCode;
@@ -57,37 +58,45 @@ public class FamilyController {
   }
 
   @GetMapping("/get-family")
-  public ResponseEntity<List<FamilyDto>> getFamilies(@RequestParam("userId") Long userId) {
-    List<FamilyDto> families = familyService.getFamiliesByUser(userId);
+  public ResponseEntity<List<FamilyDto>> getFamilies() {
+    List<FamilyDto> families = familyService.getFamiliesByUser();
     return new ResponseEntity<List<FamilyDto>>(families, HttpStatus.OK);
   }
 
-  @PatchMapping()
+  @GetMapping("/invite/join")
+  public ResponseEntity<String> joinFamily(@RequestParam("code") String inviteCode,
+      @RequestParam("eventColor") String eventColor) {
+    InviteCode inviteCodeObj = InviteCode.parseFromCodeString(inviteCode);
+    inviteService.verifyMemberInvite(inviteCodeObj, eventColor);
+    return new ResponseEntity<String>("Success", HttpStatus.OK);
+  }
+
+  @PatchMapping("/admin/update")
   public ResponseEntity<FamilyDto> updateFamily(@RequestBody FamilyDto familyRequest) {
     FamilyDto family = familyService.updateFamily(familyRequest);
     return new ResponseEntity<FamilyDto>(family, HttpStatus.OK);
   }
 
-  @DeleteMapping("/delete")
+  @DeleteMapping("/admin/delete")
   public ResponseEntity<String> deleteFamily(@RequestParam("familyId") Long familyId) {
     familyService.deleteFamily(familyId);
     return new ResponseEntity<String>("Family successfully deleted", HttpStatus.OK);
 
   }
 
-  @PatchMapping("/transferOwnership")
+  @PatchMapping("/admin/transferOwnership")
   public ResponseEntity<FamilyDto> transferOwnership(@RequestBody FamilyDto familyRequest) {
     FamilyDto response = familyService.transferOwnership(familyRequest);
     return new ResponseEntity<FamilyDto>(response, HttpStatus.OK);
   }
 
-  @GetMapping("/invite")
+  @GetMapping("/admin/invites")
   public ResponseEntity<List<MemberInvite>> getInvites(@RequestParam("id") Long familyId) {
     List<MemberInvite> invites = inviteService.getInvites(familyId);
     return new ResponseEntity<List<MemberInvite>>(invites, HttpStatus.OK);
   }
 
-  @PostMapping("/invite/generate")
+  @PostMapping("/admin/invites/generate")
   public ResponseEntity<?> generateInvite(@RequestBody MemberInviteDto memberInvite) {
     if (memberInvite.isPersistent()) {
       FamilyDto familyWithInviteCode =
@@ -117,12 +126,9 @@ public class FamilyController {
     }
   }
 
-  @GetMapping("/invite/join")
-  public ResponseEntity<String> joinFamily(@RequestParam("code") String inviteCode,
-      @RequestParam("eventColor") String eventColor) {
-    InviteCode inviteCodeObj = InviteCode.parseFromCodeString(inviteCode);
-    inviteService.verifyMemberInvite(inviteCodeObj, eventColor);
-    return new ResponseEntity<String>("Success", HttpStatus.OK);
-
+  @PostMapping("/admin/roles")
+  public ResponseEntity<String> updateRoles(@RequestBody FamilyRoleUpdateRequest request) {
+    familyService.updateMemberRoles(request);
+    return new ResponseEntity<String>("Member roles successfully updated.", HttpStatus.OK);
   }
 }
