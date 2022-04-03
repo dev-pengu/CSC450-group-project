@@ -6,7 +6,7 @@
         <div class="text-h5 text-center">Page not found</div>
         <div class="text-center">
           Sorry, the page you are looking for does not exist. <br />
-          Checkout this dank meme or go back to the homepage:
+          Checkout this wholesome meme or go back to the homepage:
         </div>
       </v-col>
     </v-row>
@@ -29,7 +29,7 @@ export default {
     memeLinks: [],
   }),
   created() {
-    axios.get('https://meme-api.herokuapp.com/gimme').then((response) => {
+    axios.get('https://meme-api.herokuapp.com/gimme/wholesomememes').then((response) => {
       this.memeLinks = response.data.preview;
       this.memeSrc = this.memeLinks[this.memeLinks.length - 1];
     });
