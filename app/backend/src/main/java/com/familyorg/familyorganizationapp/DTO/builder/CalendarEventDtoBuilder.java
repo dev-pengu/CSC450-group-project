@@ -1,7 +1,9 @@
 package com.familyorg.familyorganizationapp.DTO.builder;
 
 import java.util.Date;
+import java.util.Set;
 import com.familyorg.familyorganizationapp.DTO.CalendarEventDto;
+import com.familyorg.familyorganizationapp.DTO.ColorDto;
 import com.familyorg.familyorganizationapp.DTO.EventRepetitionDto;
 import com.familyorg.familyorganizationapp.DTO.UserDto;
 
@@ -20,7 +22,9 @@ public class CalendarEventDtoBuilder implements DtoBuilder<CalendarEventDto> {
   private Long calendarId;
   private Boolean recurringEvent = false;
   private Long recurringId;
+  private Boolean detachEvent = false;
   private Boolean canEdit;
+  private Set<ColorDto> assignees;
 
   public CalendarEventDtoBuilder withId(Long id) {
     this.id = id;
@@ -102,10 +106,20 @@ public class CalendarEventDtoBuilder implements DtoBuilder<CalendarEventDto> {
     return this;
   }
 
+  public CalendarEventDtoBuilder withAssignees(Set<ColorDto> assignees) {
+    this.assignees = assignees;
+    return this;
+  }
+
+  public CalendarEventDtoBuilder setDetachEvent(Boolean doBreak) {
+    this.detachEvent = doBreak;
+    return this;
+  }
+
   @Override
   public CalendarEventDto build() {
     return new CalendarEventDto(id, isAllDay, isFamilyEvent, color, startDate, endDate,
         repetitionSchedule, description, notes, createdBy, created, calendarId, recurringEvent,
-        recurringId, canEdit);
+        recurringId, canEdit, assignees, detachEvent);
   }
 }

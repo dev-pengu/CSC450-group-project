@@ -30,4 +30,6 @@ public interface UserService {
   UserDto getSettingsForUser();
 
   UserDto updateUserSettingsAndData(UserDto request);
+
+  void updateUser(User user);
 }

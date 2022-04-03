@@ -26,5 +26,8 @@ public interface CalendarService {
 
   void deleteRecurringEvent(Long id);
 
+  void addAssignee(CalendarEventDto request);
+
+  void removeAssignee(CalendarEventDto request);
 
 }

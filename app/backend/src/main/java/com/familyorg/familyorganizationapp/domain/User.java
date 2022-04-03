@@ -2,6 +2,7 @@ package com.familyorg.familyorganizationapp.domain;
 
 import java.io.Serializable;
 import java.sql.Timestamp;
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 import javax.persistence.CascadeType;
@@ -11,6 +12,7 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -53,6 +55,9 @@ public class User implements Serializable {
   @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, orphanRemoval = true,
       cascade = CascadeType.ALL)
   private Set<FamilyMembers> families;
+
+  @ManyToMany(mappedBy = "assignees", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+  Set<CalendarEvent> events = new HashSet<CalendarEvent>();
 
 
 
@@ -179,6 +184,14 @@ public class User implements Serializable {
     this.lastLoggedIn = lastLoggedIn;
   }
 
+  public Set<CalendarEvent> getEvents() {
+    return events;
+  }
+
+
+  public void setEvents(Set<CalendarEvent> events) {
+    this.events = events;
+  }
 
   @Override
   public String toString() {

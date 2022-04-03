@@ -1,6 +1,7 @@
 package com.familyorg.familyorganizationapp.repository.impl;
 
 import java.util.List;
+import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.jpa.repository.support.QuerydslRepositorySupport;
@@ -33,7 +34,7 @@ public class CalendarRepositoryImpl extends QuerydslRepositorySupport
   }
 
   @Override
-  public List<Calendar> search(List<Long> familyIds, List<Long> calendarIds, List<Long> userIds) {
+  public List<Calendar> search(List<Long> familyIds, List<Long> calendarIds, Set<Long> userIds) {
     JPQLQuery<Calendar> query = from(calendarTable).innerJoin(calendarTable.family, familyTable)
         .innerJoin(familyTable.members, memberTable)
         .select(calendarTable)
