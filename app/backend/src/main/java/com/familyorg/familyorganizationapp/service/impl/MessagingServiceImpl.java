@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
+import com.familyorg.familyorganizationapp.Exception.ApiExceptionCode;
 import com.familyorg.familyorganizationapp.Exception.BadRequestException;
 import com.familyorg.familyorganizationapp.service.MessagingService;
 
@@ -73,9 +74,11 @@ public class MessagingServiceImpl implements MessagingService {
 
       Transport.send(message);
     } catch (AddressException e) {
-      throw new BadRequestException("Recipient email is malformed.");
+      throw new BadRequestException(ApiExceptionCode.BAD_PARAM_VALUE,
+          "Recipient email is malformed.");
     } catch (MessagingException e) {
-      throw new BadRequestException("Error sending email to recipient");
+      throw new BadRequestException(ApiExceptionCode.BAD_PARAM_VALUE,
+          "Error sending email to recipient");
     }
   }
 
@@ -93,9 +96,11 @@ public class MessagingServiceImpl implements MessagingService {
 
       Transport.send(message);
     } catch (AddressException e) {
-      throw new BadRequestException("Recipient email is malformed.");
+      throw new BadRequestException(ApiExceptionCode.BAD_PARAM_VALUE,
+          "Recipient email is malformed.");
     } catch (MessagingException e) {
-      throw new BadRequestException("Error sending email to recipient");
+      throw new BadRequestException(ApiExceptionCode.BAD_PARAM_VALUE,
+          "Error sending email to recipient");
     }
   }
 

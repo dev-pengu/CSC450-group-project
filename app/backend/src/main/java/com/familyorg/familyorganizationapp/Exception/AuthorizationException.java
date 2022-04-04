@@ -4,38 +4,29 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 @ResponseStatus(HttpStatus.UNAUTHORIZED)
-public class AuthorizationException extends RuntimeException {
+public class AuthorizationException extends ApiException {
 
   private static final long serialVersionUID = 71198337282817719L;
   private boolean redirect = false;
 
-  public AuthorizationException() {
-    super();
+  public AuthorizationException(ApiExceptionCode apiCode, String message) {
+    super(apiCode, message);
     this.redirect = false;
   }
 
-  public AuthorizationException(boolean redirect) {
-    super();
+  public AuthorizationException(ApiExceptionCode apiCode, String message, boolean redirect) {
+    super(apiCode, message);
     this.redirect = redirect;
   }
 
-  public AuthorizationException(String message) {
-    super(message);
-    this.redirect = false;
-  }
-
-  public AuthorizationException(String message, boolean redirect) {
-    super(message);
-    this.redirect = redirect;
-  }
-
-  public AuthorizationException(String message, Throwable cause) {
-    super(message, cause);
+  public AuthorizationException(ApiExceptionCode apiCode, String message, Throwable cause) {
+    super(apiCode, message, cause);
     this.redirect = false;;
   }
 
-  public AuthorizationException(String message, Throwable cause, boolean redirect) {
-    super(message, cause);
+  public AuthorizationException(ApiExceptionCode apiCode, String message, Throwable cause,
+      boolean redirect) {
+    super(apiCode, message, cause);
     this.redirect = redirect;
   }
 

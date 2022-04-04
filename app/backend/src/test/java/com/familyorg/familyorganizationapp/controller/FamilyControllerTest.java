@@ -24,9 +24,10 @@ import com.familyorg.familyorganizationapp.DTO.builder.FamilyDtoBuilder;
 import com.familyorg.familyorganizationapp.DTO.builder.FamilyMemberDtoBuilder;
 import com.familyorg.familyorganizationapp.DTO.builder.MemberInviteDtoBuilder;
 import com.familyorg.familyorganizationapp.DTO.builder.UserDtoBuilder;
+import com.familyorg.familyorganizationapp.Exception.ApiExceptionCode;
 import com.familyorg.familyorganizationapp.Exception.AuthorizationException;
 import com.familyorg.familyorganizationapp.Exception.BadRequestException;
-import com.familyorg.familyorganizationapp.Exception.FamilyNotFoundException;
+import com.familyorg.familyorganizationapp.Exception.ResourceNotFoundException;
 import com.familyorg.familyorganizationapp.Exception.UserNotFoundException;
 import com.familyorg.familyorganizationapp.domain.Family;
 import com.familyorg.familyorganizationapp.domain.FamilyMembers;
@@ -291,19 +292,19 @@ public class FamilyControllerTest {
 
   private FamilyDto mockServiceResponse(FamilyDto request, boolean throwUser, boolean throwFamily,
       boolean throwAuth, boolean throwBadRequest)
-      throws UserNotFoundException, FamilyNotFoundException, AuthorizationException {
+      throws UserNotFoundException, ResourceNotFoundException, AuthorizationException {
     if (throwUser) {
-      throw new UserNotFoundException();
+      throw new UserNotFoundException(ApiExceptionCode.USER_DOESNT_EXIST);
     }
     if (throwFamily) {
-      throw new FamilyNotFoundException();
+      throw new ResourceNotFoundException(ApiExceptionCode.FAMILY_DOESNT_EXIST);
     }
     if (throwAuth) {
-      throw new AuthorizationException();
+      throw new AuthorizationException(ApiExceptionCode.USER_NOT_LOGGED_IN, "User not authorized");
     }
 
     if (throwBadRequest) {
-      throw new BadRequestException();
+      throw new BadRequestException(ApiExceptionCode.REQUIRED_PARAM_MISSING);
     }
     UserDto requestingUser = new UserDtoBuilder().withFirstName("Test")
         .withLastName("User")
@@ -337,7 +338,7 @@ public class FamilyControllerTest {
   private List<FamilyDto> mockServiceResponse(Long userId, int numResponse, boolean throwUser)
       throws UserNotFoundException {
     if (throwUser) {
-      throw new UserNotFoundException();
+      throw new UserNotFoundException(ApiExceptionCode.USER_DOESNT_EXIST);
     }
     UserDto requestingUser = new UserDtoBuilder().withFirstName("Test")
         .withLastName("User")

@@ -4,19 +4,19 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 @ResponseStatus(HttpStatus.CONFLICT)
-public class ExistingUserException extends RuntimeException {
+public class ExistingUserException extends ApiException {
 
-	private static final long serialVersionUID = -1570394825629179223L;
+  private static final long serialVersionUID = -1570394825629179223L;
 
-	public ExistingUserException() {
-		super();
-	}
+  public ExistingUserException(ApiExceptionCode apiCode) {
+    super(apiCode);
+  }
 
-	public ExistingUserException(String message) {
-		super(message);
-	}
+  public ExistingUserException(ApiExceptionCode apiCode, String message) {
+    super(apiCode, message);
+  }
 
-	public ExistingUserException(String message, Throwable cause) {
-		super(message, cause);
-	}
+  public ExistingUserException(ApiExceptionCode apiCode, String message, Throwable cause) {
+    super(apiCode, message, cause);
+  }
 }

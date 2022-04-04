@@ -12,6 +12,7 @@ import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import com.familyorg.familyorganizationapp.Exception.ApiExceptionCode;
 import com.familyorg.familyorganizationapp.Exception.UserNotFoundException;
 import com.familyorg.familyorganizationapp.domain.User;
 import com.familyorg.familyorganizationapp.repository.UserRepository;
@@ -30,7 +31,7 @@ public class AuthServiceImpl implements AuthService {
   public UserDetails loadUserByUsername(String username) throws UserNotFoundException {
     User user = userRepository.findByUsername(username);
     if (user == null) {
-      throw new UserNotFoundException("Username not found");
+      throw new UserNotFoundException(ApiExceptionCode.USER_DOESNT_EXIST, "Username not found");
     }
     List<GrantedAuthority> auth = AuthorityUtils.commaSeparatedStringToAuthorityList("ROLE_USER");
     String password = user.getPassword();
