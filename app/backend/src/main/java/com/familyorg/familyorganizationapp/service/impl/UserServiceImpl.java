@@ -225,4 +225,9 @@ public class UserServiceImpl implements UserService {
     User savedUser = userRepository.save(requestingUser);
     return UserDto.fromUserObj(savedUser);
   }
+
+  @Override
+  public void updateUser(User user) {
+    userRepository.save(user);
+  }
 }

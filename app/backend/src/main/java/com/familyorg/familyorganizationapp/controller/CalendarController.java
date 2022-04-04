@@ -112,4 +112,16 @@ public class CalendarController {
     }
     return new ResponseEntity<>(response, HttpStatus.OK);
   }
+
+  @PostMapping("/event/assign")
+  public ResponseEntity<String> assignEvent(@RequestBody CalendarEventDto request) {
+    calendarService.addAssignee(request);
+    return new ResponseEntity<>("Assignee added successfully", HttpStatus.OK);
+  }
+
+  @PostMapping("/event/unassign")
+  public ResponseEntity<String> unassignEvent(@RequestBody CalendarEventDto request) {
+    calendarService.removeAssignee(request);
+    return new ResponseEntity<>("Assignee removed succussfully", HttpStatus.OK);
+  }
 }

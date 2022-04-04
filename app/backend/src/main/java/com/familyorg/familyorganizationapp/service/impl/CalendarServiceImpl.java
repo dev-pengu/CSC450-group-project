@@ -27,6 +27,7 @@ import com.familyorg.familyorganizationapp.DTO.EventDateComparator;
 import com.familyorg.familyorganizationapp.DTO.UserDto;
 import com.familyorg.familyorganizationapp.DTO.builder.CalendarDtoBuilder;
 import com.familyorg.familyorganizationapp.DTO.builder.CalendarEventDtoBuilder;
+import com.familyorg.familyorganizationapp.DTO.builder.ColorDtoBuilder;
 import com.familyorg.familyorganizationapp.DTO.builder.EventRepetitionDtoBuilder;
 import com.familyorg.familyorganizationapp.Exception.AuthorizationException;
 import com.familyorg.familyorganizationapp.Exception.BadRequestException;
@@ -149,6 +150,17 @@ public class CalendarServiceImpl implements CalendarService {
     event.setDescription(request.getDescription());
     event.setNotes(request.getNotes());
 
+    if (!request.isFamilyEvent()) {
+      if (request.getAssignees() != null && !request.getAssignees().isEmpty()) {
+        Set<User> assignees = request.getAssignees()
+            .stream()
+            .map(assignee -> userService.getUserById(assignee.getUserId()))
+            .collect(Collectors.toSet());
+        event.setAssignees(assignees);
+      }
+      event.getAssignees().add(requestingUser);
+    }
+
     TimeZone timezone = getUserTimeZoneOrDefault(requestingUser, family);
     event.setTimezone(timezone.getID());
     event.setStartDatetime(DateUtil.parseTimestamp(request.getStartDate()));
@@ -240,8 +252,9 @@ public class CalendarServiceImpl implements CalendarService {
       }
       // save the event
       eventRepository.save(event);
-    } else { // The request is to update (break from series) a recurring event so some different
-             // steps are needed
+    } else {
+      // The request is to update (break from series) a recurring event so some different
+      // steps are needed
       Optional<RecurringCalendarEvent> recurringEventOpt =
           recurringEventRepository.findById(request.getRecurringId());
       if (recurringEventOpt.isEmpty())
@@ -342,22 +355,28 @@ public class CalendarServiceImpl implements CalendarService {
         getSearchFilters(requestingUser, request.getIdsByField(CalendarField.FAMILY),
             request.getIdsByField(CalendarField.CALENDAR)));
 
-    List<Long> userIdParams = request.getIdsByField(CalendarField.USER);
-    if (!request.getIdsByField(CalendarField.USER).contains(requestingUser.getId())) {
+    Set<Long> userIdParams =
+        request.getIdsByField(CalendarField.USER).stream().collect(Collectors.toSet());
+    if (userIdParams.isEmpty()) {
       userIdParams.add(requestingUser.getId());
     }
+
     List<Calendar> calendars = calendarRepository.search(
         request.getIdsByField(CalendarField.FAMILY), request.getIdsByField(CalendarField.CALENDAR),
         userIdParams);
+
     Set<Long> calendarIdsParam =
         calendars.stream().map(Calendar::getId).collect(Collectors.toSet());
+
     Timestamp startParam = new Timestamp(request.getStart().getTime());
     Timestamp endParam = new Timestamp(request.getEnd().getTime());
     Map<Long, List<CalendarEvent>> eventsByCalendar =
-        eventRepository.getEventsByCalendarIdsInDateRange(calendarIdsParam, startParam, endParam);
+        eventRepository.getEventsByCalendarIdsInDateRange(calendarIdsParam, startParam, endParam,
+            userIdParams);
+
     Map<Long, List<RecurringCalendarEvent>> recurringEventsByCalendar =
         recurringEventRepository.getEventsByCalendarIdsInDateRange(calendarIdsParam, startParam,
-            endParam);
+            endParam, userIdParams);
 
     response.setCalendars(buildResponseCalendars(calendars, eventsByCalendar,
         recurringEventsByCalendar, requestingUser));
@@ -445,11 +464,17 @@ public class CalendarServiceImpl implements CalendarService {
 
   private CalendarEventDto buildEventDtoFromCalendarEvent(CalendarEvent event, TimeZone timezone,
       User requestingUser) {
+    Map<Long, String> colors = event.getCalendar()
+        .getFamily()
+        .getMembers()
+        .stream()
+        .collect(Collectors.toMap(m -> m.getUser().getId(),
+            m -> m.getEventColor() != null ? m.getEventColor() : m.getFamily().getEventColor()));
     return new CalendarEventDtoBuilder().withId(event.getId())
         .withCalendarId(event.getCalendar().getId())
         .setIsAllDay(event.isAllDay())
         .setIsFamilyEvent(event.isFamilyEvent())
-        .withColor(getEventColor(event, event.getCalendar().getFamily(), event.getCreatedBy()))
+        .withColor(event.isFamilyEvent() ? event.getCalendar().getFamily().getEventColor() : null)
         .withCreatedDate(event.getCreatedDatetime())
         .withCreator(UserDto.fromUserObj(event.getCreatedBy()))
         .withEndDate(DateUtil.toTimezone(event.getEndDatetime(),
@@ -470,16 +495,29 @@ public class CalendarServiceImpl implements CalendarService {
         .setCanEdit(event.getCreatedBy().getUsername().equals(requestingUser.getUsername())
             || familyService.verfiyMinimumRoleSecurity(event.getCalendar().getFamily(),
                 requestingUser, Role.ADULT))
+        .withAssignees(event.getAssignees()
+            .stream()
+            .map(assignee -> new ColorDtoBuilder().withUserId(assignee.getId())
+                .withUser(assignee.getFullname())
+                .withColor(colors.get(assignee.getId()))
+                .build())
+            .collect(Collectors.toSet()))
         .build();
   }
 
   private CalendarEventDto buildEventDtoFromRecurringEvent(RecurringCalendarEvent recurringEvent,
       TimeZone timezone, User requestingUser) {
     CalendarEvent event = recurringEvent.getOriginatingEvent();
+    Map<Long, String> colors = event.getCalendar()
+        .getFamily()
+        .getMembers()
+        .stream()
+        .collect(Collectors.toMap(m -> m.getUser().getId(),
+            m -> m.getEventColor() != null ? m.getEventColor() : m.getFamily().getEventColor()));
     return new CalendarEventDtoBuilder().withCalendarId(event.getCalendar().getId())
         .setIsAllDay(event.isAllDay())
         .setIsFamilyEvent(event.isFamilyEvent())
-        .withColor(getEventColor(event, event.getCalendar().getFamily(), event.getCreatedBy()))
+        .withColor(event.isFamilyEvent() ? event.getCalendar().getFamily().getEventColor() : null)
         .withCreatedDate(event.getCreatedDatetime())
         .withCreator(UserDto.fromUserObj(event.getCreatedBy()))
         .withEndDate(DateUtil.toTimezone(recurringEvent.getEndDatetime(),
@@ -501,6 +539,13 @@ public class CalendarServiceImpl implements CalendarService {
         .setCanEdit(event.getCreatedBy().getUsername().equals(requestingUser.getUsername())
             || familyService.verfiyMinimumRoleSecurity(event.getCalendar().getFamily(),
                 requestingUser, Role.ADULT))
+        .withAssignees(event.getAssignees()
+            .stream()
+            .map(assignee -> new ColorDtoBuilder().withUserId(assignee.getId())
+                .withUser(assignee.getFullname())
+                .withColor(colors.get(assignee.getId()))
+                .build())
+            .collect(Collectors.toSet()))
         .build();
   }
 
@@ -620,7 +665,7 @@ public class CalendarServiceImpl implements CalendarService {
     return returnEvents;
   }
 
-  private void breakRecurringEvent(RecurringCalendarEvent recurringEvent,
+  private CalendarEvent breakRecurringEvent(RecurringCalendarEvent recurringEvent,
       CalendarEventDto request) {
     recurringEventRepository.deleteById(recurringEvent.getId());
     TimeZone timezone = getUserTimeZoneOrDefault(userService.getRequestingUser(),
@@ -636,7 +681,8 @@ public class CalendarServiceImpl implements CalendarService {
     event.setTimezone(timezone.getID());
     event.setFamilyEvent(request.isFamilyEvent());
     event.setNotes(request.getNotes());
-    eventRepository.save(event);
+    event.setAssignees(recurringEvent.getOriginatingEvent().getAssignees());
+    return eventRepository.save(event);
   }
 
   private String getEventColor(CalendarEvent event, Family family, User user) {
@@ -707,6 +753,158 @@ public class CalendarServiceImpl implements CalendarService {
     if (request.getEnd().compareTo(request.getStart()) < 0) {
       throw new BadRequestException("End date occurs before start date.");
     }
+  }
+
+  @Override
+  public void addAssignee(CalendarEventDto request) {
+    User requestingUser = userService.getRequestingUser();
+
+    if (request.getId() != null) {
+      Optional<CalendarEvent> event = eventRepository.findById(request.getId());
+      if (event.isEmpty()) {
+        throw new ResourceNotFoundException("Event with id " + request.getId() + " not found.");
+      }
+      if (!familyService.verfiyMinimumRoleSecurity(event.get().getCalendar().getFamily(),
+          requestingUser, Role.CHILD)) {
+        throw new AuthorizationException("User not authorized to complete this action.");
+      }
+      if (!canAddAssignee(event.get(), requestingUser)) {
+        throw new AuthorizationException("User not authorized to complete this action.");
+      }
+
+      request.getAssignees().forEach(assigneeDto -> {
+        User assignee = userService.getUserById(assigneeDto.getUserId());
+        event.get().getAssignees().add(assignee);
+
+      });
+
+      eventRepository.save(event.get());
+    } else if (request.getRecurringId() != null) {
+      Optional<RecurringCalendarEvent> recurringEvent =
+          recurringEventRepository.findById(request.getRecurringId());
+      if (recurringEvent.isEmpty()) {
+        throw new ResourceNotFoundException(
+            "Recurring event with id " + request.getRecurringId() + " not found.");
+      }
+      CalendarEvent event;
+      if (request.getDetachEvent()) {
+        recurringEventRepository.deleteById(recurringEvent.get().getId());
+        event = new CalendarEvent(recurringEvent.get().getOriginatingEvent());
+      } else {
+        event = recurringEvent.get().getOriginatingEvent();
+      }
+
+      if (!familyService.verfiyMinimumRoleSecurity(event.getCalendar().getFamily(),
+          requestingUser, Role.CHILD)) {
+        throw new AuthorizationException("User not authorized to complete this action.");
+      }
+      if (!canAddAssignee(event, requestingUser)) {
+        throw new AuthorizationException("User not authorized to complete this action.");
+      }
+
+      request.getAssignees().forEach(assigneeDto -> {
+        User assignee = userService.getUserById(assigneeDto.getUserId());
+        event.getAssignees().add(assignee);
+      });
+
+      eventRepository.save(event);
+    } else {
+      throw new BadRequestException("Either an event id or a recurring id must be supplied.");
+    }
+  }
+
+  @Override
+  public void removeAssignee(CalendarEventDto request) {
+    User requestingUser = userService.getRequestingUser();
+
+    if (request.getId() != null) {
+      Optional<CalendarEvent> event = eventRepository.findById(request.getId());
+      if (event.isEmpty()) {
+        throw new ResourceNotFoundException("Event with id " + request.getId() + " not found.");
+      }
+
+      if (!familyService.verfiyMinimumRoleSecurity(event.get().getCalendar().getFamily(),
+          requestingUser, Role.CHILD)) {
+        throw new AuthorizationException("User not authorized to complete this action.");
+      }
+      if (!canAddAssignee(event.get(), requestingUser)) {
+        throw new AuthorizationException("User not authorized to complete this action.");
+      }
+
+      request.getAssignees().forEach(assigneeDto -> {
+        User assignee = userService.getUserById(assigneeDto.getUserId());
+
+        event.get().getAssignees().remove(assignee);
+      });
+
+      eventRepository.save(event.get());
+    } else if (request.getRecurringId() != null) {
+      Optional<RecurringCalendarEvent> recurringEvent =
+          recurringEventRepository.findById(request.getRecurringId());
+      if (recurringEvent.isEmpty()) {
+        throw new ResourceNotFoundException(
+            "Recurring event with id " + request.getRecurringId() + " not found.");
+      }
+      CalendarEvent event;
+      if (request.getDetachEvent()) {
+        recurringEventRepository.deleteById(recurringEvent.get().getId());
+        event = new CalendarEvent(recurringEvent.get().getOriginatingEvent());
+      } else {
+        event = recurringEvent.get().getOriginatingEvent();
+      }
+
+      if (!familyService.verfiyMinimumRoleSecurity(event.getCalendar().getFamily(),
+          requestingUser, Role.CHILD)) {
+        throw new AuthorizationException("User not authorized to complete this action.");
+      }
+      if (!canAddAssignee(event, requestingUser)) {
+        throw new AuthorizationException("User not authorized to complete this action.");
+      }
+
+      request.getAssignees().forEach(assigneeDto -> {
+        User assignee = userService.getUserById(assigneeDto.getUserId());
+        event.getAssignees().remove(assignee);
+      });
+
+      eventRepository.save(event);
+    } else {
+      throw new BadRequestException("Either an event id or a recurring id must be supplied.");
+    }
+  }
+
+  /**
+   * <p>
+   * Checks to see if a user can be added to an event by the requesting user. The user may be added
+   * as long as the event is not a family event. (no users can be added if it is a family event) and
+   * they meet one of the following criteria
+   * </p>
+   * <ul>
+   * <li>1. the requesting user is at least an admin</li>
+   * <li>2. the requesting user created the event</li>
+   * <li>3. the requesting user is already assigned to the event</li>
+   * </ul>
+   *
+   * @param event
+   * @param requestUser
+   * @return
+   */
+  private boolean canAddAssignee(CalendarEvent event, User requestUser) {
+    if (event.isFamilyEvent()) {
+      return false;
+    }
+
+    if (familyService.verfiyMinimumRoleSecurity(event.getCalendar().getFamily(), requestUser,
+        Role.ADMIN)) {
+      return true;
+    }
+    if (event.getCreatedBy().getId() == requestUser.getId()) {
+      return true;
+    }
+    if (event.getAssignees().contains(requestUser)) {
+      return true;
+    }
+
+    return false;
   }
 
 }

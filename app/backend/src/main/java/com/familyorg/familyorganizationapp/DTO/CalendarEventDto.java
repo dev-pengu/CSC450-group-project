@@ -2,11 +2,15 @@ package com.familyorg.familyorganizationapp.DTO;
 
 import java.util.Date;
 import java.util.Objects;
+import java.util.Set;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 public class CalendarEventDto {
   private Long id;
   private Boolean allDay = false;
   private Boolean familyEvent = false;
+  @JsonInclude(Include.NON_NULL)
   private String color;
   private String startDate;
   private String endDate;
@@ -18,12 +22,16 @@ public class CalendarEventDto {
   private Long calendarId;
   private Boolean recurringEvent = false;
   private Long recurringId;
+  @JsonInclude(Include.NON_NULL)
+  private Boolean detachEvent = false;
   private Boolean userCanEdit;
+  @JsonInclude(Include.NON_EMPTY)
+  private Set<ColorDto> assignees;
 
   public CalendarEventDto(Long id, Boolean isAllDay, Boolean familyEvent, String color,
       String startDate, String endDate, EventRepetitionDto repetitionSchedule, String description,
       String notes, UserDto createdBy, Date created, Long calendarId, Boolean isRecurringEvent,
-      Long recurringId, Boolean userCanEdit) {
+      Long recurringId, Boolean userCanEdit, Set<ColorDto> assignees, Boolean detachEvent) {
     super();
     this.id = id;
     this.allDay = isAllDay;
@@ -40,6 +48,8 @@ public class CalendarEventDto {
     this.recurringEvent = isRecurringEvent;
     this.recurringId = recurringId;
     this.userCanEdit = userCanEdit;
+    this.assignees = assignees;
+    this.detachEvent = detachEvent;
   }
 
 
@@ -124,6 +134,14 @@ public class CalendarEventDto {
     return userCanEdit;
   }
 
+  public Set<ColorDto> getAssignees() {
+    return assignees;
+  }
+
+  public Boolean getDetachEvent() {
+    return detachEvent;
+  }
+
   @Override
   public int hashCode() {
     return Objects.hash(color, created, createdBy, description, endDate, id, allDay, notes,
@@ -161,6 +179,6 @@ public class CalendarEventDto {
         + ", repetitionSchedule=" + repetitionSchedule + ", description=" + description + ", notes="
         + notes + ", createdBy=" + createdBy + ", created=" + created + ", calendarId=" + calendarId
         + ", isRecurringEvent=" + recurringEvent + ", recurringId=" + recurringId + ", userCanEdit="
-        + userCanEdit + "]";
+        + userCanEdit + ", detachEvent=" + detachEvent + "]";
   }
 }
