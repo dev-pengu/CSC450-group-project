@@ -37,6 +37,24 @@
                     <v-text-field v-model="formData.lastName" label="Last Name" />
                   </v-col>
                 </v-row>
+
+                <v-row align="center">
+                  <v-col cols="12">
+                    <v-select
+                      v-model="formData.timezone"
+                      :items="timezones"
+
+                      label="Timezone"
+                      required
+
+                    ></v-select>
+                  </v-col>
+                </v-row>
+
+
+
+
+
                 <v-row>
                   <v-col cols="12">
                     <v-text-field v-model="formData.password"
@@ -57,19 +75,7 @@
 
 
 
-                <v-row align="center">
-                  <v-col cols="12">
-                    <v-select
-                      v-model="formData.timezone"
-                      :items="timezone"
-
-                      label="Timezone"
-                      required
-
-                    ></v-select>
-                  </v-col>
-                </v-row>
-
+                
 
 
               </v-form>
@@ -107,18 +113,17 @@ export default {
       lastName: '',
       password: '',
       confirmPassword: '',
-      timezone: [
-        'Item 1',
-        'Item 2',
-        'Item 3',
-        'Item 4',
-      ],
+      timezone: 'US/Central',
 
     },
     error: false,
     errors: [],
+    timezones: ['US/Central', 'US/Eastern'],
 
   }),
+
+// api.gettimezones( ) 
+
 
 
   methods: {
