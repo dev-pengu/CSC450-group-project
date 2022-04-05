@@ -1,18 +1,96 @@
+
 <template>
-    <div class="signup">
-        <img alt="Logo" src="../assets/logo.png">
-        <form @submit.prevent="signUp()">
-            <input v-model="formData.username" placeholder="Username"/>
-            <input v-model="formData.email" placeholder="Email" type="email"/>
-            <input v-model="formData.firstName" placeholder="First Name" />
-            <input v-model="formData.lastName" placeholder="Last Name" />
-            <input v-model="formData.password" type="password" placeholder="Password"/>
-            <input v-model="formData.confirmPassword" type="password"
-              placeholder="Confirm Password"/>
-            <button type="submit">Sign Up</button>
-            <p v-if="error" class="error" v-text="errors.join('<br/>')"></p>
-        </form>
-    </div>
+  <div class="signup">
+      <v-img height="100" contain src="../assets/logo.png"></v-img>
+      <v-row justify="center">
+        <v-col vols="10" md="4">
+          <v-card elevation="4">
+            <v-card-text>
+              <v-form>
+                <v-row>
+                  <v-col cols="12">
+                    <v-text-field
+                    v-model="formData.username"
+                    label="Username"
+                    required
+                    />
+                  </v-col>
+                </v-row>
+                <v-row>
+                  <v-col cols="12">
+                    <v-text-field
+                    v-model="formData.email"
+                    type="email"
+                    label="Email" />
+                  </v-col>
+                </v-row>
+                <v-row>
+                  <v-col cols="12">
+                    <v-text-field v-model="formData.firstName"
+                     label="First Name"
+
+                    />
+                  </v-col>
+                </v-row>
+                <v-row>
+                  <v-col cols="12">
+                    <v-text-field v-model="formData.lastName" label="Last Name" />
+                  </v-col>
+                </v-row>
+                <v-row>
+                  <v-col cols="12">
+                    <v-text-field v-model="formData.password"
+                      type="password"
+                      label="Password"
+
+
+
+                    />
+                  </v-col>
+                </v-row>
+                <v-row>
+                  <v-col cols="12">
+                    <v-text-field v-model="formData.confirmPassword"
+                    type="password" label="Confirm Password" />
+                  </v-col>
+                </v-row>
+
+
+
+                <v-row align="center">
+                  <v-col cols="12">
+                    <v-select
+                      v-model="formData.timezone"
+                      :items="timezone"
+
+                      label="Timezone"
+                      required
+
+                    ></v-select>
+                  </v-col>
+                </v-row>
+
+
+
+              </v-form>
+              <v-row>
+              <v-col cols="12" class="py-0">
+                <v-alert v-if="error" class="mb-0" text type="error">{{ errorMsg }}</v-alert>
+              </v-col>
+            </v-row>
+            </v-card-text>
+            <v-card-actions>
+            <v-row justify="center">
+              <v-col cols="12" sm="6">
+                <v-btn color="primary" elevation="2" :loading="loading"
+                  :disabled="loading" @click="submit">Sign Up</v-btn>
+              </v-col>
+            </v-row>
+          </v-card-actions>
+          </v-card>
+        </v-col>
+      </v-row>
+  </div>
 </template>
 
 <script>
@@ -24,15 +102,25 @@ export default {
   data: () => ({
     formData: {
       username: '',
-      password: '',
-      confirmPassword: '',
       email: '',
       firstName: '',
       lastName: '',
+      password: '',
+      confirmPassword: '',
+      timezone: [
+        'Item 1',
+        'Item 2',
+        'Item 3',
+        'Item 4',
+      ],
+
     },
     error: false,
     errors: [],
+
   }),
+
+
   methods: {
     ...mapActions(['login']),
     async signUp() {
@@ -70,15 +158,4 @@ export default {
 };
 </script>
 
-<style>
-    .signup form input{
-        display: block;
-        width: 100%;
-        margin-left: auto;
-        margin-right: auto;
-        width: min(50%, 250px);
-        margin-bottom: 1rem;
-        font-size: 16px;
-        padding: 5px;
-    }
-</style>
+<style scoped></style>
