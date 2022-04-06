@@ -10,6 +10,9 @@ export default {
     toggleDrawerMiniState(state) {
       state.drawerMiniState = !state.drawerMiniState;
     },
+    resetDrawerMiniState(state) {
+      state.drawerMiniState = false;
+    },
   },
   getters: {
     drawerState: (state) => state.drawerState,

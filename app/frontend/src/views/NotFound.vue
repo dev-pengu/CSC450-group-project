@@ -13,14 +13,14 @@
     <v-row justify="center">
       <v-btn to="/" color="foa_button" class="foa_button_fg--text">Back to Home</v-btn>
     </v-row>
-    <v-row>
-      <v-img class="mt-4" contain :src="memeSrc" height="400"></v-img>
+    <v-row class="px-3">
+      <v-img class="mt-4" contain src="@/assets/meme.jpg" height="400"></v-img>
     </v-row>
   </div>
 </template>
 
 <script>
-import axios from 'axios';
+// import axios from 'axios';
 
 export default {
   name: 'NotFound',
@@ -28,11 +28,10 @@ export default {
     memeSrc: '',
     memeLinks: [],
   }),
-  created() {
-    axios.get('https://meme-api.herokuapp.com/gimme/wholesomememes').then((response) => {
-      this.memeLinks = response.data.preview;
-      this.memeSrc = this.memeLinks[this.memeLinks.length - 1];
-    });
-  },
+  // async created() {
+  //   const res = await axios.get('https://meme-api.herokuapp.com/gimme/wholesomememes');
+  //   this.memeLinks = res.data.preview;
+  //   this.memeSrc = this.memeLinks[this.memeLinks.length - 1];
+  // },
 };
 </script>

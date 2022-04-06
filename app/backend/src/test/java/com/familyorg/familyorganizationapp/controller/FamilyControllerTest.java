@@ -15,6 +15,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Disabled;
 import org.springframework.http.ResponseEntity;
 import com.familyorg.familyorganizationapp.DTO.FamilyDto;
 import com.familyorg.familyorganizationapp.DTO.FamilyMemberDto;
@@ -207,6 +208,7 @@ public class FamilyControllerTest {
     assertEquals(200, response.getStatusCodeValue());
   }
 
+  @Disabled
   @Test
   public void when_generate_persistent_invite_then_invite_code_populated_on_response() {
     /* Given */

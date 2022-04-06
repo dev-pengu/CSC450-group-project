@@ -1,7 +1,8 @@
 <template>
   <v-app-bar app clipped-left>
     <v-app-bar-nav-icon @click="toggleDrawerState"></v-app-bar-nav-icon>
-    <v-img max-height="40" max-width="40" contain src="../assets/logo.png"></v-img>
+    <v-img v-if="$vuetify.theme.dark" max-height="60" max-width="60" contain src="@/assets/logo-dark.png"></v-img>
+    <v-img v-else max-height="60" max-width="60" contain src="@/assets/logo-light.png"></v-img>
     <v-toolbar-title v-if="$vuetify.breakpoint.smAndUp">Family Command Center</v-toolbar-title>
     <v-spacer></v-spacer>
     <v-btn icon :color="darkModeBtnColor" @click="toggleDarkMode">
