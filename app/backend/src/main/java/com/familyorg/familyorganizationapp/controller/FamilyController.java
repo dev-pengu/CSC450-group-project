@@ -116,7 +116,8 @@ public class FamilyController {
       Optional<FamilyMembers> owner = invite.getFamily().getOwner();
       if (owner.isPresent()) {
         String emailContents = messagingService.buildInviteContent(
-            invite.getInviteCodeObj().getInviteCodeString(), owner.get().getUser().getFullname());
+            invite.getInviteCodeObj().getInviteCodeString(),
+            owner.get().getUser().getFullname().toUpperCase());
         messagingService.sendHtmlEmail(invite.getUserEmail(), "You've been invited to a family!",
             emailContents);
       }
