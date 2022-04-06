@@ -21,7 +21,7 @@ export default new Vuetify({
       },
       dark: {
         foa_content_bg: '#CCEFDA',
-        foa_text: '#616161',
+        foa_text: '#ffffff',
         foa_text_header: '#ffffff',
         foa_highlight: '#D9F1F1',
         foa_link: '#00B5AA',

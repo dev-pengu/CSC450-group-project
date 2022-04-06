@@ -1,8 +1,15 @@
 <template>
-  <v-navigation-drawer v-model="drawerState" :mini-variant="drawerMiniState" app clipped color="foa_nav_bg">
+  <v-navigation-drawer
+    v-model="drawerState"
+    v-resize="onResize"
+    :mini-variant="drawerMiniState"
+    app
+    clipped
+    color="foa_nav_bg"
+  >
     <v-list-item v-if="$vuetify.breakpoint.mdAndDown">
       <v-list-item-content>
-        <v-img height="75" contain src="../assets/logo.png"></v-img>
+        <v-img height="75%" contain src="@/assets/logo-light.png"></v-img>
         <v-list-item-title class="text-center font-weight-bold">Family Command Center</v-list-item-title>
       </v-list-item-content>
     </v-list-item>
@@ -57,6 +64,11 @@ export default {
     },
   },
   methods: {
+    onResize() {
+      if (this.$vuetify.breakpoint.mdAndDown) {
+        this.$store.commit('resetDrawerMiniState');
+      }
+    },
     async logout() {
       await this.$store.dispatch('logout');
       this.$router.push('/login');
