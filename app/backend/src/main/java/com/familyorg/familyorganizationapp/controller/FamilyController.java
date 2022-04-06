@@ -101,7 +101,7 @@ public class FamilyController {
     if (memberInvite.isPersistent()) {
       FamilyDto familyWithInviteCode =
           inviteService.generatePersistentMemberInvite(memberInvite.getFamilyId());
-      return new ResponseEntity<FamilyDto>(familyWithInviteCode, HttpStatus.OK);
+      return new ResponseEntity<String>("Invite code created successfully", HttpStatus.OK);
     } else {
       // Generate the Invite
       MemberInvite invite = null;
