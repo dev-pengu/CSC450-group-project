@@ -18,6 +18,7 @@ public class FamilyDtoBuilder implements DtoBuilder<FamilyDto> {
   private FamilyMemberDto owner;
   private UserDto requestingUser;
   private List<Role> availableRoles;
+  private String personalEventColor;
 
   public FamilyDtoBuilder withId(Long id) {
     this.id = id;
@@ -51,6 +52,11 @@ public class FamilyDtoBuilder implements DtoBuilder<FamilyDto> {
 
   public FamilyDtoBuilder withRequestingUser(UserDto requestingUser) {
     this.requestingUser = requestingUser;
+    return this;
+  }
+
+  public FamilyDtoBuilder withPersonalEventColor(String eventColor) {
+    this.personalEventColor = eventColor;
     return this;
   }
 
@@ -93,6 +99,7 @@ public class FamilyDtoBuilder implements DtoBuilder<FamilyDto> {
         this.owner,
         this.members,
         this.requestingUser,
-        this.availableRoles);
+        this.availableRoles,
+        this.personalEventColor);
   }
 }

@@ -22,10 +22,11 @@ public class FamilyDto {
   private UserDto requestingUser;
   @JsonInclude(Include.NON_NULL)
   private List<Role> availableRoles;
+  private String personalEventColor;
 
   public FamilyDto(Long id, String name, String eventColor, String timezone, String inviteCode,
       FamilyMemberDto owner, Set<FamilyMemberDto> members, UserDto requestingUser,
-      List<Role> availableRoles) {
+      List<Role> availableRoles, String personalEventColor) {
     super();
     this.id = id;
     this.name = name;
@@ -36,6 +37,7 @@ public class FamilyDto {
     this.owner = owner;
     this.requestingUser = requestingUser;
     this.availableRoles = availableRoles;
+    this.personalEventColor = personalEventColor;
   }
 
   public Long getId() {
@@ -74,6 +76,10 @@ public class FamilyDto {
     return availableRoles;
   }
 
+  public String getPersonalEventColor() {
+    return personalEventColor;
+  }
+
   public static FamilyDto fromFamilyObj(Family family, User requestingUser) {
     return new FamilyDtoBuilder()
         .withId(family.getId())
@@ -90,6 +96,12 @@ public class FamilyDto {
         .withTimezone(family.getTimezone())
         .withRequestingUser(UserDto.fromUserObj(requestingUser))
         .withInviteCode(family.getInviteCodeObj().getInviteCodeString())
+        .withPersonalEventColor(family.getMembers()
+            .stream()
+            .filter(member -> member.getUser().getId().equals(requestingUser.getId()))
+            .findFirst()
+            .get()
+            .getEventColor())
         .build();
   }
 
