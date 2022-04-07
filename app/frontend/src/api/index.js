@@ -109,7 +109,7 @@ export default {
         familyId: formData.family,
         persistent: false,
         recipientEmail: formData.recipientEmail,
-        role: formData.role,
+        initialRole: formData.role,
       },
       {
         validateStatus(status) {
