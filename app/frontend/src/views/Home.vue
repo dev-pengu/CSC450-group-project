@@ -41,7 +41,6 @@
                     <div class="foa_text--text">
                       Owner: {{ family.owner.user.firstName + ' ' + family.owner.user.lastName }}
                     </div>
-                    <router-link class="d-block foa_link--text" to="/test">Manage Members</router-link>
                     <div class="d-flex align-center foa_text--text">
                       Invite code: {{ family.inviteCode }}
                       <v-btn
@@ -58,8 +57,8 @@
                       :family-id="family.id"
                       :family-name="family.name"
                     />
-                    <router-link class="d-block foa_link--text" to="/test">Family Calendar</router-link>
                     <router-link class="d-block foa_link--text" to="/test">Manage Members</router-link>
+                    <router-link class="d-block foa_link--text" to="/test">Family Calendar</router-link>
                     <router-link class="d-block foa_link--text" to="/test">Family To Do List</router-link>
                     <router-link class="d-block foa_link--text" to="/test">Family Polls</router-link>
                     <router-link class="d-block foa_link--text" to="/test">Family Shopping List</router-link>

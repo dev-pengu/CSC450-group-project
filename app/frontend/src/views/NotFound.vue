@@ -6,7 +6,7 @@
         <div class="text-h5 text-center">Page not found</div>
         <div class="text-center">
           Sorry, the page you are looking for does not exist. <br />
-          Checkout this wholesome meme or go back to the homepage:
+          Checkout this meme or go back to the homepage:
         </div>
       </v-col>
     </v-row>
