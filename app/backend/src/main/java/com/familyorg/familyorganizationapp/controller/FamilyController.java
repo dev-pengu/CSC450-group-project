@@ -1,5 +1,15 @@
 package com.familyorg.familyorganizationapp.controller;
 
+import com.familyorg.familyorganizationapp.DTO.FamilyDto;
+import com.familyorg.familyorganizationapp.DTO.FamilyRoleUpdateRequest;
+import com.familyorg.familyorganizationapp.DTO.MemberInviteDto;
+import com.familyorg.familyorganizationapp.Exception.BadRequestException;
+import com.familyorg.familyorganizationapp.domain.FamilyMembers;
+import com.familyorg.familyorganizationapp.domain.InviteCode;
+import com.familyorg.familyorganizationapp.domain.MemberInvite;
+import com.familyorg.familyorganizationapp.service.FamilyService;
+import com.familyorg.familyorganizationapp.service.InviteService;
+import com.familyorg.familyorganizationapp.service.MessagingService;
 import java.util.List;
 import java.util.Optional;
 import org.slf4j.Logger;
@@ -15,15 +25,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import com.familyorg.familyorganizationapp.DTO.FamilyDto;
-import com.familyorg.familyorganizationapp.DTO.FamilyRoleUpdateRequest;
-import com.familyorg.familyorganizationapp.DTO.MemberInviteDto;
-import com.familyorg.familyorganizationapp.domain.FamilyMembers;
-import com.familyorg.familyorganizationapp.domain.InviteCode;
-import com.familyorg.familyorganizationapp.domain.MemberInvite;
-import com.familyorg.familyorganizationapp.service.FamilyService;
-import com.familyorg.familyorganizationapp.service.InviteService;
-import com.familyorg.familyorganizationapp.service.MessagingService;
 
 @RestController
 @RequestMapping("/api/v1/family")
@@ -36,8 +37,8 @@ public class FamilyController {
   private MessagingService messagingService;
 
   @Autowired
-  FamilyController(FamilyService familyService, InviteService inviteService,
-      MessagingService messagingService) {
+  FamilyController(
+      FamilyService familyService, InviteService inviteService, MessagingService messagingService) {
     this.familyService = familyService;
     this.inviteService = inviteService;
     this.messagingService = messagingService;
@@ -53,7 +54,6 @@ public class FamilyController {
   public ResponseEntity<FamilyDto> getFamily(@RequestBody FamilyDto familyRequest) {
     FamilyDto family = familyService.getFamily(familyRequest);
     return new ResponseEntity<FamilyDto>(family, HttpStatus.OK);
-
   }
 
   @GetMapping("/get-family")
@@ -63,11 +63,15 @@ public class FamilyController {
   }
 
   @GetMapping("/invite/join")
-  public ResponseEntity<String> joinFamily(@RequestParam("code") String inviteCode,
-      @RequestParam("eventColor") String eventColor) {
-    InviteCode inviteCodeObj = InviteCode.parseFromCodeString(inviteCode);
-    inviteService.verifyMemberInvite(inviteCodeObj, eventColor);
-    return new ResponseEntity<String>("Success", HttpStatus.OK);
+  public ResponseEntity<String> joinFamily(
+      @RequestParam("code") String inviteCode, @RequestParam("eventColor") String eventColor) {
+    try {
+      InviteCode inviteCodeObj = InviteCode.parseFromCodeString(inviteCode);
+      inviteService.verifyMemberInvite(inviteCodeObj, eventColor);
+      return new ResponseEntity<String>("Success", HttpStatus.OK);
+    } catch (IllegalStateException e) {
+      throw new BadRequestException("Invite code passed is malformed.");
+    }
   }
 
   @PatchMapping("/admin/update")
@@ -80,7 +84,6 @@ public class FamilyController {
   public ResponseEntity<String> deleteFamily(@RequestParam("id") Long familyId) {
     familyService.deleteFamily(familyId);
     return new ResponseEntity<String>("Family successfully deleted", HttpStatus.OK);
-
   }
 
   @PatchMapping("/admin/transferOwnership")
@@ -105,20 +108,25 @@ public class FamilyController {
       // Generate the Invite
       MemberInvite invite = null;
       if (memberInvite.getInitialRole() != null) {
-        invite = inviteService.createUniqueMemberInviteWithRole(memberInvite.getFamilyId(),
-            memberInvite.getRecipientEmail(), memberInvite.getInitialRole());
+        invite =
+            inviteService.createUniqueMemberInviteWithRole(
+                memberInvite.getFamilyId(),
+                memberInvite.getRecipientEmail(),
+                memberInvite.getInitialRole());
       } else {
-        invite = inviteService.createUniqueMemberInvite(memberInvite.getFamilyId(),
-            memberInvite.getRecipientEmail());
+        invite =
+            inviteService.createUniqueMemberInvite(
+                memberInvite.getFamilyId(), memberInvite.getRecipientEmail());
       }
       // Send the invite via email
       Optional<FamilyMembers> owner = invite.getFamily().getOwner();
       if (owner.isPresent()) {
-        String emailContents = messagingService.buildInviteContent(
-            invite.getInviteCodeObj().getInviteCodeString(),
-            owner.get().getUser().getFullname().toUpperCase());
-        messagingService.sendHtmlEmail(invite.getUserEmail(), "You've been invited to a family!",
-            emailContents);
+        String emailContents =
+            messagingService.buildInviteContent(
+                invite.getInviteCodeObj().getInviteCodeString(),
+                owner.get().getUser().getFullname().toUpperCase());
+        messagingService.sendHtmlEmail(
+            invite.getUserEmail(), "You've been invited to a family!", emailContents);
       }
       // Assuming no errors were thrown, an invitation was sent successfully, respond with 200
       // status
