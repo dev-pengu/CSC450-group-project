@@ -16,5 +16,7 @@
     <mapping class="com.familyorg.familyorganizationapp.domain.CalendarEvent" />
     <mapping class="com.familyorg.familyorganizationapp.domain.RecurringCalendarEvent" />
     <mapping class="com.familyorg.familyorganizationapp.domain.EventRepetitionSchedule" />
+    <mapping class="com.familyorg.familyorganizationapp.domain.ShoppingList" />
+    <mapping class="com.familyorg.familyorganizationapp.domain.ShoppingListItem" />
   </session-factory>
 </hibernate-configuration>

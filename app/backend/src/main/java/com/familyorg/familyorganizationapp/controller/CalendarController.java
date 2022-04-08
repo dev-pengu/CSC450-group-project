@@ -57,7 +57,6 @@ public class CalendarController {
     return new ResponseEntity<>("Calendar event updated successfully.", HttpStatus.OK);
   }
 
-  // TODO: test calendar deletion
   @DeleteMapping()
   public ResponseEntity<String> deleteCalendar(@RequestParam Long id) {
     calendarService.deleteCalendar(id);

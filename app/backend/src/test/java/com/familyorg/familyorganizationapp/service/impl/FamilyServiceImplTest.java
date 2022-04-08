@@ -10,6 +10,8 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
+import com.familyorg.familyorganizationapp.repository.ShoppingListRepository;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -52,6 +54,7 @@ public class FamilyServiceImplTest {
   private FamilyRepository familyRepository;
   private UserService userService;
   private CalendarRepository calendarRepository;
+  private ShoppingListRepository shoppingListRepository;
 
   static User TEST_USER_1 =
       new User(1l, "Test", "User", "testuser", "password", "testuser@test.com", null);
@@ -143,8 +146,9 @@ public class FamilyServiceImplTest {
     });
     familyMemberRepository = mock(FamilyMemberRepository.class);
     calendarRepository = mock(CalendarRepository.class);
+    shoppingListRepository = mock(ShoppingListRepository.class);
     familyService = new FamilyServiceImpl(familyRepository, familyMemberRepository,
-        calendarRepository, userService);
+        calendarRepository, userService, shoppingListRepository);
 
     when(userService.getUserByEmail(any(String.class)))
         .thenAnswer(invocation -> usersByEmail.get(invocation.getArgument(0)));
