@@ -88,7 +88,7 @@ public class PollDtoBuilder implements DtoBuilder<PollDto> {
   @Override
   public PollDto build() {
     return new PollDto(id, familyId, createdBy, createdDateTime, description, notes, closedDateTime,
-        closed, options, respondents);
+        closed, options, respondents, null);
   }
 
 }

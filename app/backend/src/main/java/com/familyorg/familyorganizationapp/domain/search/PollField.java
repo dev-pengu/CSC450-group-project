@@ -1,7 +1,6 @@
 package com.familyorg.familyorganizationapp.domain.search;
 
-public enum CalendarField {
+public enum PollField {
   FAMILY,
-  CALENDAR,
-  USER;
+  POLL;
 }

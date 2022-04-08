@@ -11,6 +11,8 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
@@ -30,6 +32,10 @@ public class PollOption implements Serializable {
 
   @OneToMany(mappedBy = "vote", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
   List<PollVote> votes;
+
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "poll_id", referencedColumnName = "poll_id", columnDefinition = "BIGINT")
+  private Poll poll;
 
   public Long getId() {
     return id;
@@ -60,6 +66,14 @@ public class PollOption implements Serializable {
       this.votes = new ArrayList<>();
     }
     this.votes.add(vote);
+  }
+
+  public Poll getPoll() {
+    return poll;
+  }
+
+  public void setPoll(Poll poll) {
+    this.poll = poll;
   }
 
   @Override

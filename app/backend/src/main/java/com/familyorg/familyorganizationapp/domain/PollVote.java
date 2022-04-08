@@ -79,7 +79,7 @@ public class PollVote implements Serializable {
 
   @Override
   public String toString() {
-    return "PollVote [vote=" + vote + ", user=" + user + "]";
+    return "PollVote [vote=" + vote.getId() + ", user=" + user + "]";
   }
 
 }
