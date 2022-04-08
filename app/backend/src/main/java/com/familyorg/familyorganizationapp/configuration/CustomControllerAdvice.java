@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import com.familyorg.familyorganizationapp.DTO.ErrorDto;
 import com.familyorg.familyorganizationapp.DTO.builder.ErrorDtoBuilder;
+import com.familyorg.familyorganizationapp.Exception.ApiException;
 import com.familyorg.familyorganizationapp.Exception.AuthorizationException;
 import com.familyorg.familyorganizationapp.Exception.BadRequestException;
 import com.familyorg.familyorganizationapp.Exception.ExistingUserException;
@@ -24,51 +25,59 @@ public class CustomControllerAdvice {
   private static Logger logger = LoggerFactory.getLogger(CustomControllerAdvice.class);
 
   @ExceptionHandler(ResourceNotFoundException.class)
-  public ResponseEntity<ErrorDto> handleResourceNotFound(Exception e) {
-    ErrorDto errorResponse = new ErrorDtoBuilder().withErrorCode(HttpStatus.NOT_FOUND.value())
-        .withMessage(e.getMessage()).build();
+  public ResponseEntity<ErrorDto> handleResourceNotFound(ApiException e) {
+    ErrorDto errorResponse = new ErrorDtoBuilder().withErrorCode(e.getApiCode().getCode())
+        .withMessage(e.getMessage())
+        .build();
     return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
   }
 
   @ExceptionHandler(UserNotFoundException.class)
-  public ResponseEntity<ErrorDto> handleUserNotFound(Exception e) {
-    ErrorDto errorResponse = new ErrorDtoBuilder().withErrorCode(HttpStatus.NOT_FOUND.value())
-        .withMessage(e.getMessage()).addRedirect("/register").build();
+  public ResponseEntity<ErrorDto> handleUserNotFound(ApiException e) {
+    ErrorDto errorResponse = new ErrorDtoBuilder().withErrorCode(e.getApiCode().getCode())
+        .withMessage(e.getMessage())
+        .addRedirect("/register")
+        .build();
     return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
   }
 
   @ExceptionHandler(BadRequestException.class)
-  public ResponseEntity<ErrorDto> handleBadRequest(Exception e) {
-    ErrorDto errorResponse = new ErrorDtoBuilder().withErrorCode(HttpStatus.BAD_REQUEST.value())
-        .withMessage(e.getMessage()).build();
+  public ResponseEntity<ErrorDto> handleBadRequest(ApiException e) {
+    ErrorDto errorResponse = new ErrorDtoBuilder().withErrorCode(e.getApiCode().getCode())
+        .withMessage(e.getMessage())
+        .build();
     return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
   }
 
   @ExceptionHandler(ExistingUserException.class)
-  public ResponseEntity<ErrorDto> handleExistingUser(Exception e) {
-    ErrorDto errorResponse = new ErrorDtoBuilder().withErrorCode(HttpStatus.CONFLICT.value())
-        .withMessage(e.getMessage()).build();
+  public ResponseEntity<ErrorDto> handleExistingUser(ApiException e) {
+    ErrorDto errorResponse = new ErrorDtoBuilder().withErrorCode(e.getApiCode().getCode())
+        .withMessage(e.getMessage())
+        .build();
     return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
   }
 
   @ExceptionHandler(IncorrectCredentialsException.class)
-  public ResponseEntity<ErrorDto> handleIncorrectCredentials(Exception e) {
-    ErrorDto errorResponse = new ErrorDtoBuilder().withErrorCode(HttpStatus.UNAUTHORIZED.value())
-        .withMessage(e.getMessage()).build();
+  public ResponseEntity<ErrorDto> handleIncorrectCredentials(ApiException e) {
+    ErrorDto errorResponse = new ErrorDtoBuilder().withErrorCode(e.getApiCode().getCode())
+        .withMessage(e.getMessage())
+        .build();
     return new ResponseEntity<ErrorDto>(errorResponse, HttpStatus.UNAUTHORIZED);
   }
 
   @ExceptionHandler(BadCredentialsException.class)
-  public ResponseEntity<ErrorDto> handleBadCredentials(Exception e) {
-    ErrorDto errorResponse = new ErrorDtoBuilder().withErrorCode(HttpStatus.UNAUTHORIZED.value())
-        .withMessage(e.getMessage()).build();
+  public ResponseEntity<ErrorDto> handleBadCredentials(ApiException e) {
+    ErrorDto errorResponse = new ErrorDtoBuilder().withErrorCode(e.getApiCode().getCode())
+        .withMessage(e.getMessage())
+        .build();
     return new ResponseEntity<ErrorDto>(errorResponse, HttpStatus.UNAUTHORIZED);
   }
 
   @ExceptionHandler(AuthorizationException.class)
-  public ResponseEntity<ErrorDto> handleUnauthorized(Exception e) {
+  public ResponseEntity<ErrorDto> handleUnauthorized(ApiException e) {
     ErrorDtoBuilder errorResponseBuilder = new ErrorDtoBuilder()
-        .withErrorCode(HttpStatus.UNAUTHORIZED.value()).withMessage(e.getMessage());
+        .withErrorCode(e.getApiCode().getCode())
+        .withMessage(e.getMessage());
     if (((AuthorizationException) e).isRedirect()) {
       errorResponseBuilder.addRedirect("/login");
     }
@@ -88,7 +97,8 @@ public class CustomControllerAdvice {
 
     ErrorDto errorResponse =
         new ErrorDtoBuilder().withErrorCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
-            .withMessage(e.getMessage()).build();
+            .withMessage(e.getMessage())
+            .build();
     return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
   }
 }
