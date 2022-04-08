@@ -1,7 +1,8 @@
 package com.familyorg.familyorganizationapp.service;
 
-import java.util.List;
 import com.familyorg.familyorganizationapp.DTO.PollDto;
+import com.familyorg.familyorganizationapp.DTO.PollSearchRequestDto;
+import com.familyorg.familyorganizationapp.DTO.PollSearchResponseDto;
 import com.familyorg.familyorganizationapp.DTO.VoteDto;
 
 public interface PollService {
@@ -14,13 +15,9 @@ public interface PollService {
 
   PollDto getPoll(Long id);
 
-  List<PollDto> getUnvotedPolls();
-
   void vote(VoteDto request);
 
   PollDto getPollResults(Long id);
 
-  List<PollDto> getPollsForFamily(Long id, boolean closed, boolean active);
-
-  void updateRespondents(PollDto request);
+  PollSearchResponseDto search(PollSearchRequestDto request);
 }

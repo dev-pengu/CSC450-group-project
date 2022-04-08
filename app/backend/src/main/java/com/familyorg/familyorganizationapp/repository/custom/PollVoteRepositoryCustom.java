@@ -7,4 +7,6 @@ public interface PollVoteRepositoryCustom {
   List<PollVote> getUnvotedPolls(Long userId);
 
   void deleteAllByUserIdAndPoll(List<Long> userIds, Long pollId);
+
+  void deleteByPollId(Long pollId);
 }

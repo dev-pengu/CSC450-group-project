@@ -1,7 +1,7 @@
 package com.familyorg.familyorganizationapp.controller;
 
-import java.util.List;
-import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,11 +14,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.familyorg.familyorganizationapp.DTO.PollDto;
+import com.familyorg.familyorganizationapp.DTO.PollSearchRequestDto;
+import com.familyorg.familyorganizationapp.DTO.PollSearchResponseDto;
+import com.familyorg.familyorganizationapp.DTO.VoteDto;
 import com.familyorg.familyorganizationapp.service.PollService;
 
 @RestController
 @RequestMapping("/api/v1/poll")
 public class PollController {
+
+  private Logger logger = LoggerFactory.getLogger(PollController.class);
 
   private PollService pollService;
 
@@ -52,21 +57,27 @@ public class PollController {
   }
 
   /**
-   * Closed is an optional parameter. if not included all polls for a family will be returned. If
-   * true, only
+   * Search for polls. If closed is false and no start date is specified, the current timestamp will
+   * be used.
    *
-   * @param familyId
-   * @param status
+   * @param request
    * @return
    */
-  @GetMapping("/by-family")
-  public ResponseEntity<List<PollDto>> getPollsForFamily(@RequestParam("familyId") Long familyId,
-      @RequestParam(name = "status") Optional<Boolean> closed) {
-    return null;
+  @PostMapping("/search")
+  public ResponseEntity<PollSearchResponseDto> search(@RequestBody() PollSearchRequestDto request) {
+    PollSearchResponseDto response = pollService.search(request);
+    return new ResponseEntity<PollSearchResponseDto>(response, HttpStatus.OK);
   }
 
-  @GetMapping("/user/all")
-  public ResponseEntity<PollDto> getPollsForLoggedInUser() {
-    return null;
+  @PostMapping("/vote")
+  public ResponseEntity<String> vote(@RequestBody() VoteDto request) {
+    pollService.vote(request);
+    return new ResponseEntity<String>("Vote recorded successfully", HttpStatus.OK);
+  }
+
+  @GetMapping("/results")
+  public ResponseEntity<PollDto> results(@RequestParam("id") Long pollId) {
+    PollDto response = pollService.getPollResults(pollId);
+    return new ResponseEntity<PollDto>(response, HttpStatus.OK);
   }
 }

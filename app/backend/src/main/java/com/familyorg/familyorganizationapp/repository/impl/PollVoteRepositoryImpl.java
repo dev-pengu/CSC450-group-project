@@ -38,4 +38,11 @@ public class PollVoteRepositoryImpl extends QuerydslRepositorySupport
             .and(voteTable.poll.id.eq(pollId)))
         .execute();
   }
+
+  @Override
+  public void deleteByPollId(Long pollId) {
+    new JPADeleteClause(getEntityManager(), voteTable)
+        .where(voteTable.poll.id.eq(pollId))
+        .execute();
+  }
 }

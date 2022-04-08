@@ -2,7 +2,10 @@ package com.familyorg.familyorganizationapp.service.impl;
 
 import java.sql.Timestamp;
 import java.time.Instant;
-import java.util.Collections;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
@@ -10,10 +13,14 @@ import java.util.Optional;
 import java.util.TimeZone;
 import java.util.stream.Collectors;
 import javax.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.familyorg.familyorganizationapp.DTO.PollDto;
 import com.familyorg.familyorganizationapp.DTO.PollOptionDto;
+import com.familyorg.familyorganizationapp.DTO.PollSearchRequestDto;
+import com.familyorg.familyorganizationapp.DTO.PollSearchResponseDto;
 import com.familyorg.familyorganizationapp.DTO.UserDto;
 import com.familyorg.familyorganizationapp.DTO.VoteDto;
 import com.familyorg.familyorganizationapp.DTO.builder.PollDtoBuilder;
@@ -28,6 +35,8 @@ import com.familyorg.familyorganizationapp.domain.PollVote;
 import com.familyorg.familyorganizationapp.domain.Role;
 import com.familyorg.familyorganizationapp.domain.User;
 import com.familyorg.familyorganizationapp.domain.id.VoteId;
+import com.familyorg.familyorganizationapp.domain.search.PollField;
+import com.familyorg.familyorganizationapp.domain.search.SearchFilter;
 import com.familyorg.familyorganizationapp.repository.PollOptionRepository;
 import com.familyorg.familyorganizationapp.repository.PollRepository;
 import com.familyorg.familyorganizationapp.repository.PollVoteRepository;
@@ -38,6 +47,8 @@ import com.familyorg.familyorganizationapp.util.DateUtil;
 
 @Service
 public class PollServiceImpl implements PollService {
+
+  private Logger logger = LoggerFactory.getLogger(PollServiceImpl.class);
 
   PollRepository pollRepository;
   PollOptionRepository pollOptionRepository;
@@ -65,6 +76,12 @@ public class PollServiceImpl implements PollService {
       throw new BadRequestException(
           "A family id, description, closed date, and options are required to create a poll.");
     }
+
+    if (DateUtil.parseDateTime(request.getClosedDateTime())
+        .compareTo(Date.from(Instant.now())) < 0) {
+      throw new BadRequestException(
+          "Closed date occurs in the past. Cannot create a poll that is already closed.");
+    }
     User requestingUser = userService.getRequestingUser();
 
     Optional<Family> family = familyService.getFamilyById(request.getFamilyId());
@@ -87,20 +104,46 @@ public class PollServiceImpl implements PollService {
     poll.setCloseDateTime(DateUtil.parseTimestamp(request.getClosedDateTime()));
     poll.setCreatedBy(requestingUser);
     poll.setFamily(family.get());
-    poll.setOptions(request.getOptions().stream().map(option -> {
-      PollOption pollOption = new PollOption();
-      pollOption.setValue(option.getValue());
-      return pollOption;
-    }).filter(option -> option == null).collect(Collectors.toList()));
 
     Poll savedPoll = pollRepository.save(poll);
-    voteRepository.saveAll(family.get().getMembers().stream().map(member -> {
-      PollVote vote = new PollVote();
-      vote.setPoll(savedPoll);
-      vote.setUser(member.getUser());
-      vote.setVote(null);
-      return vote;
-    }).collect(Collectors.toList()));
+    List<PollOption> options = request.getOptions().stream().map(option -> {
+      PollOption pollOption = new PollOption();
+      pollOption.setValue(option.getValue());
+      pollOption.setPoll(savedPoll);
+      return pollOption;
+    }).collect(Collectors.toList());
+    pollOptionRepository.saveAll(options);
+
+    List<PollVote> respondents =
+        request.getRespondents().isEmpty()
+            ? family.get()
+                .getMembers()
+                .stream()
+                .filter(member -> request.shouldOmitCreator()
+                    && member.getUser().getId() != requestingUser.getId())
+                .map(member -> {
+                  PollVote vote = new PollVote();
+                  vote.setPoll(savedPoll);
+                  vote.setUser(member.getUser());
+                  vote.setVote(null);
+                  return vote;
+                })
+                .collect(Collectors.toList())
+            : request.getRespondents().stream().map(respondent -> {
+              User user = userService.getUserById(respondent.getId());
+              if (user != null) {
+                if (family.get().isMember(user)) {
+
+                  PollVote vote = new PollVote();
+                  vote.setPoll(savedPoll);
+                  vote.setUser(user);
+                  vote.setVote(null);
+                  return vote;
+                }
+              }
+              return null;
+            }).filter(vote -> vote != null).collect(Collectors.toList());
+    voteRepository.saveAll(respondents);
   }
 
   @Override
@@ -135,6 +178,9 @@ public class PollServiceImpl implements PollService {
           "A poll cannot be updated once users have started voting. Please delete this poll and "
               + "create a new one if the action was intended");
     }
+    if (poll.getCloseDateTime().compareTo(Date.from(Instant.now())) < 0) {
+      throw new BadRequestException("A poll that is closed cannot be changed.");
+    }
 
 
     Map<Long, PollOptionDto> reqOptionsById =
@@ -153,7 +199,33 @@ public class PollServiceImpl implements PollService {
         iter.remove();
       }
     }
+    if (request.getRespondents() != null && !request.getRespondents().isEmpty()) {
+      List<Long> respondentIds = poll
+        .getRespondents()
+        .stream()
+        .map(respondent -> respondent.getUser().getId())
+        .collect(Collectors.toList());
+      request.getRespondents().forEach(respondent -> {
+        if (respondentIds.contains(respondent.getId())) {
+          respondentIds.remove(respondent.getId());
+        } else {
+          User user = userService.getUserById(respondent.getId());
+          if (user != null) {
+            if (poll.getFamily().isMember(user)) {
 
+              PollVote vote = new PollVote();
+              vote.setPoll(poll);
+              vote.setUser(user);
+              vote.setVote(null);
+
+              poll.getRespondents().add(vote);
+            }
+          }
+        }
+      });
+      poll.getRespondents().removeIf(p -> respondentIds.contains(p.getUser().getId()));
+      voteRepository.deleteAllByUserIdAndPoll(respondentIds, poll.getId());
+    }
     TimeZone timezone =
         familyService.getUserTimeZoneOrDefault(requestingUser, pollOpt.get().getFamily());
     poll.setTimezone(timezone.getID());
@@ -184,7 +256,8 @@ public class PollServiceImpl implements PollService {
     if (!hasAppropriatePrivileges) {
       throw new AuthorizationException("User is not authorized to perform this action.");
     }
-
+    voteRepository.deleteByPollId(id);
+    pollOptionRepository.deleteByPollId(id);
     pollRepository.delete(pollOpt.get());
   }
 
@@ -225,89 +298,16 @@ public class PollServiceImpl implements PollService {
                 .withValue(option.getValue())
                 .build())
             .collect(Collectors.toList()))
+        .isClosed(
+            DateUtil
+                .toZonedDateTime(poll.getCloseDateTime(), TimeZone.getTimeZone(poll.getTimezone()),
+                    timezone)
+                .compareTo(ZonedDateTime.now(ZoneId.of(timezone.getID()))) < 0)
+        .withRespondents(poll.getRespondents()
+            .stream()
+            .map(respondent -> UserDto.fromUserObj(respondent.getUser()))
+            .collect(Collectors.toList()))
         .build();
-  }
-
-  @Override
-  public List<PollDto> getPollsForFamily(Long id, boolean closed, boolean active) {
-    if (id == null) {
-      throw new BadRequestException("Poll id is required to retreive it.");
-    }
-    User requestingUser = userService.getRequestingUser();
-
-    Optional<Family> family = familyService.getFamilyById(id);
-    if (family.isEmpty()) {
-      throw new ResourceNotFoundException("Family with id " + id + " not found.");
-    }
-
-    boolean hasAppropriatePrivileges = familyService
-        .verfiyMinimumRoleSecurity(family.get(), requestingUser, Role.CHILD);
-    if (!hasAppropriatePrivileges) {
-      throw new AuthorizationException("User is not authorized to perform this action.");
-    }
-    List<Poll> polls = pollRepository.pollsByFamilyId(id, closed, active);
-
-    return polls.stream()
-        .map(poll -> {
-          TimeZone timezone =
-              familyService.getUserTimeZoneOrDefault(requestingUser, poll.getFamily());
-          return new PollDtoBuilder().withId(poll.getId())
-              .withFamilyId(poll.getFamily().getId())
-              .withDescription(poll.getDescription())
-              .withNotes(poll.getNotes())
-              .withClosedDateTime(
-                  DateUtil.toTimezone(poll.getCloseDateTime(),
-                      TimeZone.getTimeZone(poll.getTimezone()),
-                      timezone))
-              .withCreatedDateTime(
-                  DateUtil.toTimezone(poll.getCreatedDatetime(),
-                      TimeZone.getTimeZone(poll.getTimezone()),
-                      timezone))
-              .withCreatedBy(UserDto.fromUserObj(poll.getCreatedBy()))
-              .withOptions(poll.getOptions()
-                  .stream()
-                  .map(option -> new PollOptionDtoBuilder().withId(option.getId())
-                      .withValue(option.getValue())
-                      .build())
-                  .collect(Collectors.toList()))
-              .build();
-        })
-        .collect(Collectors.toList());
-  }
-
-  @Override
-  public List<PollDto> getUnvotedPolls() {
-    User requestingUser = userService.getRequestingUser();
-    List<PollVote> nullVotes = voteRepository.getUnvotedPolls(requestingUser.getId());
-    if (nullVotes.isEmpty()) {
-      return Collections.emptyList();
-    }
-
-    List<PollDto> response = nullVotes.stream().map(vote -> {
-      Poll poll = vote.getPoll();
-      TimeZone timezone =
-          familyService.getUserTimeZoneOrDefault(requestingUser, poll.getFamily());
-      return new PollDtoBuilder().withId(poll.getId())
-          .withFamilyId(poll.getFamily().getId())
-          .withDescription(poll.getDescription())
-          .withNotes(poll.getNotes())
-          .withClosedDateTime(
-              DateUtil.toTimezone(poll.getCloseDateTime(), TimeZone.getTimeZone(poll.getTimezone()),
-                  timezone))
-          .withCreatedDateTime(
-              DateUtil.toTimezone(poll.getCreatedDatetime(),
-                  TimeZone.getTimeZone(poll.getTimezone()),
-                  timezone))
-          .withCreatedBy(UserDto.fromUserObj(poll.getCreatedBy()))
-          .withOptions(poll.getOptions()
-              .stream()
-              .map(option -> new PollOptionDtoBuilder().withId(option.getId())
-                  .withValue(option.getValue())
-                  .build())
-              .collect(Collectors.toList()))
-          .build();
-    }).collect(Collectors.toList());
-    return response;
   }
 
   @Override
@@ -328,7 +328,11 @@ public class PollServiceImpl implements PollService {
       throw new AuthorizationException("User is not authorized to perform this action.");
     }
 
-    // TODO: add check for current progress
+    boolean allVotesIn = pollOpt.get().getRespondents().stream().allMatch(respondent -> respondent.getVote() != null);
+    boolean closed = pollOpt.get().getCloseDateTime().compareTo(Date.from(Instant.now())) < 0;
+    if (!allVotesIn || closed) {
+      throw new BadRequestException("Results cannot be viewed for a poll still in progress.");
+    }
     TimeZone timezone =
         familyService.getUserTimeZoneOrDefault(requestingUser, pollOpt.get().getFamily());
     Poll poll = pollOpt.get();
@@ -383,52 +387,83 @@ public class PollServiceImpl implements PollService {
   }
 
   @Override
-  @Transactional
-  public void updateRespondents(PollDto request) {
-    if (request.getId() == null || request.getRespondents() == null
-        || request.getRespondents().isEmpty()) {
-      throw new BadRequestException("A poll id and list of respondents are required.");
-    }
+  public PollSearchResponseDto search(PollSearchRequestDto request) {
+    verifyPollSearchRequest(request);
     User requestingUser = userService.getRequestingUser();
 
-    Optional<Poll> poll = pollRepository.findById(request.getId());
-    if (poll.isEmpty()) {
-      throw new ResourceNotFoundException("Poll with id " + request.getId() + " not found.");
-    }
+    PollSearchResponseDto response = new PollSearchResponseDto();
+    response.setStart(request.getStart());
+    response.setEnd(request.getEnd());
+    response.setActiveSearchFilters(request.getFilters());
+    List<Long> permittedFamilyIds = familyService.getFamilyIdsByUser(requestingUser.getUsername());
 
-    boolean hasAppropriatePrivileges =
-        familyService.verfiyMinimumRoleSecurity(poll.get().getFamily(), requestingUser, Role.ADMIN);
-    if (!hasAppropriatePrivileges) {
-      hasAppropriatePrivileges =
-          poll.get().getCreatedBy().getUsername().equals(requestingUser.getUsername());
-    }
-    if (!hasAppropriatePrivileges) {
-      throw new AuthorizationException("User is not authorized to perform this action.");
-    }
-    List<Long> respondentIds = poll.get()
-        .getRespondents()
-        .stream()
-        .map(respondent -> respondent.getUser().getId())
-        .collect(Collectors.toList());
-    request.getRespondents().forEach(respondent -> {
-      if (respondentIds.contains(respondent.getId())) {
-        respondentIds.remove(respondent.getId());
-      } else {
-        User user = userService.getUserById(respondent.getId());
-        if (user != null) {
-          if (poll.get().getFamily().isMember(user)) {
+    List<Long> requestFamilyIds = request.getIdsByField(PollField.FAMILY);
+    List<Poll> polls = pollRepository.getFilteredPolls(
+        requestFamilyIds.isEmpty() ? permittedFamilyIds
+            : permittedFamilyIds.stream()
+                .filter(id -> requestFamilyIds.contains(id))
+                .collect(Collectors.toList()),
+        request.getIdsByField(PollField.POLL), request.getClosed(), request.getUnVoted(),
+        request.getStart() == null ? null : new Timestamp(request.getStart().getTime()),
+        request.getEnd() == null ? null : new Timestamp(request.getEnd().getTime()),
+        requestingUser.getId());
 
-            PollVote vote = new PollVote();
-            vote.setPoll(poll.get());
-            vote.setUser(user);
-            vote.setVote(null);
+    TimeZone timezone = TimeZone.getTimeZone(requestingUser.getTimezone());
+    response.setSearchFilters(
+        getSearchFilters(polls));
+    response.setPolls(
+        polls.stream()
+            .map(poll -> new PollDtoBuilder().withId(poll.getId())
+                .withFamilyId(poll.getFamily().getId())
+                .withDescription(poll.getDescription())
+                .withNotes(poll.getNotes())
+                .withClosedDateTime(
+                    DateUtil.toTimezone(poll.getCloseDateTime(),
+                        TimeZone.getTimeZone(poll.getTimezone()),
+                        timezone))
+                .withCreatedDateTime(
+                    DateUtil.toTimezone(poll.getCreatedDatetime(),
+                        TimeZone.getTimeZone(poll.getTimezone()),
+                        timezone))
+                .withCreatedBy(UserDto.fromUserObj(poll.getCreatedBy()))
+                .withOptions(poll.getOptions()
+                    .stream()
+                    .map(option -> new PollOptionDtoBuilder().withId(option.getId())
+                        .withValue(option.getValue())
+                        .build())
+                    .collect(Collectors.toList()))
+                .isClosed(
+                    DateUtil
+                        .toZonedDateTime(poll.getCloseDateTime(),
+                            TimeZone.getTimeZone(poll.getTimezone()),
+                            timezone)
+                        .compareTo(ZonedDateTime.now(ZoneId.of(timezone.getID()))) < 0)
+                .withRespondents(poll.getRespondents()
+                    .stream()
+                    .map(respondent -> UserDto.fromUserObj(respondent.getUser()))
+                    .collect(Collectors.toList()))
+                .build())
+            .collect(Collectors.toList()));
 
-            poll.get().getRespondents().add(vote);
-          }
-        }
-      }
-    });
-    voteRepository.deleteAllByUserIdAndPoll(respondentIds, poll.get().getId());
+    return response;
   }
 
+  private void verifyPollSearchRequest(PollSearchRequestDto request) {
+
+  }
+
+  private Map<PollField, List<SearchFilter>> getSearchFilters(List<Poll> polls) {
+    Map<PollField, List<SearchFilter>> filters = new HashMap<>();
+    filters.put(PollField.POLL,
+        polls.stream()
+            .map(poll -> new SearchFilter(poll.getId(), poll.getDescription()))
+            .collect(Collectors.toList()));
+    filters.put(PollField.FAMILY,
+        polls.stream()
+            .map(poll -> new SearchFilter(poll.getFamily().getId(), poll.getFamily().getName()))
+            .distinct()
+            .collect(Collectors.toList()));
+
+    return filters;
+  }
 }

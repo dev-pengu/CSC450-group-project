@@ -1,6 +1,9 @@
 package com.familyorg.familyorganizationapp.DTO;
 
+import java.util.ArrayList;
 import java.util.List;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 public class PollDto {
   private Long id;
@@ -11,12 +14,15 @@ public class PollDto {
   private String notes;
   private String closedDateTime;
   private Boolean closed;
+  @JsonInclude(Include.NON_NULL)
+  private Boolean omitCreator;
   private List<PollOptionDto> options;
+  @JsonInclude(Include.NON_EMPTY)
   private List<UserDto> respondents;
 
   public PollDto(Long id, Long familyId, UserDto createdBy, String createdDateTime,
       String description, String notes, String closedDateTime, Boolean isClosed,
-      List<PollOptionDto> options, List<UserDto> respondents) {
+      List<PollOptionDto> options, List<UserDto> respondents, Boolean omitCreator) {
     super();
     this.id = id;
     this.familyId = familyId;
@@ -26,7 +32,9 @@ public class PollDto {
     this.notes = notes;
     this.closedDateTime = closedDateTime;
     this.closed = isClosed;
-    this.options = options;
+    this.options = options == null ? new ArrayList<>() : options;
+    this.respondents = respondents == null ? new ArrayList<>() : respondents;
+    this.omitCreator = omitCreator;
   }
 
   public Long getId() {
@@ -67,6 +75,10 @@ public class PollDto {
 
   public List<UserDto> getRespondents() {
     return respondents;
+  }
+
+  public Boolean shouldOmitCreator() {
+    return omitCreator;
   }
 
   @Override
