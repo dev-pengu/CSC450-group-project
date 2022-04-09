@@ -69,6 +69,6 @@ public class UserDtoBuilder implements DtoBuilder<UserDto> {
   @Override
   public UserDto build() {
     return new UserDto(this.id, this.firstName, this.lastName, this.email, this.username, null,
-        null, timezone, darkMode, this.colorsByFamily);
+        null, timezone, darkMode, this.colorsByFamily, null);
   }
 }

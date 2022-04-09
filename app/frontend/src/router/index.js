@@ -5,6 +5,7 @@ import Home from '../views/Home.vue';
 import Login from '../views/Login.vue';
 import SignUp from '../views/SignUp.vue';
 import NotFound from '../views/NotFound.vue';
+import PasswordReset from '../views/PasswordReset.vue';
 
 Vue.use(VueRouter);
 const routes = [
@@ -26,6 +27,11 @@ const routes = [
     path: '/signup',
     name: 'Sign Up',
     component: SignUp,
+  },
+  {
+    path: '/passwordReset',
+    name: 'Password Reset',
+    component: PasswordReset,
   },
   {
     path: '/:pathMatch(.*)*',

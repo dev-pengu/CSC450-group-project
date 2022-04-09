@@ -1,10 +1,16 @@
 package com.familyorg.familyorganizationapp.service.impl;
 
+import com.familyorg.familyorganizationapp.domain.PasswordResetCode;
+import com.familyorg.familyorganizationapp.repository.PasswordResetCodeRepository;
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import javax.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -21,8 +27,8 @@ import com.familyorg.familyorganizationapp.service.AuthService;
 @Service
 public class AuthServiceImpl implements AuthService {
 
-  @Autowired
-  UserRepository userRepository;
+  @Autowired UserRepository userRepository;
+  @Autowired PasswordResetCodeRepository codeRepository;
 
   private final Pattern passwordPattern =
       Pattern.compile("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*()-+?]).+$");
@@ -66,6 +72,43 @@ public class AuthServiceImpl implements AuthService {
     if (user.getLastLoggedIn().compareTo(cal.getTime()) > 0) {
       return true;
     }
+    return false;
+  }
+
+  @Override
+  @Transactional
+  public String generateResetCode(User user) {
+    List<PasswordResetCode> existingCodes = codeRepository.getResetCodesByUser(user.getId());
+    if (existingCodes.size() > 0) {
+      codeRepository.batchExpire(
+          existingCodes.stream().map(PasswordResetCode::getId).collect(Collectors.toList()));
+    }
+    PasswordResetCode code = new PasswordResetCode();
+    code.setUser(user);
+    code.setResetCode(UUID.randomUUID().toString());
+    code.setCreated(Timestamp.from(Instant.now()));
+    PasswordResetCode savedCode = codeRepository.save(code);
+    return savedCode.getResetCode();
+  }
+
+  @Override
+  @Transactional
+  public boolean verifyResetCode(String resetCode,
+    User user) {
+    PasswordResetCode code = codeRepository.findByResetCode(resetCode);
+    if (code == null) {
+      return false;
+    }
+    Calendar cal = Calendar.getInstance();
+    cal.setTime(Date.from(Instant.now()));
+    cal.add(Calendar.MINUTE, 15);
+    if(code.getUser().getId().equals(user.getId()) && code.getCreated().compareTo(cal.getTime()) < 0) {
+      code.setExpired(true);
+      codeRepository.save(code);
+      return true;
+    }
+    code.setExpired(true);
+    codeRepository.save(code);
     return false;
   }
 }
