@@ -4,56 +4,45 @@ export default {
   state: {
     loggedIn: false,
     loginError: false,
-    // TODO: remove
-    username: null,
     user: {},
   },
   mutations: {
-    login_success(state, payload) {
+    LOGIN_SUCCESS(state, payload) {
       state.loggedIn = true;
-      state.username = payload.username;
-      state.user = payload;
+      state.user = payload.user;
     },
-    login_error(state) {
+    LOGIN_ERROR(state) {
       state.loginError = true;
-      state.username = null;
       state.user = null;
     },
-    logout_success(state) {
+    LOGOUT_SUCCESS(state) {
       state.loggedIn = false;
-      state.username = null;
       state.user = null;
     },
   },
   actions: {
-    login({ commit }, formData) {
-      // TODO: update this to not be promise based
-      return new Promise((resolve, reject) => {
-        api
-          .login(formData)
-          .then((res) => {
-            if (res.status === 200) {
-              commit('login_success', res.data);
-            }
-            resolve(res);
-          })
-          // eslint-disable-next-line no-unused-vars
-          .catch((_err) => {
-            commit('login_error');
-            reject(new Error('Invalid credentials!'));
-          });
-      });
+    async loginUser({ commit }, formData) {
+      try {
+        const res = await api.login(formData);
+        if (res.status === 200) {
+          commit('LOGIN_SUCCESS', { user: res.data });
+        } else {
+          commit('LOGIN_ERROR');
+        }
+        return res;
+      } catch (err) {
+        commit('LOGIN_ERROR');
+        throw err;
+      }
     },
-    logout({ commit }) {
-      api.logout().then(() => {
-        commit('logout_success');
-      });
+    async logoutUser({ commit }) {
+      await api.logout();
+      commit('LOGOUT_SUCCESS');
     },
   },
   getters: {
     isLoggedIn: (state) => state.loggedIn,
     hasLoginErrored: (state) => state.loginError,
-    getUsername: (state) => state.username,
-    user: (state) => state.user,
+    getUser: (state) => state.user,
   },
 };

@@ -25,23 +25,25 @@
 </template>
 
 <script>
+import { mapActions, mapGetters, mapMutations } from 'vuex';
+
 export default {
   name: 'AppBar',
   data: () => ({}),
   computed: {
-    drawerState() {
-      return this.$store.getters.drawerState;
-    },
+    ...mapGetters({ drawerState: 'getDrawerState', drawerMiniState: 'getDrawerMiniState' }),
     darkModeBtnColor() {
       return this.$vuetify.theme.dark ? 'foa_button' : '';
     },
   },
   methods: {
+    ...mapMutations({ setDrawerState: 'SET_DRAWER_STATE', setDrawerMiniState: 'SET_DRAWER_MINI_STATE' }),
+    ...mapActions(['logoutUser']),
     toggleDrawerState() {
       if (this.$vuetify.breakpoint.mdAndDown) {
-        this.$store.commit('toggleDrawerState', !this.drawerState);
+        this.setDrawerState({ state: !this.drawerState });
       } else {
-        this.$store.commit('toggleDrawerMiniState');
+        this.setDrawerMiniState({ state: !this.drawerMiniState });
       }
     },
     toggleDarkMode() {
@@ -49,7 +51,7 @@ export default {
       localStorage.setItem('darkMode', this.$vuetify.theme.dark.toString());
     },
     async logout() {
-      await this.$store.dispatch('logout');
+      this.logoutUser();
       this.$router.push('/login');
     },
   },

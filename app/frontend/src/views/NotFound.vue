@@ -28,6 +28,7 @@ export default {
     memeSrc: '',
     memeLinks: [],
   }),
+  // TODO: memes
   // async created() {
   //   const res = await axios.get('https://meme-api.herokuapp.com/gimme/wholesomememes');
   //   this.memeLinks = res.data.preview;

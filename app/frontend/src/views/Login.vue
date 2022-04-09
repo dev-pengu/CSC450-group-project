@@ -63,34 +63,31 @@ export default {
     loading: false,
   }),
   methods: {
-    ...mapActions(['login']),
+    ...mapActions(['loginUser']),
     async submit() {
-      this.loading = true;
-      this.error = false;
-      this.errors = [];
-      if (this.formData.username === '' || this.formData.password === '') {
-        this.loading = false;
-        return;
-      }
       try {
-        const res = await this.login(this.formData);
+        this.loading = true;
+        this.error = false;
+        this.errors = [];
+
+        if (this.formData.username === '' || this.formData.password === '') {
+          this.loading = false;
+          return;
+        }
+
+        const res = await this.loginUser(this.formData);
         if (res.status === 200) {
           this.$router.push('/');
         } else {
           this.error = true;
-          this.errorMsg = 'Your username or password was incorrect';
+          this.errorMsg = 'Your username or password was incorrect.';
         }
       } catch (err) {
         this.error = true;
-        const error = { err };
-        if (error.err.isAxiosError) {
-          this.errorMsg = error.err.response.data;
-        } else {
-          this.errorMsg = err;
-        }
+        this.errorMsg = 'Login failed, please try again.';
+      } finally {
+        this.loading = false;
       }
-
-      this.loading = false;
     },
   },
 };

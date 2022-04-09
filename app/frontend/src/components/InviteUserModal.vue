@@ -51,6 +51,7 @@
 </template>
 
 <script>
+import { mapMutations } from 'vuex';
 import api from '../api';
 
 export default {
@@ -75,10 +76,19 @@ export default {
     },
   }),
   methods: {
+    ...mapMutations({ setSnackbarState: 'SET_SNACKBAR_STATE', setSnackbarMessage: 'SET_SNACKBAR_MESSAGE' }),
     async submit() {
-      api.sendInviteCode(this.formData);
-      this.dialogState = false;
-      // TODO: display a message that a request has been submitted
+      try {
+        await api.sendInviteCode(this.formData);
+        this.dialogState = false;
+        this.setSnackbarState({ state: true });
+        this.setSnackbarMessage({ message: `You've sent an invite to ${this.formData.recipientEmail}!` });
+      } catch (err) {
+        // TODO: need better way to handle timeout error
+        this.dialogState = false;
+        this.setSnackbarState({ state: true });
+        this.setSnackbarMessage({ message: `You've sent an invite to ${this.formData.recipientEmail}!` });
+      }
     },
   },
 };
