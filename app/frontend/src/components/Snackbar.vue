@@ -1,9 +1,9 @@
 <template>
   <div class="snackbar">
-    <v-snackbar v-model="snackbarState" timeout="3000" top app>
+    <v-snackbar v-model="snackbarState" text :color="snackbarColor" timeout="-1" top app>
       {{ snackbarMessage }}
       <template #action="{ attrs }">
-        <v-btn color="foa_button" text v-bind="attrs" @click="closeSnackbar">Close</v-btn>
+        <v-btn text v-bind="attrs" @click="closeSnackbar">Close</v-btn>
       </template>
     </v-snackbar>
   </div>
@@ -15,7 +15,7 @@ import { mapGetters, mapMutations } from 'vuex';
 export default {
   name: 'Snackbar',
   computed: {
-    ...mapGetters({ snackbarMessage: 'getSnackbarMessage' }),
+    ...mapGetters({ snackbarMessage: 'getSnackbarMessage', snackbarColor: 'getSnackbarColor' }),
     snackbarState: {
       get() {
         return this.$store.getters.getSnackbarState;

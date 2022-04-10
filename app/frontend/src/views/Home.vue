@@ -104,7 +104,7 @@
 </template>
 
 <script>
-import { mapActions, mapGetters, mapMutations } from 'vuex';
+import { mapActions, mapGetters } from 'vuex';
 import FamilyModal from '../components/FamilyModal.vue';
 import InviteModal from '../components/InviteUserModal.vue';
 import api from '../api';
@@ -143,22 +143,21 @@ export default {
     this.fetchFamilies();
   },
   methods: {
-    ...mapActions(['fetchFamilies']),
-    ...mapMutations({ setSnackbarState: 'SET_SNACKBAR_STATE', setSnackbarMessage: 'SET_SNACKBAR_MESSAGE' }),
+    ...mapActions(['fetchFamilies', 'showSnackbar']),
     async generateInviteCode(id) {
       try {
         const res = await api.generateInviteCode(id);
         if (res.status === 200) {
           this.fetchFamilies();
         } else {
-          this.setSnackbarState({ state: true });
-          this.setSnackbarMessage({
+          this.showSnackbar({
+            type: 'error',
             message: 'There was a problem generating an invite code for this family, please try again.',
           });
         }
       } catch (err) {
-        this.setSnackbarState({ state: true });
-        this.setSnackbarMessage({
+        this.showSnackbar({
+          type: 'error',
           message: 'There was a problem generating an invite code for this family, please try again.',
         });
       }

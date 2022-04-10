@@ -91,7 +91,7 @@
 </template>
 
 <script>
-import { mapActions, mapMutations } from 'vuex';
+import { mapActions } from 'vuex';
 import ColorPicker from './ColorPicker.vue';
 import api from '../api';
 
@@ -124,8 +124,7 @@ export default {
     this.createFamilyData.timezone = 'US/Central';
   },
   methods: {
-    ...mapActions(['fetchFamilies']),
-    ...mapMutations({ setSnackbarState: 'SET_SNACKBAR_STATE', setSnackbarMessage: 'SET_SNACKBAR_MESSAGE' }),
+    ...mapActions(['fetchFamilies', 'showSnackbar']),
     async submitJoinFamily() {
       try {
         this.joinFamilyData.personalEventColor = this.$refs.joinPersonalColorPicker.color;
@@ -133,8 +132,10 @@ export default {
         if (res.status === 200) {
           this.dialogState = false;
           this.fetchFamilies();
-          this.setSnackbarState({ state: true });
-          this.setSnackbarMessage({ message: 'You have successfully joined a family!' });
+          this.showSnackbar({ type: 'success', message: 'You have successfully joined a family!' });
+        } else if (res.data.errorCode === 3001) {
+          this.joinError = true;
+          this.joinErrorMsg = 'This invite code does not exist. Make sure the invite code is correct and try again.';
         } else {
           this.joinError = true;
           this.joinErrorMsg =
@@ -154,8 +155,7 @@ export default {
         if (res.status === 201) {
           this.dialogState = false;
           this.fetchFamilies();
-          this.setSnackbarState({ state: true });
-          this.setSnackbarMessage({ message: 'You have successfully created a family!' });
+          this.showSnackbar({ type: 'success', message: 'You have successfully created a family!' });
         } else {
           this.createError = true;
           this.createErrorMsg = 'There was a problem creating your family, please try again.';
