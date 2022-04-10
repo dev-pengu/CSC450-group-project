@@ -12,38 +12,44 @@
           <v-btn class="pr-0" icon @click="dialogState = false"><v-icon>mdi-close</v-icon></v-btn>
         </v-card-actions>
         <v-card-title class="py-0 justify-center foa_text_header--text">Invite a Family Member to</v-card-title>
-        <v-card-title class="pt-0 justify-center foa_text_header--text">{{ familyName }}</v-card-title>
+        <v-card-title class="pt-0 mb-2 justify-center foa_text_header--text">{{ familyName }}</v-card-title>
         <v-card-text>
-          <v-row justify="center">
-            <v-col cols="12" sm="6">
-              <v-text-field
-                v-model="formData.recipientEmail"
-                hide-details
-                outlined
-                color="foa_button"
-                label="User's Email"
-                type="email"
-              ></v-text-field>
-            </v-col>
-          </v-row>
-          <v-row justify="center">
-            <v-col cols="12" sm="6">
-              <v-select
-                v-model="formData.role"
-                :items="roles"
-                hide-details
-                outlined
-                color="foa_button"
-                item-color="foa_button"
-                label="Starting Role"
-              ></v-select>
-            </v-col>
-          </v-row>
-          <v-row justify="center">
-            <v-col cols="6" sm="4">
-              <v-btn block color="foa_button" class="foa_button_text--text" @click="submit">Send</v-btn>
-            </v-col>
-          </v-row>
+          <v-form v-model="valid">
+            <v-row justify="center">
+              <v-col cols="12" sm="6" class="pb-0">
+                <v-text-field
+                  v-model="formData.recipientEmail"
+                  outlined
+                  color="foa_button"
+                  label="User's Email"
+                  append-icon="mdi-email"
+                  type="email"
+                  required
+                  :rules="emailRules"
+                ></v-text-field>
+              </v-col>
+            </v-row>
+            <v-row justify="center">
+              <v-col cols="12" sm="6">
+                <v-select
+                  v-model="formData.role"
+                  :items="roles"
+                  hide-details
+                  outlined
+                  color="foa_button"
+                  item-color="foa_button"
+                  label="Starting Role"
+                ></v-select>
+              </v-col>
+            </v-row>
+            <v-row justify="center">
+              <v-col cols="6" sm="4">
+                <v-btn :disabled="!valid" block color="foa_button" class="foa_button_text--text" @click="submit"
+                  >Send</v-btn
+                >
+              </v-col>
+            </v-row>
+          </v-form>
         </v-card-text>
       </v-card>
     </v-dialog>
@@ -67,6 +73,8 @@ export default {
   },
   data: (instance) => ({
     dialogState: false,
+    valid: false,
+    emailRules: [(v) => !!v || 'Email is required', (v) => /.+@.+\..+/.test(v) || 'Email must be valid'],
     roles: ['CHILD', 'ADULT', 'ADMIN'],
     formData: {
       family: instance.familyId,
