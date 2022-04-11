@@ -21,10 +21,12 @@ public class UserDto {
   private Boolean useDarkMode;
   @JsonInclude(Include.NON_EMPTY)
   private List<ColorDto> colorsByFamily;
+  @JsonInclude(Include.NON_NULL)
+  private String resetCode;
 
   public UserDto(Long id, String firstName, String lastName, String email, String username,
       String oldPassword, String newPassword, String timezone, Boolean useDarkMode,
-      List<ColorDto> colorsByFamily) {
+      List<ColorDto> colorsByFamily, String resetCode) {
     super();
     this.id = id;
     this.firstName = firstName;
@@ -36,6 +38,7 @@ public class UserDto {
     this.timezone = timezone;
     this.useDarkMode = useDarkMode;
     this.colorsByFamily = colorsByFamily;
+    this.resetCode = resetCode;
   }
 
   public Long getId() {
@@ -78,6 +81,10 @@ public class UserDto {
     return colorsByFamily;
   }
 
+  public String getResetCode() {
+    return resetCode;
+  }
+
   @Override
   public String toString() {
     return "UserDto [id=" + id + ", firstName=" + firstName + ", lastName=" + lastName + ", email="
@@ -106,7 +113,7 @@ public class UserDto {
 
   public static UserDto fromUserObj(User user) {
     return new UserDto(user.getId(), user.getFirstName(), user.getLastName(), user.getEmail(),
-        user.getUsername(), null, null, user.getTimezone(), user.useDarkMode(), null);
+        user.getUsername(), null, null, user.getTimezone(), user.useDarkMode(), null, null);
   }
 
 }
