@@ -23,9 +23,7 @@ import com.familyorg.familyorganizationapp.service.PollService;
 @RequestMapping("/api/v1/poll")
 public class PollController {
 
-  private Logger logger = LoggerFactory.getLogger(PollController.class);
-
-  private PollService pollService;
+  private final PollService pollService;
 
   @Autowired
   public PollController(PollService pollService) {
@@ -60,8 +58,8 @@ public class PollController {
    * Search for polls. If closed is false and no start date is specified, the current timestamp will
    * be used.
    *
-   * @param request
-   * @return
+   * @param request PollSearchRequest containing any filters to be applied
+   * @return PollSearchResponse
    */
   @PostMapping("/search")
   public ResponseEntity<PollSearchResponseDto> search(@RequestBody() PollSearchRequestDto request) {
