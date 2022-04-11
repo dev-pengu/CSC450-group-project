@@ -3,6 +3,7 @@ package com.familyorg.familyorganizationapp.controller;
 import com.familyorg.familyorganizationapp.DTO.FamilyDto;
 import com.familyorg.familyorganizationapp.DTO.FamilyRoleUpdateRequest;
 import com.familyorg.familyorganizationapp.DTO.MemberInviteDto;
+import com.familyorg.familyorganizationapp.Exception.ApiExceptionCode;
 import com.familyorg.familyorganizationapp.Exception.BadRequestException;
 import com.familyorg.familyorganizationapp.domain.FamilyMembers;
 import com.familyorg.familyorganizationapp.domain.InviteCode;
@@ -70,7 +71,8 @@ public class FamilyController {
       inviteService.verifyMemberInvite(inviteCodeObj, eventColor);
       return new ResponseEntity<String>("Success", HttpStatus.OK);
     } catch (IllegalStateException e) {
-      throw new BadRequestException("Invite code passed is malformed.");
+      throw new BadRequestException(
+          ApiExceptionCode.BAD_PARAM_VALUE, "Invite code passed is malformed.");
     }
   }
 
