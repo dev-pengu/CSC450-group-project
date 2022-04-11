@@ -12,7 +12,7 @@
                 color="foa_button"
                 prepend-icon="mdi-account"
                 label="Username/Email"
-                :rules="[rules.required]"
+                required
                 clearable
               />
               <v-text-field
