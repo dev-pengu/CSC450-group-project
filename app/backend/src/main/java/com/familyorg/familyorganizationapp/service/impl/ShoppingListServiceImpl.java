@@ -7,6 +7,7 @@ import com.familyorg.familyorganizationapp.DTO.ShoppingListSearchResponseDto;
 import com.familyorg.familyorganizationapp.DTO.UserDto;
 import com.familyorg.familyorganizationapp.DTO.builder.ShoppingListDtoBuilder;
 import com.familyorg.familyorganizationapp.DTO.builder.ShoppingListItemDtoBuilder;
+import com.familyorg.familyorganizationapp.Exception.ApiExceptionCode;
 import com.familyorg.familyorganizationapp.Exception.AuthorizationException;
 import com.familyorg.familyorganizationapp.Exception.BadRequestException;
 import com.familyorg.familyorganizationapp.Exception.ResourceNotFoundException;
@@ -23,7 +24,6 @@ import com.familyorg.familyorganizationapp.service.FamilyService;
 import com.familyorg.familyorganizationapp.service.ShoppingListService;
 import com.familyorg.familyorganizationapp.service.UserService;
 import com.familyorg.familyorganizationapp.util.DateUtil;
-import io.micrometer.core.instrument.search.Search;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -61,21 +61,26 @@ public class ShoppingListServiceImpl implements ShoppingListService {
   @Transactional
   public void createShoppingList(ShoppingListDto request) {
     if (request.getDescription() == null) {
-      throw new BadRequestException("List description must not be null.");
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING, "List description must not be null.");
     }
     if (request.getFamilyId() == null) {
-      throw new BadRequestException("List must have a family id to associate the list with.");
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING,
+          "List must have a family id to associate the list with.");
     }
     User requestingUser = userService.getRequestingUser();
     Optional<Family> family = familyService.getFamilyById(request.getFamilyId());
     if (family.isEmpty()) {
       throw new ResourceNotFoundException(
+          ApiExceptionCode.FAMILY_DOESNT_EXIST,
           "Family with id " + request.getFamilyId() + " not found.");
     }
     boolean hasAppropriatePermissions =
         familyService.verfiyMinimumRoleSecurity(family.get(), requestingUser, Role.ADULT);
     if (!hasAppropriatePermissions) {
-      throw new AuthorizationException("User not authorized to complete this action.");
+      throw new AuthorizationException(
+          ApiExceptionCode.USER_PRIVILEGES_TOO_LOW, "User not authorized to complete this action.");
     }
 
     ShoppingList list = new ShoppingList();
@@ -91,11 +96,13 @@ public class ShoppingListServiceImpl implements ShoppingListService {
   @Transactional
   public void updateShoppingList(ShoppingListDto request) {
     if (request.getId() == null) {
-      throw new BadRequestException("List id must not be null.");
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING, "List id must not be null.");
     }
     Optional<ShoppingList> list = listRepository.findById(request.getId());
     if (list.isEmpty()) {
-      throw new ResourceNotFoundException("List with id " + request.getId() + " not found.");
+      throw new ResourceNotFoundException(
+          ApiExceptionCode.LIST_DOESNT_EXIST, "List with id " + request.getId() + " not found.");
     }
     User requestingUser = userService.getRequestingUser();
     boolean hasAppropriatePermissions =
@@ -104,7 +111,8 @@ public class ShoppingListServiceImpl implements ShoppingListService {
       hasAppropriatePermissions = list.get().getCreatedBy().getId().equals(requestingUser.getId());
     }
     if (!hasAppropriatePermissions) {
-      throw new AuthorizationException("User not authorized to complete this action.");
+      throw new AuthorizationException(
+          ApiExceptionCode.USER_PRIVILEGES_TOO_LOW, "User not authorized to complete this action.");
     }
 
     if (request.getDescription() != null) {
@@ -117,11 +125,13 @@ public class ShoppingListServiceImpl implements ShoppingListService {
   @Transactional
   public void deleteShoppingList(Long id) {
     if (id == null) {
-      throw new BadRequestException("Id must not be null.");
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING, "Id must not be null.");
     }
     Optional<ShoppingList> list = listRepository.findById(id);
     if (list.isEmpty()) {
-      throw new ResourceNotFoundException("List with id " + id + " not found.");
+      throw new ResourceNotFoundException(
+          ApiExceptionCode.LIST_DOESNT_EXIST, "List with id " + id + " not found.");
     }
     User requestingUser = userService.getRequestingUser();
     boolean hasAppropriatePermissions =
@@ -130,10 +140,13 @@ public class ShoppingListServiceImpl implements ShoppingListService {
       hasAppropriatePermissions = list.get().getCreatedBy().getId().equals(requestingUser.getId());
     }
     if (!hasAppropriatePermissions) {
-      throw new AuthorizationException("User not authorized to complete this action.");
+      throw new AuthorizationException(
+          ApiExceptionCode.USER_PRIVILEGES_TOO_LOW, "User not authorized to complete this action.");
     }
     if (list.get().getDefault()) {
-      throw new BadRequestException("The family's default shopping list cannot be deleted.");
+      throw new BadRequestException(
+          ApiExceptionCode.ILLEGAL_ACTION_REQUESTED,
+          "The family's default shopping list cannot be deleted.");
     }
     listRepository.delete(list.get());
   }
@@ -141,19 +154,21 @@ public class ShoppingListServiceImpl implements ShoppingListService {
   @Override
   public ShoppingListDto getShoppingList(Long id) {
     if (id == null) {
-      throw new BadRequestException("Id must not be null.");
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING, "Id must not be null.");
     }
     Optional<ShoppingList> list = listRepository.findById(id);
     if (list.isEmpty()) {
-      throw new ResourceNotFoundException("List with id " + id + " not found.");
+      throw new ResourceNotFoundException(
+          ApiExceptionCode.LIST_DOESNT_EXIST, "List with id " + id + " not found.");
     }
     User requestingUser = userService.getRequestingUser();
     boolean hasAppropriatePermissions =
         familyService.verfiyMinimumRoleSecurity(list.get().getFamily(), requestingUser, Role.CHILD);
     if (!hasAppropriatePermissions) {
-      throw new AuthorizationException("User not authorized to complete this action.");
+      throw new AuthorizationException(
+          ApiExceptionCode.USER_PRIVILEGES_TOO_LOW, "User not authorized to complete this action.");
     }
-    // TODO: update this to use family service timezone getter method
     TimeZone timezone =
         requestingUser.getTimezone() != null
             ? TimeZone.getTimeZone(requestingUser.getTimezone())
@@ -187,20 +202,26 @@ public class ShoppingListServiceImpl implements ShoppingListService {
   @Transactional
   public void addItem(ShoppingListItemDto request) {
     if (request.getDescription() == null) {
-      throw new BadRequestException("Item description must not be null.");
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING, "Item description must not be null.");
     }
     if (request.getListId() == null) {
-      throw new BadRequestException("A list id must be specified to create a list item.");
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING,
+          "A list id must be specified to create a list item.");
     }
     User requestingUser = userService.getRequestingUser();
     Optional<ShoppingList> list = listRepository.findById(request.getListId());
     if (list.isEmpty()) {
-      throw new ResourceNotFoundException("List with id " + request.getListId() + " not found.");
+      throw new ResourceNotFoundException(
+          ApiExceptionCode.LIST_DOESNT_EXIST,
+          "List with id " + request.getListId() + " not found.");
     }
     boolean hasAppropriatePermissions =
         familyService.verfiyMinimumRoleSecurity(list.get().getFamily(), requestingUser, Role.CHILD);
     if (!hasAppropriatePermissions) {
-      throw new AuthorizationException("User not authorized to complete this action.");
+      throw new AuthorizationException(
+          ApiExceptionCode.USER_PRIVILEGES_TOO_LOW, "User not authorized to complete this action.");
     }
 
     ShoppingListItem item = new ShoppingListItem();
@@ -217,11 +238,14 @@ public class ShoppingListServiceImpl implements ShoppingListService {
   @Transactional
   public void updateItem(ShoppingListItemDto request) {
     if (request.getId() == null) {
-      throw new BadRequestException("Item id must not be null.");
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING, "Item id must not be null.");
     }
     Optional<ShoppingListItem> item = itemRepository.findById(request.getId());
     if (item.isEmpty()) {
-      throw new ResourceNotFoundException("List item with id " + request.getId() + " not found.");
+      throw new ResourceNotFoundException(
+          ApiExceptionCode.LIST_ITEM_DOESNT_EXIST,
+          "List item with id " + request.getId() + " not found.");
     }
     User requestingUser = userService.getRequestingUser();
     boolean hasAppropriatePermissions =
@@ -231,7 +255,8 @@ public class ShoppingListServiceImpl implements ShoppingListService {
       hasAppropriatePermissions = item.get().getAddedBy().getId().equals(requestingUser.getId());
     }
     if (!hasAppropriatePermissions) {
-      throw new AuthorizationException("User not authorized to complete this action.");
+      throw new AuthorizationException(
+          ApiExceptionCode.USER_PRIVILEGES_TOO_LOW, "User not authorized to complete this action.");
     }
 
     if (request.getDescription() != null) {
@@ -248,11 +273,13 @@ public class ShoppingListServiceImpl implements ShoppingListService {
   @Transactional
   public void deleteItem(Long id) {
     if (id == null) {
-      throw new BadRequestException("Item id must not be null.");
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING, "Item id must not be null.");
     }
     Optional<ShoppingListItem> item = itemRepository.findById(id);
     if (item.isEmpty()) {
-      throw new ResourceNotFoundException("List item with id " + id + " not found.");
+      throw new ResourceNotFoundException(
+          ApiExceptionCode.LIST_ITEM_DOESNT_EXIST, "List item with id " + id + " not found.");
     }
     User requestingUser = userService.getRequestingUser();
     boolean hasAppropriatePermissions =
@@ -262,7 +289,8 @@ public class ShoppingListServiceImpl implements ShoppingListService {
       hasAppropriatePermissions = item.get().getAddedBy().getId().equals(requestingUser.getId());
     }
     if (!hasAppropriatePermissions) {
-      throw new AuthorizationException("User not authorized to complete this action.");
+      throw new AuthorizationException(
+          ApiExceptionCode.USER_PRIVILEGES_TOO_LOW, "User not authorized to complete this action.");
     }
     itemRepository.delete(item.get());
   }
@@ -270,18 +298,21 @@ public class ShoppingListServiceImpl implements ShoppingListService {
   @Override
   public ShoppingListItemDto getItem(Long id) {
     if (id == null) {
-      throw new BadRequestException("Item id must not be null.");
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING, "Item id must not be null.");
     }
     Optional<ShoppingListItem> item = itemRepository.findById(id);
     if (item.isEmpty()) {
-      throw new ResourceNotFoundException("List item with id " + id + " not found.");
+      throw new ResourceNotFoundException(
+          ApiExceptionCode.LIST_ITEM_DOESNT_EXIST, "List item with id " + id + " not found.");
     }
     User requestingUser = userService.getRequestingUser();
     boolean hasAppropriatePermissions =
         familyService.verfiyMinimumRoleSecurity(
             item.get().getList().getFamily(), requestingUser, Role.CHILD);
     if (!hasAppropriatePermissions) {
-      throw new AuthorizationException("User not authorized to complete this action.");
+      throw new AuthorizationException(
+          ApiExceptionCode.USER_PRIVILEGES_TOO_LOW, "User not authorized to complete this action.");
     }
 
     return new ShoppingListItemDtoBuilder()
@@ -296,6 +327,7 @@ public class ShoppingListServiceImpl implements ShoppingListService {
   }
 
   @Override
+  @Transactional
   public ShoppingListSearchResponseDto search(ShoppingListSearchRequestDto request) {
     User requestingUser = userService.getRequestingUser();
 
@@ -306,7 +338,7 @@ public class ShoppingListServiceImpl implements ShoppingListService {
     // retroactively create a default shopping list.
     families.forEach(
         family -> {
-          if (family.getShoppingLists().stream().filter(ShoppingList::getDefault).count() < 1) {
+          if (family.getShoppingLists().stream().noneMatch(ShoppingList::getDefault)) {
             createDefaultShoppingList(family, family.getOwner().get().getUser());
           }
         });
@@ -318,7 +350,7 @@ public class ShoppingListServiceImpl implements ShoppingListService {
             requestFamilyIds.isEmpty()
                 ? permittedFamilyIds
                 : permittedFamilyIds.stream()
-                    .filter(id -> requestFamilyIds.contains(id))
+                    .filter(requestFamilyIds::contains)
                     .collect(Collectors.toList()),
             request.getIdsByField(ShoppingListField.SHOPPING_LIST)));
 
@@ -375,14 +407,13 @@ public class ShoppingListServiceImpl implements ShoppingListService {
     return filters;
   }
 
-  private ShoppingList createDefaultShoppingList(Family family, User ownerUser) {
+  private void createDefaultShoppingList(Family family, User ownerUser) {
     ShoppingList shoppingList = new ShoppingList();
     shoppingList.setDefault(true);
     shoppingList.setDescription("Family Shopping List");
     shoppingList.setFamily(family);
     shoppingList.setCreatedDatetime(Timestamp.from(Instant.now()));
     shoppingList.setCreatedBy(ownerUser);
-    ShoppingList savedShoppingList = listRepository.save(shoppingList);
-    return savedShoppingList;
+    listRepository.save(shoppingList);
   }
 }
