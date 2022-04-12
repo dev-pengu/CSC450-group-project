@@ -189,6 +189,12 @@ public class Family implements Serializable {
     }
     this.shoppingLists.add(list);
   }
+    
+  public boolean isMember(User user) {
+    return this.members.stream()
+        .filter(member -> member.getUser().getId().equals(user.getId()))
+        .count() > 0;
+  }
 
   @Override
   public String toString() {

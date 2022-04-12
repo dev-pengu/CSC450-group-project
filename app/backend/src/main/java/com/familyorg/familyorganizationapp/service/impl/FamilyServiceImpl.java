@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.stream.Collectors;
 import javax.transaction.Transactional;
 import org.slf4j.Logger;
@@ -337,6 +338,12 @@ public class FamilyServiceImpl implements FamilyService {
           ApiExceptionCode.USER_NOT_IN_FAMILY,
           "User is not a member of the family owning thee requesting resource.");
     }
+  }
+
+  @Override
+  public TimeZone getUserTimeZoneOrDefault(User requestingUser, Family family) {
+    return requestingUser.getTimezone() != null ? TimeZone.getTimeZone(requestingUser.getTimezone())
+        : TimeZone.getTimeZone(family.getTimezone());
   }
 
   @Override

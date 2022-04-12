@@ -18,5 +18,8 @@
     <mapping class="com.familyorg.familyorganizationapp.domain.EventRepetitionSchedule" />
     <mapping class="com.familyorg.familyorganizationapp.domain.ShoppingList" />
     <mapping class="com.familyorg.familyorganizationapp.domain.ShoppingListItem" />
+    <mapping class="com.familyorg.familyorganizationapp.domain.Poll" />
+    <mapping class="com.familyorg.familyorganizationapp.domain.PollOption" />
+    <mapping class="com.familyorg.familyorganizationapp.domain.PollVote" />
   </session-factory>
 </hibernate-configuration>

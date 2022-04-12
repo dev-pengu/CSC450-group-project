@@ -5,6 +5,7 @@ import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.TimeZone;
@@ -71,6 +72,15 @@ public class DateUtil {
     return calendar.toInstant()
         .atZone(ZoneId.of(targetTimezone.getID()))
         .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
+  }
+
+  public static ZonedDateTime toZonedDateTime(Timestamp timestamp, TimeZone sourceTimezone,
+      TimeZone targetTimezone) {
+    Calendar calendar = Calendar.getInstance(sourceTimezone);
+    calendar.setTime(Date.from(timestamp.toInstant()));
+
+    return calendar.toInstant()
+        .atZone(ZoneId.of(targetTimezone.getID()));
   }
 
   /**
