@@ -4,9 +4,11 @@ import com.familyorg.familyorganizationapp.domain.ShoppingList;
 import com.familyorg.familyorganizationapp.repository.ShoppingListRepository;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.time.ZoneId;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TimeZone;
@@ -64,23 +66,8 @@ public class FamilyServiceImpl implements FamilyService {
   @Transactional
   public FamilyDto createFamily(FamilyDto familyRequest)
       throws BadRequestException, UserNotFoundException {
-    if (familyRequest.getEventColor() == null
-        || familyRequest.getName() == null
-        || familyRequest.getOwner() == null
-        || familyRequest.getTimezone() == null) {
-      throw new BadRequestException(
-          ApiExceptionCode.REQUIRED_PARAM_MISSING,
-          "Request is missing one or more required fields");
-    }
-    if (!ColorUtil.isValidHexCode(familyRequest.getEventColor())) {
-      throw new BadRequestException(
-          ApiExceptionCode.BAD_PARAM_VALUE, "Family event color is not a valid hexcode.");
-    }
-    if (!ColorUtil.isValidHexCode(familyRequest.getOwner().getEventColor())) {
-      throw new BadRequestException(
-          ApiExceptionCode.BAD_PARAM_VALUE, "Owner event color is not a valid hexcode.");
-    }
     User ownerUser = userService.getRequestingUser();
+    verifyFamilyCreationRequest(familyRequest);
     Family family = new Family();
     family.setEventColor(familyRequest.getEventColor());
     family.setName(familyRequest.getName());
@@ -205,6 +192,10 @@ public class FamilyServiceImpl implements FamilyService {
     }
     User requestingUser = userService.getRequestingUser();
     Optional<Family> family = familyRepository.findById(id);
+    if (family.isEmpty()) {
+      throw new ResourceNotFoundException(
+          ApiExceptionCode.FAMILY_DOESNT_EXIST, "Family with id " + id + " not found.");
+    }
     boolean hasAppropriatePermissions =
         verfiyMinimumRoleSecurity(family.get(), requestingUser, Role.OWNER);
     if (!hasAppropriatePermissions) {
@@ -251,7 +242,9 @@ public class FamilyServiceImpl implements FamilyService {
 
     Optional<FamilyMembers> newOwnerRelation =
         family.get().getMembers().stream()
-            .filter(member -> member.getUser().getId() == request.getOwner().getUser().getId())
+            .filter(
+                member ->
+                    Objects.equals(member.getUser().getId(), request.getOwner().getUser().getId()))
             .findFirst();
     if (newOwnerRelation.isEmpty()) {
       throw new UserNotFoundException(
@@ -364,12 +357,37 @@ public class FamilyServiceImpl implements FamilyService {
   @Override
   @Transactional
   public Family updateFamily(Family family) {
-    Family updatedFamily = familyRepository.save(family);
-    return updatedFamily;
+    return familyRepository.save(family);
   }
 
   @Override
   public Optional<Family> getFamilyById(Long id) {
     return familyRepository.findById(id);
+  }
+
+  private void verifyFamilyCreationRequest(FamilyDto request) throws BadRequestException {
+    if (request.getName() == null || request.getName().isBlank()) {
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING, "Family name must not be null.");
+    }
+    if (request.getTimezone() == null
+        || request.getTimezone().isBlank()
+        || !ZoneId.getAvailableZoneIds().contains(request.getTimezone())) {
+      throw new BadRequestException(
+          ApiExceptionCode.BAD_PARAM_VALUE, "Family event timezone must be a valid timezone.");
+    }
+    if (request.getEventColor() == null
+        || request.getEventColor().isBlank()
+        || !ColorUtil.isValidHexCode(request.getEventColor())) {
+      throw new BadRequestException(
+          ApiExceptionCode.BAD_PARAM_VALUE, "Family event color is not a valid hex code");
+    }
+    if (request.getOwner() == null
+        || request.getOwner().getEventColor() == null
+        || request.getOwner().getEventColor().isBlank()
+        || !ColorUtil.isValidHexCode(request.getOwner().getEventColor())) {
+      throw new BadRequestException(
+          ApiExceptionCode.BAD_PARAM_VALUE, "Owner event color is not a valid hex code.");
+    }
   }
 }
