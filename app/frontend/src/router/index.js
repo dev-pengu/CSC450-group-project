@@ -4,6 +4,7 @@ import store from '../store';
 import Home from '../views/Home.vue';
 import Login from '../views/Login.vue';
 import SignUp from '../views/SignUp.vue';
+import NotFound from '../views/NotFound.vue';
 
 Vue.use(VueRouter);
 const routes = [
@@ -28,7 +29,8 @@ const routes = [
   },
   {
     path: '/:pathMatch(.*)*',
-    redirect: '/',
+    name: 'Not Found',
+    component: NotFound,
   },
 ];
 

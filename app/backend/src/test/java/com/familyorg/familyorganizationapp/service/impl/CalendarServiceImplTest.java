@@ -349,12 +349,12 @@ public class CalendarServiceImplTest {
     /* Given */
     when(calendarRepository.calendarDataByFamilyIds(any(List.class)))
         .thenReturn(Collections.singletonList(testCalendars.get(1l)));
-    when(calendarRepository.search(any(List.class), any(List.class), any(List.class)))
+    when(calendarRepository.search(any(List.class), any(List.class), any(Set.class)))
         .thenReturn(Collections.singletonList(testCalendars.get(1l)));
     when(familyService.getFamiliesByUser(any(String.class)))
         .thenReturn(Collections.singletonList(FAMILY_1));
     when(eventRepository.getEventsByCalendarIdsInDateRange(any(Set.class), any(Timestamp.class),
-        any(Timestamp.class)))
+        any(Timestamp.class), any(Set.class)))
             .thenAnswer(invocation -> {
               List<CalendarEvent> events = testCalendarEvents.values()
                   .stream()
@@ -368,7 +368,7 @@ public class CalendarServiceImplTest {
               return response;
             });
     when(recurringEventRepository.getEventsByCalendarIdsInDateRange(any(Set.class),
-        any(Timestamp.class), any(Timestamp.class)))
+        any(Timestamp.class), any(Timestamp.class), any(Set.class)))
             .thenAnswer(invocation -> {
               List<RecurringCalendarEvent> events = testRecurringEvents.values()
                   .stream()
@@ -437,7 +437,6 @@ public class CalendarServiceImplTest {
     assertNotNull(response.isAllDay());
     assertNotNull(response.isFamilyEvent());
     assertNotNull(response.getCalendarId());
-    assertNotNull(response.getColor());
     assertNotNull(response.getCreated());
     assertNotNull(response.getCreatedBy());
     assertNotNull(response.getStartDate());

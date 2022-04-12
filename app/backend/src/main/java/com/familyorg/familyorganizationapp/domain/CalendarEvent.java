@@ -2,8 +2,10 @@ package com.familyorg.familyorganizationapp.domain;
 
 import java.io.Serializable;
 import java.sql.Timestamp;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -12,6 +14,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
@@ -70,6 +74,13 @@ public class CalendarEvent implements Serializable {
       columnDefinition = "BIGINT")
   private Calendar calendar;
 
+  @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.PERSIST)
+  @JoinTable(
+      name = "event_assignees",
+      joinColumns = {@JoinColumn(name = "calendar_event_id")},
+      inverseJoinColumns = {@JoinColumn(name = "user_id")})
+  private Set<User> assignees = new HashSet<User>();
+
   public CalendarEvent() {
     super();
   }
@@ -107,6 +118,7 @@ public class CalendarEvent implements Serializable {
     this.recurringEventInfo = other.recurringEventInfo;
     this.calendar = other.calendar;
     this.timezone = other.timezone;
+    this.assignees = other.assignees;
   }
 
   public Long getId() {
@@ -211,6 +223,14 @@ public class CalendarEvent implements Serializable {
 
   public void setTimezone(String timezone) {
     this.timezone = timezone;
+  }
+
+  public Set<User> getAssignees() {
+    return assignees;
+  }
+
+  public void setAssignees(Set<User> assignees) {
+    this.assignees = assignees;
   }
 
   @Override

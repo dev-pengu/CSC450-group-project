@@ -4,13 +4,7 @@
     <v-img max-height="40" max-width="40" contain src="../assets/logo.png"></v-img>
     <v-toolbar-title v-if="$vuetify.breakpoint.smAndUp">Family Command Center</v-toolbar-title>
     <v-spacer></v-spacer>
-    <v-switch
-      v-if="$vuetify.breakpoint.smAndUp"
-      color="foa_button"
-      hide-details
-      append-icon="mdi-weather-night"
-    ></v-switch>
-    <v-btn v-else icon :color="darkModeBtnColor" @click="toggleDarkMode">
+    <v-btn icon :color="darkModeBtnColor" @click="toggleDarkMode">
       <v-icon>mdi-weather-night</v-icon>
     </v-btn>
     <v-menu offset-y>
@@ -32,15 +26,13 @@
 <script>
 export default {
   name: 'AppBar',
-  data: () => ({
-    darkMode: false,
-  }),
+  data: () => ({}),
   computed: {
     drawerState() {
       return this.$store.getters.drawerState;
     },
     darkModeBtnColor() {
-      return this.darkMode ? 'foa_button' : '';
+      return this.$vuetify.theme.dark ? 'foa_button' : '';
     },
   },
   methods: {
@@ -52,7 +44,8 @@ export default {
       }
     },
     toggleDarkMode() {
-      this.darkMode = !this.darkMode;
+      this.$vuetify.theme.dark = !this.$vuetify.theme.dark;
+      localStorage.setItem('darkMode', this.$vuetify.theme.dark.toString());
     },
     async logout() {
       await this.$store.dispatch('logout');

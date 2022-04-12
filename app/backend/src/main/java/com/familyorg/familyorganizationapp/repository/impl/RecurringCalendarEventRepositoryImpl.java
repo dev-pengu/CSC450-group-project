@@ -9,9 +9,12 @@ import java.util.Map;
 import java.util.Set;
 import org.springframework.data.jpa.repository.support.QuerydslRepositorySupport;
 import org.springframework.stereotype.Repository;
+import com.familyorg.familyorganizationapp.domain.QCalendarEvent;
 import com.familyorg.familyorganizationapp.domain.QRecurringCalendarEvent;
+import com.familyorg.familyorganizationapp.domain.QUser;
 import com.familyorg.familyorganizationapp.domain.RecurringCalendarEvent;
 import com.familyorg.familyorganizationapp.repository.custom.RecurringCalendarEventRepositoryCustom;
+import com.querydsl.jpa.JPQLQuery;
 import com.querydsl.jpa.impl.JPADeleteClause;
 
 @Repository
@@ -20,6 +23,8 @@ public class RecurringCalendarEventRepositoryImpl extends QuerydslRepositorySupp
 
   private QRecurringCalendarEvent recurringEventTable =
       QRecurringCalendarEvent.recurringCalendarEvent;
+  private QCalendarEvent eventTable = QCalendarEvent.calendarEvent;
+  private QUser userTable = QUser.user;
 
 
   public RecurringCalendarEventRepositoryImpl() {
@@ -71,14 +76,25 @@ public class RecurringCalendarEventRepositoryImpl extends QuerydslRepositorySupp
 
   @Override
   public Map<Long, List<RecurringCalendarEvent>> getEventsByCalendarIdsInDateRange(
-      Set<Long> calendarIds, Timestamp start, Timestamp end) {
+      Set<Long> calendarIds, Timestamp start, Timestamp end, Set<Long> userIds) {
     Map<Long, List<RecurringCalendarEvent>> result = new HashMap<>();
-    List<RecurringCalendarEvent> events =
-        from(recurringEventTable).where(recurringEventTable.originatingEvent.calendar.id
-            .in(calendarIds)
-            .and(recurringEventTable.startDatetime.goe(start)
-                .and(recurringEventTable.endDatetime.loe(end))))
-            .fetch();
+
+    JPQLQuery<RecurringCalendarEvent> query =
+        from(recurringEventTable)
+            .innerJoin(recurringEventTable.originatingEvent, eventTable)
+            .where(recurringEventTable.originatingEvent.calendar.id
+                .in(calendarIds)
+                .and(recurringEventTable.startDatetime.goe(start)
+                    .and(recurringEventTable.endDatetime.loe(end))));
+
+    if (userIds != null && !userIds.isEmpty()) {
+      query.leftJoin(eventTable.assignees, userTable);
+      query.where(userTable.id.in(userIds).or(eventTable.familyEvent.eq(true)));
+    }
+
+    query.select(recurringEventTable);
+
+    List<RecurringCalendarEvent> events = query.fetch();
     events.forEach(event -> {
       if (result.containsKey(event.getOriginatingEvent().getCalendar().getId())) {
         result.get(event.getOriginatingEvent().getCalendar().getId()).add(event);
