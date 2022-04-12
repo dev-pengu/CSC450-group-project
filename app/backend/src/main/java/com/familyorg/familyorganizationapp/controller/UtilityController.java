@@ -22,9 +22,15 @@ public class UtilityController {
   @GetMapping("/timezones")
   public ResponseEntity<List<String>> getAvailableTimezones() {
     Set<String> timezones = ZoneId.getAvailableZoneIds().stream()
-        .filter(zone -> !zone.contains("System") && zone.contains("/")).collect(Collectors.toSet());
+        .filter(zone -> !zone.contains("System") && zone.contains("/") && !zone.contains("US/"))
+        .collect(Collectors.toSet());
+    List<String> usTimezones = ZoneId.getAvailableZoneIds().stream()
+      .filter(zone -> zone.contains("US/"))
+      .collect(Collectors.toList());
     List<String> sortedTimezones = new ArrayList<String>(timezones);
     Collections.sort(sortedTimezones);
-    return new ResponseEntity<>(sortedTimezones, HttpStatus.OK);
+    Collections.sort(usTimezones);
+    usTimezones.addAll(sortedTimezones);
+    return new ResponseEntity<>(usTimezones, HttpStatus.OK);
   }
 }

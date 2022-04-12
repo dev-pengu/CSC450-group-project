@@ -1,36 +1,70 @@
 <template>
   <div class="home">
-    <div class="text-h4 foa_text_header--text my-3">Welcome back, {{ userFirstName }}</div>
+    <div class="text-h4 foa_text_header--text my-3">Welcome back, {{ user.firstName }}</div>
     <v-row>
       <v-col cols="12" sm="8" md="6">
         <v-sheet color="foa_content_bg" rounded>
           <div class="text-h5 foa_nav_link--text pl-4 py-3">
             My Families
-            <v-btn class="pb-1" icon color="foa_button_dark"><v-icon>mdi-plus-box</v-icon></v-btn>
+            <FamilyModal />
           </div>
-          <v-carousel hide-delimiters cycle height="325">
+          <v-carousel hide-delimiters cycle interval="6000" height="340">
             <v-carousel-item v-for="(family, i) in families" :key="i">
-              <v-card class="mx-auto" color="white" width="55%">
-                <v-card-text>
-                  <div class="text-subtitle-1 foa_text--text">{{ family.name }}</div>
+              <v-card class="mx-auto" width="65%" max-height="95%">
+                <v-card-text class="pt-1">
+                  <div class="text-h6 foa_text--text">{{ family.name }}</div>
                   <div class="pl-4">
-                    <div class="foa_text--text">Owner: {{ family.owner }}</div>
-                    <router-link class="d-block foa_link--text" :to="family.testRoute">Manage Members</router-link>
+                    <div class="d-inline-flex align-center foa_text--text">
+                      Family:
+                      <v-sheet
+                        color="grey lighten-1"
+                        rounded
+                        height="15"
+                        width="15"
+                        class="d-inline-flex align-center justify-center ml-2"
+                      >
+                        <v-sheet rounded height="80%" width="80%" :color="'#' + family.eventColor"></v-sheet>
+                      </v-sheet>
+                    </div>
+                    <div class="d-inline-flex align-center foa_text--text ml-3">
+                      Me:
+                      <v-sheet
+                        color="grey lighten-1"
+                        rounded
+                        height="15"
+                        width="15"
+                        class="d-inline-flex align-center justify-center ml-2"
+                      >
+                        <v-sheet rounded height="80%" width="80%" :color="'#' + family.memberData.eventColor"></v-sheet>
+                      </v-sheet>
+                    </div>
+                    <div class="foa_text--text">
+                      Owner: {{ family.owner.user.firstName + ' ' + family.owner.user.lastName }}
+                    </div>
                     <div class="d-flex align-center foa_text--text">
                       Invite code: {{ family.inviteCode }}
-                      <v-btn x-small color="foa_button" class="ml-2 foa_button_text--text">Generate</v-btn>
+                      <v-btn
+                        v-if="isAdmin(family.memberData.role) && family.inviteCode == null"
+                        x-small
+                        color="foa_button"
+                        class="ml-2 foa_button_text--text"
+                        @click="generateInviteCode(family.id)"
+                        >Generate</v-btn
+                      >
                     </div>
-                    <router-link class="d-block foa_link--text" :to="family.testRoute"
-                      >Invite a Family Member</router-link
+                    <InviteModal
+                      v-if="isAdmin(family.memberData.role)"
+                      :family-id="family.id"
+                      :family-name="family.name"
+                    />
+                    <router-link class="d-block foa_link--text" to="/test">Manage Members</router-link>
+                    <router-link class="d-block foa_link--text" to="/test">Family Calendar</router-link>
+                    <router-link class="d-block foa_link--text" to="/test">Family To Do List</router-link>
+                    <router-link class="d-block foa_link--text" to="/test">Family Polls</router-link>
+                    <router-link class="d-block foa_link--text" to="/test">Family Shopping List</router-link>
+                    <router-link v-if="isAdmin(family.memberData.role)" class="d-block foa_link--text" to="/test"
+                      >Family Settings</router-link
                     >
-                    <router-link class="d-block foa_link--text" :to="family.testRoute">Family Calendar</router-link>
-                    <router-link class="d-block foa_link--text" :to="family.testRoute">Manage Members</router-link>
-                    <router-link class="d-block foa_link--text" :to="family.testRoute">Family To Do List</router-link>
-                    <router-link class="d-block foa_link--text" :to="family.testRoute">Family Polls</router-link>
-                    <router-link class="d-block foa_link--text" :to="family.testRoute"
-                      >Family Shopping List</router-link
-                    >
-                    <router-link class="d-block foa_link--text" :to="family.testRoute">Family Settings</router-link>
                   </div>
                 </v-card-text>
               </v-card>
@@ -70,17 +104,21 @@
 </template>
 
 <script>
+import { mapActions, mapGetters } from 'vuex';
+import FamilyModal from '../components/FamilyModal.vue';
+import InviteModal from '../components/InviteUserModal.vue';
+import api from '../api';
+import { isAdmin } from '../util/RoleUtil';
+
 export default {
   name: 'Home',
+  components: {
+    FamilyModal,
+    InviteModal,
+  },
   data: () => ({
     // this is all dummy data
     // will be replaced by proper API calls later
-    userFirstName: '<User>',
-    families: [
-      { name: '<Family Name>', owner: '<Family Owner>', inviteCode: '<Invite Code>', testRoute: '/test' },
-      { name: '<Family Name>', owner: '<Family Owner>', inviteCode: '<Invite Code>', testRoute: '/test' },
-      { name: '<Family Name>', owner: '<Family Owner>', inviteCode: '<Invite Code>', testRoute: '/test' },
-    ],
     events: [
       {
         name: 'Event #1',
@@ -97,9 +135,24 @@ export default {
     ],
   }),
   computed: {
+    ...mapGetters(['families', 'user']),
     btnColor() {
       return this.$vuetify.theme.dark ? 'foa_button' : 'foa_button_dark';
     },
+  },
+  created() {
+    this.getFamilies();
+  },
+  methods: {
+    ...mapActions(['getFamilies']),
+    async generateInviteCode(id) {
+      const res = await api.generateInviteCode(id);
+      if (res.status === 200) {
+        this.getFamilies();
+      }
+      // TODO: add an error to snackbar stating there was an error with adding invite code
+    },
+    isAdmin,
   },
 };
 </script>

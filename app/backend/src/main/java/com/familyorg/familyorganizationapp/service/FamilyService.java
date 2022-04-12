@@ -6,7 +6,6 @@ import com.familyorg.familyorganizationapp.DTO.FamilyDto;
 import com.familyorg.familyorganizationapp.DTO.FamilyRoleUpdateRequest;
 import com.familyorg.familyorganizationapp.Exception.AuthorizationException;
 import com.familyorg.familyorganizationapp.Exception.BadRequestException;
-import com.familyorg.familyorganizationapp.Exception.FamilyNotFoundException;
 import com.familyorg.familyorganizationapp.Exception.UserNotFoundException;
 import com.familyorg.familyorganizationapp.domain.Family;
 import com.familyorg.familyorganizationapp.domain.Role;
@@ -16,21 +15,21 @@ public interface FamilyService {
   FamilyDto createFamily(FamilyDto familyRequest) throws BadRequestException, UserNotFoundException;
 
   FamilyDto getFamily(FamilyDto familyRequest)
-      throws FamilyNotFoundException, AuthorizationException;
+      throws AuthorizationException;
 
   Optional<Family> getFamilyById(Long id);
 
   List<FamilyDto> getFamiliesByUser() throws UserNotFoundException;
 
   FamilyDto updateFamily(FamilyDto familyRequest)
-      throws AuthorizationException, FamilyNotFoundException, UserNotFoundException;
+      throws AuthorizationException, UserNotFoundException;
 
   Family updateFamily(Family family);
 
   void deleteFamily(Long id) throws AuthorizationException;
 
   FamilyDto transferOwnership(FamilyDto request) throws AuthorizationException,
-      UserNotFoundException, FamilyNotFoundException, BadRequestException;
+      UserNotFoundException, BadRequestException;
 
   Family getFamilyByInviteCode(String inviteCode);
 

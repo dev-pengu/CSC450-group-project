@@ -3,8 +3,6 @@ package com.familyorg.familyorganizationapp.service;
 import java.util.List;
 import com.familyorg.familyorganizationapp.DTO.FamilyDto;
 import com.familyorg.familyorganizationapp.Exception.AuthorizationException;
-import com.familyorg.familyorganizationapp.Exception.FamilyNotFoundException;
-import com.familyorg.familyorganizationapp.Exception.InviteCodeNotFoundException;
 import com.familyorg.familyorganizationapp.domain.InviteCode;
 import com.familyorg.familyorganizationapp.domain.MemberInvite;
 import com.familyorg.familyorganizationapp.domain.Role;
@@ -19,7 +17,7 @@ public interface InviteService {
    * @return A generated MemberInvite to be consumed by other services.
    */
   MemberInvite createUniqueMemberInvite(Long familyId, String userEmail)
-      throws FamilyNotFoundException, AuthorizationException;
+      throws AuthorizationException;
 
   /**
    * Generates an invite code given the familyId, userEmail, and role.
@@ -30,7 +28,7 @@ public interface InviteService {
    * @return a generated MemberInvite to be consumed by other services.
    */
   MemberInvite createUniqueMemberInviteWithRole(Long familyId, String userEmail, Role role)
-      throws FamilyNotFoundException, AuthorizationException;
+      throws AuthorizationException;
 
   /**
    * Generates an invite code to persist on the family table. Subsequent calls to this method with
@@ -40,7 +38,7 @@ public interface InviteService {
    * @return The string representation of the uuid generated
    */
   FamilyDto generatePersistentMemberInvite(Long familyId)
-      throws FamilyNotFoundException, AuthorizationException;
+      throws AuthorizationException;
 
   /**
    * Verifies if a member invite exists and returns the full MemberInvite with the role to be
@@ -51,7 +49,7 @@ public interface InviteService {
    * @param eventColor The invite color for the user
    */
   void verifyMemberInvite(InviteCode invite, String inviteColor)
-      throws AuthorizationException, FamilyNotFoundException, InviteCodeNotFoundException;
+      throws AuthorizationException;
 
   /**
    * Returns a list of invites yet to be consumed. If the family is not found, a
@@ -61,5 +59,5 @@ public interface InviteService {
    * @return The list of outstanding invites
    * @throws FamilyNotFoundException
    */
-  List<MemberInvite> getInvites(Long familyId) throws FamilyNotFoundException;
+  List<MemberInvite> getInvites(Long familyId);
 }

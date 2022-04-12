@@ -10,14 +10,13 @@ import javax.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import com.familyorg.familyorganizationapp.DTO.FamilyDto;
 import com.familyorg.familyorganizationapp.DTO.FamilyMemberDto;
 import com.familyorg.familyorganizationapp.DTO.FamilyRoleUpdateRequest;
+import com.familyorg.familyorganizationapp.Exception.ApiExceptionCode;
 import com.familyorg.familyorganizationapp.Exception.AuthorizationException;
 import com.familyorg.familyorganizationapp.Exception.BadRequestException;
-import com.familyorg.familyorganizationapp.Exception.FamilyNotFoundException;
 import com.familyorg.familyorganizationapp.Exception.ResourceNotFoundException;
 import com.familyorg.familyorganizationapp.Exception.UserNotFoundException;
 import com.familyorg.familyorganizationapp.domain.Calendar;
@@ -56,28 +55,27 @@ public class FamilyServiceImpl implements FamilyService {
   @Transactional
   public FamilyDto createFamily(FamilyDto familyRequest)
       throws BadRequestException, UserNotFoundException {
-    User ownerUser = userService.getRequestingUser();
     if (familyRequest.getEventColor() == null || familyRequest.getName() == null
         || familyRequest.getOwner() == null || familyRequest.getTimezone() == null) {
-      throw new BadRequestException("Request is missing one or more required fields");
+      throw new BadRequestException(ApiExceptionCode.REQUIRED_PARAM_MISSING,
+          "Request is missing one or more required fields");
     }
     if (!ColorUtil.isValidHexCode(familyRequest.getEventColor())) {
-      throw new BadRequestException("Family event color is not a valid hexcode.");
+      throw new BadRequestException(ApiExceptionCode.BAD_PARAM_VALUE,
+          "Family event color is not a valid hexcode.");
     }
     if (!ColorUtil.isValidHexCode(familyRequest.getOwner().getEventColor())) {
-      throw new BadRequestException("Owner event color is not a valid hexcode.");
+      throw new BadRequestException(ApiExceptionCode.BAD_PARAM_VALUE,
+          "Owner event color is not a valid hexcode.");
     }
+    User ownerUser = userService.getRequestingUser();
     Family family = new Family();
     family.setEventColor(familyRequest.getEventColor());
     family.setName(familyRequest.getName());
     family.setTimezone(familyRequest.getTimezone());
     FamilyMemberDto owner = familyRequest.getOwner();
-    Family savedFamily;
-    try {
-      savedFamily = familyRepository.save(family);
-    } catch (DataIntegrityViolationException e) {
-      throw new BadRequestException("Request is missing one or more required fields.");
-    }
+
+    Family savedFamily = familyRepository.save(family);
     Calendar calendar = new Calendar();
     calendar.setDefault(true);
     calendar.setDescription("Family Calendar");
@@ -96,18 +94,20 @@ public class FamilyServiceImpl implements FamilyService {
   }
 
   @Override
-  public FamilyDto getFamily(FamilyDto familyRequest) throws FamilyNotFoundException {
+  public FamilyDto getFamily(FamilyDto familyRequest) {
     Optional<Family> family = familyRepository.findById(familyRequest.getId());
 
     if (family.isEmpty()) {
-      throw new ResourceNotFoundException("Family not found");
+      throw new ResourceNotFoundException(ApiExceptionCode.FAMILY_DOESNT_EXIST,
+          "Family with id " + familyRequest.getId() + " not found");
     }
 
     User requestingUser = userService.getRequestingUser();
     boolean hasAppropriatePermissions =
         verfiyMinimumRoleSecurity(family.get(), requestingUser, Role.CHILD);
     if (!hasAppropriatePermissions) {
-      throw new AuthorizationException("User not authorized to complete this action.");
+      throw new AuthorizationException(ApiExceptionCode.USER_PRIVILEGES_TOO_LOW,
+          "User not authorized to complete this action.");
     }
 
     Family familyObj = family.get();
@@ -131,17 +131,28 @@ public class FamilyServiceImpl implements FamilyService {
   @Override
   @Transactional
   public FamilyDto updateFamily(FamilyDto familyRequest)
-      throws FamilyNotFoundException, AuthorizationException, UserNotFoundException {
+      throws AuthorizationException, UserNotFoundException {
+    if (familyRequest.getId() == null) {
+      throw new BadRequestException(ApiExceptionCode.REQUIRED_PARAM_MISSING,
+          "Id field is required to update a family.");
+    }
+    if (familyRequest.getEventColor() != null
+        && !ColorUtil.isValidHexCode(familyRequest.getEventColor())) {
+      throw new BadRequestException(ApiExceptionCode.BAD_PARAM_VALUE,
+          "Family event color is not a valid hexcode.");
+    }
     User requestingUser = userService.getRequestingUser();
 
     Optional<Family> family = familyRepository.findById(familyRequest.getId());
     if (family.isEmpty()) {
-      throw new ResourceNotFoundException("Unable to find family with given id");
+      throw new ResourceNotFoundException(ApiExceptionCode.FAMILY_DOESNT_EXIST,
+          "Family with id " + familyRequest.getId() + " not found.");
     }
     boolean hasAppropriatePermissions =
         verfiyMinimumRoleSecurity(family.get(), requestingUser, Role.ADMIN);
     if (!hasAppropriatePermissions) {
-      throw new AuthorizationException("User not authorized to complete this action.");
+      throw new AuthorizationException(ApiExceptionCode.USER_PRIVILEGES_TOO_LOW,
+          "User not authorized to complete this action.");
     }
 
     if (familyRequest.getInviteCode() != null) {
@@ -154,9 +165,6 @@ public class FamilyServiceImpl implements FamilyService {
       family.get().setTimezone(familyRequest.getTimezone());
     }
     if (familyRequest.getEventColor() != null) {
-      if (!ColorUtil.isValidHexCode(familyRequest.getEventColor())) {
-        throw new BadRequestException("Family event color is not a valid hexcode.");
-      }
       family.get().setEventColor(familyRequest.getEventColor());
     }
 
@@ -168,13 +176,18 @@ public class FamilyServiceImpl implements FamilyService {
 
   @Override
   @Transactional
-  public void deleteFamily(Long id) throws FamilyNotFoundException, AuthorizationException {
+  public void deleteFamily(Long id) throws AuthorizationException {
+    if (id == null) {
+      throw new BadRequestException(ApiExceptionCode.REQUIRED_PARAM_MISSING,
+          "Id is required to delete a family.");
+    }
     User requestingUser = userService.getRequestingUser();
     Optional<Family> family = familyRepository.findById(id);
     boolean hasAppropriatePermissions =
         verfiyMinimumRoleSecurity(family.get(), requestingUser, Role.OWNER);
     if (!hasAppropriatePermissions) {
-      throw new AuthorizationException("User not authorized to complete this action.");
+      throw new AuthorizationException(ApiExceptionCode.USER_PRIVILEGES_TOO_LOW,
+          "User not authorized to complete this action.");
     }
     familyRepository.deleteById(id);
   }
@@ -185,12 +198,14 @@ public class FamilyServiceImpl implements FamilyService {
     User requestingUser = userService.getRequestingUser();
     Optional<Family> family = familyRepository.findById(request.getId());
     if (family.isEmpty()) {
-      throw new ResourceNotFoundException("Family with id " + request.getId() + " not found.");
+      throw new ResourceNotFoundException(ApiExceptionCode.FAMILY_DOESNT_EXIST,
+          "Family with id " + request.getId() + " not found.");
     }
     boolean hasAppropriatePermissions =
         verfiyMinimumRoleSecurity(family.get(), requestingUser, Role.OWNER);
     if (!hasAppropriatePermissions) {
-      throw new AuthorizationException("User not authorized to complete this action.");
+      throw new AuthorizationException(ApiExceptionCode.USER_PRIVILEGES_TOO_LOW,
+          "User not authorized to complete this action.");
     }
     Optional<FamilyMembers> currentOwnerRelation = family.get()
         .getMembers()
@@ -206,7 +221,8 @@ public class FamilyServiceImpl implements FamilyService {
 
     User newOwner = userService.getUserByUsername(request.getOwner().getUser().getUsername());
     if (newOwner == null) {
-      throw new UserNotFoundException("User supplied to be new owner does not exist.", false);
+      throw new UserNotFoundException(ApiExceptionCode.USER_DOESNT_EXIST,
+          "User supplied to be new owner does not exist.", false);
     }
 
     Optional<FamilyMembers> newOwnerRelation = family.get()
@@ -215,7 +231,7 @@ public class FamilyServiceImpl implements FamilyService {
         .filter(member -> member.getUser().getId() == request.getOwner().getUser().getId())
         .findFirst();
     if (newOwnerRelation.isEmpty()) {
-      throw new UserNotFoundException(
+      throw new UserNotFoundException(ApiExceptionCode.USER_NOT_IN_FAMILY,
           "User supplied to be new owner is not a member of family with id " + family.get().getId(),
           false);
     }
@@ -233,26 +249,31 @@ public class FamilyServiceImpl implements FamilyService {
   public void updateMemberRoles(FamilyRoleUpdateRequest request) {
     User requestingUser = userService.getRequestingUser();
     if (request.getFamilyId() == null) {
-      throw new BadRequestException("Family id may not be null.");
+      throw new BadRequestException(ApiExceptionCode.REQUIRED_PARAM_MISSING,
+          "Family id may not be null.");
     }
     if (request.getMembers() == null || request.getMembers().isEmpty()) {
-      throw new BadRequestException("Family members to update must be specified.");
+      throw new BadRequestException(ApiExceptionCode.REQUIRED_PARAM_MISSING,
+          "Family members to update must be specified.");
     }
     Optional<Family> family = familyRepository.findById(request.getFamilyId());
     if (family.isEmpty()) {
-      throw new FamilyNotFoundException("Family with id " + request.getFamilyId() + " not found.");
+      throw new ResourceNotFoundException(ApiExceptionCode.FAMILY_DOESNT_EXIST,
+          "Family with id " + request.getFamilyId() + " not found.");
     }
     boolean hasAppropriatePermissions =
         verfiyMinimumRoleSecurity(family.get(), requestingUser, Role.ADMIN);
     if (!hasAppropriatePermissions) {
-      throw new AuthorizationException("User not authorized to complete this action.");
+      throw new AuthorizationException(ApiExceptionCode.USER_PRIVILEGES_TOO_LOW,
+          "User not authorized to complete this action.");
     }
     Set<FamilyMembers> membersToUpdate = new HashSet<>();
     request.getMembers().forEach(member -> {
       FamilyMemberId id = new FamilyMemberId(member.getUser().getId(), family.get().getId());
       Optional<FamilyMembers> familyMemberOpt = familyMemberRepository.findById(id);
       if (familyMemberOpt.isEmpty()) {
-        throw new UserNotFoundException("User with id " + member.getUser().getId() + " not found.");
+        throw new UserNotFoundException(ApiExceptionCode.USER_DOESNT_EXIST,
+            "User with id " + member.getUser().getId() + " not found.");
       }
       FamilyMembers familyMember = familyMemberOpt.get();
       if (member.getRole() != Role.OWNER || familyMember.getRole() != Role.OWNER) {

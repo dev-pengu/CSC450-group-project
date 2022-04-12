@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
+import com.familyorg.familyorganizationapp.Exception.ApiExceptionCode;
 import com.familyorg.familyorganizationapp.Exception.BadRequestException;
 import com.familyorg.familyorganizationapp.service.MessagingService;
 
@@ -28,20 +29,29 @@ public class MessagingServiceImpl implements MessagingService {
 
   private static Logger LOG = LoggerFactory.getLogger(MessagingServiceImpl.class);
 
-  @Autowired
   private Environment env;
+  private String domain;
+
+  @Autowired
+  public MessagingServiceImpl(Environment env) {
+    this.env = env;
+    domain =
+      env.getProperty("server.domain") != null
+        ? env.getProperty("server.domain")
+        : (env.getProperty("server.host") + ":" + env.getProperty("server.port"));
+  }
 
   private static String inviteTemplateContents;
+  private static String passwordResetTemplateContents;
 
   private static String getInviteTemplateContents() {
     if (inviteTemplateContents != null) {
       return inviteTemplateContents;
     }
-    try {
-      FileReader fileReader =
-          new FileReader("src/main/resources/email_templates/invite-template/index.html");
+    try (FileReader fileReader =
+        new FileReader("src/main/resources/email_templates/invite-template/index.html")) {
       try (BufferedReader bufferedReader = new BufferedReader(fileReader)) {
-        StringBuilder content = new StringBuilder(19321);
+        StringBuilder content = new StringBuilder(20000);
         String s;
         while ((s = bufferedReader.readLine()) != null) {
           content.append(s);
@@ -49,6 +59,30 @@ public class MessagingServiceImpl implements MessagingService {
         inviteTemplateContents = content.toString();
       }
       return inviteTemplateContents;
+    } catch (FileNotFoundException e) {
+      LOG.error(e.getMessage(), e);
+      return null;
+    } catch (IOException e) {
+      LOG.error(e.getMessage(), e);
+      return null;
+    }
+  }
+
+  private static String getPassowrdResetTemplateContents() {
+    if (passwordResetTemplateContents != null) {
+      return passwordResetTemplateContents;
+    }
+    try (FileReader fileReader =
+        new FileReader("src/main/resources/email_templates/password-reset-template/index.html")) {
+      try (BufferedReader bufferedReader = new BufferedReader(fileReader)) {
+        StringBuilder content = new StringBuilder(18000);
+        String s;
+        while ((s = bufferedReader.readLine()) != null) {
+          content.append(s);
+        }
+        passwordResetTemplateContents = content.toString();
+      }
+      return passwordResetTemplateContents;
     } catch (FileNotFoundException e) {
       LOG.error(e.getMessage(), e);
       return null;
@@ -73,9 +107,11 @@ public class MessagingServiceImpl implements MessagingService {
 
       Transport.send(message);
     } catch (AddressException e) {
-      throw new BadRequestException("Recipient email is malformed.");
+      throw new BadRequestException(
+          ApiExceptionCode.BAD_PARAM_VALUE, "Recipient email is malformed.");
     } catch (MessagingException e) {
-      throw new BadRequestException("Error sending email to recipient");
+      throw new BadRequestException(
+          ApiExceptionCode.BAD_PARAM_VALUE, "Error sending email to recipient");
     }
   }
 
@@ -93,16 +129,18 @@ public class MessagingServiceImpl implements MessagingService {
 
       Transport.send(message);
     } catch (AddressException e) {
-      throw new BadRequestException("Recipient email is malformed.");
+      throw new BadRequestException(
+          ApiExceptionCode.BAD_PARAM_VALUE, "Recipient email is malformed.");
     } catch (MessagingException e) {
-      throw new BadRequestException("Error sending email to recipient");
+      throw new BadRequestException(
+          ApiExceptionCode.BAD_PARAM_VALUE, "Error sending email to recipient");
     }
   }
 
+  @Override
   public String buildInviteContent(String inviteCode, String owner) {
     // TODO: replace unsub link |UNSUB-LINK| in the template
-    String joinLink = "http://" + env.getProperty("server.host") + ":"
-        + env.getProperty("server.port") + "/family/join&code=" + inviteCode;
+    String joinLink = "http://" + domain + "/family/join?code=" + inviteCode;
     String contents = getInviteTemplateContents();
     if (contents == null) {
       return null;
@@ -110,6 +148,19 @@ public class MessagingServiceImpl implements MessagingService {
     contents = contents.replace("|FAMILY-CODE|", inviteCode);
     contents = contents.replace("|JOIN-LINK|", joinLink);
     contents = contents.replace("|OWNER-NAME|", owner);
+
+    return contents;
+  }
+
+  @Override
+  public String buildPasswordResetContent(String resetCode) {
+    // TODO: replace unsub link |UNSUB-LINK| in the template
+    String resetLink = "http://" + domain + "/passwordReset?code=" + resetCode;
+    String contents = getPassowrdResetTemplateContents();
+    if (contents == null) {
+      return null;
+    }
+    contents = contents.replace("|RESET-LINK|", resetLink);
 
     return contents;
   }
@@ -127,8 +178,8 @@ public class MessagingServiceImpl implements MessagingService {
 
   private class SMTPAuthenticator extends Authenticator {
     public PasswordAuthentication getPasswordAuthentication() {
-      return new PasswordAuthentication(env.getProperty("messaging.email"),
-          env.getProperty("messaging.password"));
+      return new PasswordAuthentication(
+          env.getProperty("messaging.email"), env.getProperty("messaging.password"));
     }
   }
 }

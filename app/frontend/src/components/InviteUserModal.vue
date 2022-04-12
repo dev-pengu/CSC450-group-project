@@ -1,0 +1,85 @@
+<template>
+  <div class="inviteModal d-inline-block">
+    <v-dialog v-model="dialogState" persistent transition="dialog-bottom-transition" max-width="600">
+      <template #activator="{ on, attrs }">
+        <div class="d-block foa_link--text text-decoration-underline" v-bind="attrs" v-on="on">
+          Invite a Family Member
+        </div>
+      </template>
+      <v-card>
+        <v-card-actions class="pb-0">
+          <v-spacer></v-spacer>
+          <v-btn class="pr-0" icon @click="dialogState = false"><v-icon>mdi-close</v-icon></v-btn>
+        </v-card-actions>
+        <v-card-title class="py-0 justify-center foa_text_header--text">Invite a Family Member to</v-card-title>
+        <v-card-title class="pt-0 justify-center foa_text_header--text">{{ familyName }}</v-card-title>
+        <v-card-text>
+          <v-row justify="center">
+            <v-col cols="12" sm="6">
+              <v-text-field
+                v-model="formData.recipientEmail"
+                hide-details
+                outlined
+                color="foa_button"
+                label="User's Email"
+                type="email"
+              ></v-text-field>
+            </v-col>
+          </v-row>
+          <v-row justify="center">
+            <v-col cols="12" sm="6">
+              <v-select
+                v-model="formData.role"
+                :items="roles"
+                hide-details
+                outlined
+                color="foa_button"
+                item-color="foa_button"
+                label="Starting Role"
+              ></v-select>
+            </v-col>
+          </v-row>
+          <v-row justify="center">
+            <v-col cols="6" sm="4">
+              <v-btn block color="foa_button" class="foa_button_text--text" @click="submit">Send</v-btn>
+            </v-col>
+          </v-row>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+  </div>
+</template>
+
+<script>
+import api from '../api';
+
+export default {
+  name: 'InviteModal',
+  props: {
+    familyId: {
+      default: 0,
+      type: Number,
+    },
+    familyName: {
+      default: '',
+      type: String,
+    },
+  },
+  data: (instance) => ({
+    dialogState: false,
+    roles: ['CHILD', 'ADULT', 'ADMIN'],
+    formData: {
+      family: instance.familyId,
+      recipientEmail: '',
+      role: 'CHILD',
+    },
+  }),
+  methods: {
+    async submit() {
+      api.sendInviteCode(this.formData);
+      this.dialogState = false;
+      // TODO: display a message that a request has been submitted
+    },
+  },
+};
+</script>

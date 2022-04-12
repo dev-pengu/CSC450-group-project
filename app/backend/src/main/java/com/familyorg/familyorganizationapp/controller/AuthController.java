@@ -1,10 +1,17 @@
 package com.familyorg.familyorganizationapp.controller;
 
+import com.familyorg.familyorganizationapp.Exception.ApiExceptionCode;
+import com.familyorg.familyorganizationapp.Exception.AuthorizationException;
+import com.familyorg.familyorganizationapp.Exception.BadRequestException;
+import com.familyorg.familyorganizationapp.Exception.UserNotFoundException;
+import com.familyorg.familyorganizationapp.service.AuthService;
+import com.familyorg.familyorganizationapp.service.MessagingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -20,13 +27,12 @@ import com.familyorg.familyorganizationapp.service.UserService;
 @RestController
 @RequestMapping("/api/services/auth")
 public class AuthController {
-  @Autowired
-  private UserService userService;
-  @Autowired
-  private SecurityService securityService;
+  @Autowired private UserService userService;
+  @Autowired private SecurityService securityService;
+  @Autowired private AuthService authService;
+  @Autowired private MessagingService messagingService;
 
   private static final Logger LOG = LoggerFactory.getLogger(AuthController.class);
-
 
   /**
    * Create a new user. If username or email is already in use, will return HttpStatus 409 and
@@ -44,11 +50,12 @@ public class AuthController {
       return new ResponseEntity<>(savedUser, HttpStatus.CREATED);
     } else {
       ErrorDto errorResponse =
-          new ErrorDtoBuilder().withErrorCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
-              .withMessage("Error processing request.").build();
+          new ErrorDtoBuilder()
+              .withErrorCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+              .withMessage("Error processing request.")
+              .build();
       return new ResponseEntity<ErrorDto>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
-
   }
 
   /**
@@ -58,15 +65,104 @@ public class AuthController {
    * @return Currently logged in user on success.
    */
   @PostMapping("/login")
-  public ResponseEntity<?> login(@RequestBody User user) {
+  public ResponseEntity<UserDto> login(@RequestBody User user) {
     securityService.autologin(user.getUsername(), user.getPassword());
     User loggedInUser = userService.getUserByUsername(user.getUsername());
     return new ResponseEntity<>(UserDto.fromUserObj(loggedInUser), HttpStatus.OK);
   }
 
-  @PatchMapping("/change-password")
-  public ResponseEntity<?> changePassword(@RequestBody UserDto user) {
-    userService.changePassword(user);
-    return new ResponseEntity<String>("Success", HttpStatus.OK);
+  @PostMapping("/changePassword")
+  public ResponseEntity<String> changePassword(@RequestBody UserDto request) {
+    if ((request.getUsername() == null || request.getUsername().isBlank())
+        && (request.getEmail() == null || request.getEmail().isBlank())) {
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING,
+          "Either a username or a password must be supplied.");
+    }
+    if (request.getResetCode() == null || request.getResetCode().isBlank()) {
+      validateReauthenticatedResetRequest(request);
+      User user = userService.getRequestingUser();
+      UserDetails reauthenticatedUser =
+          securityService.reauthenticate(request.getUsername(), request.getOldPassword());
+      if (reauthenticatedUser == null
+          || !user.getUsername().equals(reauthenticatedUser.getUsername())) {
+        throw new AuthorizationException(
+            ApiExceptionCode.ILLEGAL_ACTION_REQUESTED,
+            "User is not authorized to complete this action");
+      }
+      userService.changePassword(user, request.getNewPassword());
+    } else {
+      validateCodeResetRequest(request);
+      User user;
+      if (request.getUsername() != null && !request.getUsername().isBlank()) {
+        user = userService.getUserByUsername(request.getUsername());
+      } else {
+        user = userService.getUserByEmail(request.getEmail());
+      }
+      if (user == null) {
+        throw new UserNotFoundException(ApiExceptionCode.USER_DOESNT_EXIST, "User not found.");
+      }
+      if (authService.verifyResetCode(request.getResetCode(), user)) {
+        userService.changePassword(user, request.getNewPassword());
+      } else {
+        throw new AuthorizationException(
+            ApiExceptionCode.ILLEGAL_ACTION_REQUESTED,
+            "User is not permitted to perform this action.");
+      }
+    }
+
+    return new ResponseEntity<>("Success", HttpStatus.OK);
+  }
+
+  @PostMapping("/passwordReset")
+  public ResponseEntity<String> requestPasswordReset(@RequestBody UserDto request) {
+    if ((request.getUsername() == null || request.getUsername().isBlank())
+        && (request.getEmail() == null || request.getEmail().isBlank())) {
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING,
+          "Either a username or a password must be supplied.");
+    }
+    User user;
+    if (request.getUsername() != null && !request.getUsername().isBlank()) {
+      user = userService.getUserByUsername(request.getUsername());
+    } else {
+      user = userService.getUserByEmail(request.getEmail());
+    }
+    String emailContents =
+        messagingService.buildPasswordResetContent(authService.generateResetCode(user));
+    messagingService.sendHtmlEmail(
+        user.getEmail(), "Password Reset for Family Command Center", emailContents);
+    return new ResponseEntity<>("Success", HttpStatus.OK);
+  }
+
+  private void validateReauthenticatedResetRequest(UserDto request) {
+    if (request.getNewPassword() == null || request.getNewPassword().isBlank()) {
+      throw new BadRequestException(
+        ApiExceptionCode.REQUIRED_PARAM_MISSING,
+        "A new password is required to change password.");
+    }
+    if (request.getOldPassword() == null || request.getOldPassword().isBlank()) {
+      throw new BadRequestException(
+        ApiExceptionCode.REQUIRED_PARAM_MISSING,
+        "Old password is required to change password.");
+    }
+    if (!authService.verifyPasswordRequirements(request.getNewPassword())) {
+      throw new BadRequestException(
+        ApiExceptionCode.PASSWORD_MINIMUM_REQUIREMENTS_NOT_MET,
+        "Password does not meet minimum requirements");
+    }
+  }
+
+  private void validateCodeResetRequest(UserDto request) {
+    if (request.getNewPassword() == null || request.getNewPassword().isBlank()) {
+      throw new BadRequestException(
+        ApiExceptionCode.REQUIRED_PARAM_MISSING,
+        "A new password is required to change password.");
+    }
+    if (!authService.verifyPasswordRequirements(request.getNewPassword())) {
+      throw new BadRequestException(
+        ApiExceptionCode.PASSWORD_MINIMUM_REQUIREMENTS_NOT_MET,
+        "Password does not meet minimum requirements");
+    }
   }
 }

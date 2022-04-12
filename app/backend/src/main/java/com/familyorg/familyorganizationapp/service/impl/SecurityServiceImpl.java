@@ -25,7 +25,7 @@ public class SecurityServiceImpl implements SecurityService {
   @Autowired
   private UserRepository userRepository;
 
-  private Logger LOG = LoggerFactory.getLogger(SecurityServiceImpl.class);
+  private Logger logger = LoggerFactory.getLogger(SecurityServiceImpl.class);
 
   @Override
   @Transactional
@@ -46,7 +46,7 @@ public class SecurityServiceImpl implements SecurityService {
   public boolean isAuthenticated() {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     if (authentication != null) {
-      LOG.error(authentication.toString());
+      logger.error(authentication.toString());
     }
     if (authentication == null
         || AnonymousAuthenticationToken.class.isAssignableFrom(authentication.getClass())) {
