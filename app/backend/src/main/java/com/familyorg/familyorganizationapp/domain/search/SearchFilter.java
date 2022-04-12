@@ -12,12 +12,9 @@ public class SearchFilter implements Serializable {
   protected Long id;
   protected String display;
 
-  public SearchFilter() {
-
-  }
+  public SearchFilter() {}
 
   public SearchFilter(Long id, String display) {
-    super();
     this.id = id;
     this.display = display;
   }

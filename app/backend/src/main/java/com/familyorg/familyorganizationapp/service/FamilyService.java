@@ -40,6 +40,8 @@ public interface FamilyService {
 
   List<Family> getFamiliesByUser(String username);
 
+  Iterable<Family> findAllByIds(List<Long> familyIds);
+
   void updateMemberRoles(FamilyRoleUpdateRequest request);
 
   TimeZone getUserTimeZoneOrDefault(User requestingUser, Family family);

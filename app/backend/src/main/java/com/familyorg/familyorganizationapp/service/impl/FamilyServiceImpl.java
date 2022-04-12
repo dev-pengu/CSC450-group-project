@@ -1,5 +1,9 @@
 package com.familyorg.familyorganizationapp.service.impl;
 
+import com.familyorg.familyorganizationapp.domain.ShoppingList;
+import com.familyorg.familyorganizationapp.repository.ShoppingListRepository;
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.time.ZoneId;
 import java.util.Collections;
 import java.util.HashSet;
@@ -41,6 +45,7 @@ public class FamilyServiceImpl implements FamilyService {
   FamilyRepository familyRepository;
   FamilyMemberRepository familyMemberRepository;
   CalendarRepository calendarRepository;
+  ShoppingListRepository shoppingListRepository;
   UserService userService;
 
   @Autowired
@@ -48,11 +53,13 @@ public class FamilyServiceImpl implements FamilyService {
       FamilyRepository familyRepository,
       FamilyMemberRepository familyMemberRepository,
       CalendarRepository calendarRepository,
-      UserService userService) {
+      UserService userService,
+      ShoppingListRepository shoppingListRepository) {
     this.familyRepository = familyRepository;
     this.familyMemberRepository = familyMemberRepository;
     this.calendarRepository = calendarRepository;
     this.userService = userService;
+    this.shoppingListRepository = shoppingListRepository;
   }
 
   @Override
@@ -74,6 +81,16 @@ public class FamilyServiceImpl implements FamilyService {
     calendar.setFamily(family);
     Calendar savedCalendar = calendarRepository.save(calendar);
     savedFamily.addCalendar(savedCalendar);
+
+    ShoppingList shoppingList = new ShoppingList();
+    shoppingList.setDefault(true);
+    shoppingList.setDescription("Family Shopping List");
+    shoppingList.setFamily(family);
+    shoppingList.setCreatedDatetime(Timestamp.from(Instant.now()));
+    shoppingList.setCreatedBy(ownerUser);
+    ShoppingList savedShoppingList = shoppingListRepository.save(shoppingList);
+    savedFamily.addShoppingList(savedShoppingList);
+
     FamilyMembers ownerRelation = new FamilyMembers();
     ownerRelation.setFamily(savedFamily);
     ownerRelation.setEventColor(owner.getEventColor());
@@ -303,11 +320,17 @@ public class FamilyServiceImpl implements FamilyService {
 
   @Override
   public boolean verfiyMinimumRoleSecurity(Family family, User user, Role minimumRole) {
-    return family.getMembers().stream()
-        .anyMatch(
-            member ->
-                member.getUser().getUsername().equals(user.getUsername())
-                    && member.getRole().getLevel() >= minimumRole.getLevel());
+    Optional<FamilyMembers> memberRecord =
+        family.getMembers().stream()
+            .filter(member -> member.getUser().getUsername().equals(user.getUsername()))
+            .findFirst();
+    if (memberRecord.isPresent()) {
+      return memberRecord.get().getRole().getLevel() >= minimumRole.getLevel();
+    } else {
+      throw new AuthorizationException(
+          ApiExceptionCode.USER_NOT_IN_FAMILY,
+          "User is not a member of the family owning thee requesting resource.");
+    }
   }
 
   @Override
@@ -324,6 +347,11 @@ public class FamilyServiceImpl implements FamilyService {
   @Override
   public List<Family> getFamiliesByUser(String username) {
     return familyRepository.getFamiliesByUser(username);
+  }
+
+  @Override
+  public Iterable<Family> findAllByIds(List<Long> familyIds) {
+    return familyRepository.findAllById(familyIds);
   }
 
   @Override
