@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import com.familyorg.familyorganizationapp.domain.search.CalendarField;
 import com.familyorg.familyorganizationapp.domain.search.SearchFilter;
 
@@ -100,6 +101,25 @@ public class CalendarSearchResponseDto {
       this.activeSearchFilters = new HashMap<>();
     }
     this.activeSearchFilters.put(key, filter);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(activeSearchFilters, calendars, end, searchFilters, start);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj)
+      return true;
+    if (obj == null)
+      return false;
+    if (getClass() != obj.getClass())
+      return false;
+    CalendarSearchResponseDto other = (CalendarSearchResponseDto) obj;
+    return Objects.equals(activeSearchFilters, other.activeSearchFilters)
+        && Objects.equals(calendars, other.calendars) && Objects.equals(end, other.end)
+        && Objects.equals(searchFilters, other.searchFilters) && Objects.equals(start, other.start);
   }
 
   @Override

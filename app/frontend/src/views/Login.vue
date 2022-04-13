@@ -21,6 +21,9 @@
                 label="Password"
                 @keyup.enter="submit"
               />
+              <div class="text-center">
+                <router-link class="foa_link--text" to="#" @click="sendReset">Forgot your password?</router-link>
+              </div>
             </v-form>
             <v-alert v-if="error" class="mb-2" text type="error">{{ errorMsg }}</v-alert>
           </v-card-text>
@@ -49,6 +52,7 @@
 
 <script>
 import { mapActions } from 'vuex';
+import api from '../api';
 
 export default {
   name: 'Login',
@@ -88,6 +92,29 @@ export default {
       } finally {
         this.loading = false;
       }
+    },
+    async sendReset() {
+      this.loading = true;
+      this.error = false;
+      this.errorMsg = '';
+      if (this.formData.username === '') {
+        this.loading = false;
+        this.error = true;
+        this.errorMsg = 'Please supply a username to reset your password';
+        return;
+      }
+      try {
+        api.sendResetCode(this.formData);
+      } catch (err) {
+        this.error = true;
+        const error = { err };
+        if (error.err.isAxiosError) {
+          this.errorMsg = error.err.response.data;
+        } else {
+          this.errorMsg = err;
+        }
+      }
+      this.loading = false;
     },
   },
 };

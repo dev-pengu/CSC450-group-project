@@ -50,6 +50,10 @@ public class Family implements Serializable {
       orphanRemoval = true)
   private Set<Calendar> calendars;
 
+  @JsonIgnore
+  @OneToMany(mappedBy = "family", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+  private Set<ShoppingList> shoppingLists;
+
   public Family() {}
 
   public Family(Long id, String name, String eventColor, String timezone, String inviteCode,
@@ -168,6 +172,28 @@ public class Family implements Serializable {
       calendars = new HashSet<>();
     }
     this.calendars.add(calendar);
+  }
+
+  public Set<ShoppingList> getShoppingLists() {
+    return shoppingLists;
+  }
+
+  public void setShoppingLists(
+    Set<ShoppingList> shoppingLists) {
+    this.shoppingLists = shoppingLists;
+  }
+
+  public void addShoppingList(ShoppingList list) {
+    if (shoppingLists == null) {
+      shoppingLists = new HashSet<>();
+    }
+    this.shoppingLists.add(list);
+  }
+    
+  public boolean isMember(User user) {
+    return this.members.stream()
+        .filter(member -> member.getUser().getId().equals(user.getId()))
+        .count() > 0;
   }
 
   @Override
