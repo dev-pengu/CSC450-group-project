@@ -2,6 +2,7 @@ package com.familyorg.familyorganizationapp.service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.TimeZone;
 import com.familyorg.familyorganizationapp.DTO.FamilyDto;
 import com.familyorg.familyorganizationapp.DTO.FamilyRoleUpdateRequest;
 import com.familyorg.familyorganizationapp.Exception.AuthorizationException;
@@ -39,5 +40,9 @@ public interface FamilyService {
 
   List<Family> getFamiliesByUser(String username);
 
+  Iterable<Family> findAllByIds(List<Long> familyIds);
+
   void updateMemberRoles(FamilyRoleUpdateRequest request);
+
+  TimeZone getUserTimeZoneOrDefault(User requestingUser, Family family);
 }

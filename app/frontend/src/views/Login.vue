@@ -25,6 +25,9 @@
                 required
                 @keyup.enter="submit"
               />
+              <div class="text-center">
+                <router-link class="foa_link--text" to="#" @click="sendReset">Forgot your password?</router-link>
+              </div>
             </v-form>
             <v-alert v-if="error" class="mb-0" text type="error">{{ errorMsg }}</v-alert>
           </v-card-text>
@@ -53,6 +56,7 @@
 
 <script>
 import { mapActions } from 'vuex';
+import api from '../api';
 
 export default {
   name: 'Login',
@@ -70,18 +74,39 @@ export default {
     loading: false,
   }),
   methods: {
-    ...mapActions(['login']),
+    ...mapActions(['loginUser']),
     async submit() {
-      this.loading = true;
-      this.error = false;
       try {
-        const res = await this.login(this.formData);
+        this.loading = true;
+        this.error = false;
+        this.errorMsg = '';
+
+        const res = await this.loginUser(this.formData);
         if (res.status === 200) {
           this.$router.push('/');
         } else {
           this.error = true;
-          this.errorMsg = 'Your username or password was incorrect';
+          this.errorMsg = 'Your username or password was incorrect.';
         }
+      } catch (err) {
+        this.error = true;
+        this.errorMsg = 'Login failed, please try again.';
+      } finally {
+        this.loading = false;
+      }
+    },
+    async sendReset() {
+      this.loading = true;
+      this.error = false;
+      this.errorMsg = '';
+      if (this.formData.username === '') {
+        this.loading = false;
+        this.error = true;
+        this.errorMsg = 'Please supply a username to reset your password';
+        return;
+      }
+      try {
+        api.sendResetCode(this.formData);
       } catch (err) {
         this.error = true;
         const error = { err };
@@ -91,7 +116,6 @@ export default {
           this.errorMsg = err;
         }
       }
-
       this.loading = false;
     },
   },

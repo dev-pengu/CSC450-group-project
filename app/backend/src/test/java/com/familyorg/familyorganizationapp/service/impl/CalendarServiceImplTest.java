@@ -138,6 +138,8 @@ public class CalendarServiceImplTest {
       testRepetitionSchedules.put(schedule.getId(), schedule);
       return schedule;
     });
+    when(familyService.getUserTimeZoneOrDefault(any(User.class), any(Family.class)))
+      .thenReturn(TimeZone.getTimeZone("America/Chicago"));
 
     doNothing().when(eventRepository).deleteById(any(Long.class));
     doNothing().when(calendarRepository).deleteById(any(Long.class));

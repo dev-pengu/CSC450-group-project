@@ -103,27 +103,9 @@ public class UserServiceImpl implements UserService {
 
   @Override
   @Transactional
-  public void changePassword(UserDto request)
-      throws AuthorizationException, UserNotFoundException, BadRequestException {
-    User requestingUser = getRequestingUser();
-    if (request.getOldPassword() == null || request.getNewPassword() == null
-        || request.getUsername() == null) {
-      throw new BadRequestException(ApiExceptionCode.REQUIRED_PARAM_MISSING,
-          "Username, old password, and new password cannot be null");
-    }
-    if (!authService.verifyPasswordRequirements(request.getNewPassword())) {
-      throw new BadRequestException(ApiExceptionCode.PASSWORD_MINIMUM_REQUIREMENTS_NOT_MET,
-          "Password does not meet minimum requirements");
-    }
-    UserDetails reauthenticatedUser =
-        securityService.reauthenticate(request.getUsername(), request.getOldPassword());
-    if (reauthenticatedUser == null
-        || !requestingUser.getUsername().equals(reauthenticatedUser.getUsername())) {
-      throw new AuthorizationException(ApiExceptionCode.ILLEGAL_ACTION_REQUESTED,
-          "User is not authorized to complete this action");
-    }
-    requestingUser.setPassword(bCryptPasswordEncoder.encode(request.getNewPassword()));
-    userRepository.save(requestingUser);
+  public void changePassword(User user, String newPassword) {
+      user.setPassword(bCryptPasswordEncoder.encode(newPassword));
+      userRepository.save(user);
   }
 
   @Override

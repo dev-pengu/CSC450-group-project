@@ -36,9 +36,6 @@ export default {
   logout() {
     return authHttp.post('/auth/logout');
   },
-  getDashboardData() {
-    return authHttp.get('/dashboard');
-  },
   createUser(formData) {
     return authHttp.post('/auth', {
       username: formData.username,
@@ -46,6 +43,20 @@ export default {
       lastName: formData.lastName,
       email: formData.email,
       password: formData.password,
+    });
+  },
+  sendResetCode(formData) {
+    return authHttp.post('/auth/passwordReset', {
+      username: formData.username,
+    });
+  },
+  changePassword(formData) {
+    return authHttp.post('/auth/changePassword', {
+      username: formData.username !== null && formData.username !== undefined ? formData.username : null,
+      email: formData.email !== null && formData.email !== undefined ? formData.email : null,
+      resetCode: formData.resetCode !== null && formData.resetCode !== undefined ? formData.resetCode : null,
+      oldPassword: formData.oldPassword !== null && formData.oldPassword !== undefined ? formData.oldPassword : null,
+      newPassword: formData.newPassword,
     });
   },
   getTimezones() {

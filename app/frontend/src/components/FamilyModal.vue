@@ -149,21 +149,24 @@ export default {
     this.createFamilyData.timezone = 'US/Central';
   },
   methods: {
-    ...mapActions(['getFamilies']),
+    ...mapActions(['fetchFamilies', 'showSnackbar']),
     async submitJoinFamily() {
       try {
         this.joinFamilyData.personalEventColor = this.$refs.joinPersonalColorPicker.color;
         const res = await api.joinFamily(this.joinFamilyData);
         if (res.status === 200) {
           this.closeDialog();
-          this.getFamilies();
+          this.fetchFamilies();
+          this.showSnackbar({ type: 'success', message: 'You have successfully joined a family!' });
+        } else if (res.data.errorCode === 3001) {
+          this.joinError = true;
+          this.joinErrorMsg = 'This invite code does not exist. Make sure the invite code is correct and try again.';
         } else {
           this.joinError = true;
           this.joinErrorMsg =
             'There was a problem joining this family. Make sure the invite code is correct and try again.';
         }
       } catch (err) {
-        // 500 error
         this.joinError = true;
         this.joinErrorMsg =
           'There was a problem joining this family. Make sure the invite code is correct and try again.';
@@ -176,13 +179,13 @@ export default {
         const res = await api.createFamily(this.createFamilyData);
         if (res.status === 201) {
           this.closeDialog();
-          this.getFamilies();
+          this.fetchFamilies();
+          this.showSnackbar({ type: 'success', message: 'You have successfully created a family!' });
         } else {
           this.createError = true;
           this.createErrorMsg = 'There was a problem creating your family, please try again.';
         }
       } catch (err) {
-        // 500 error
         this.createError = true;
         this.createErrorMsg = 'There was a problem creating your family, please try again.';
       }

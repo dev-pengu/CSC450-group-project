@@ -37,6 +37,8 @@
 </template>
 
 <script>
+import { mapActions, mapGetters, mapMutations } from 'vuex';
+
 export default {
   name: 'NavDrawer',
   data: () => ({
@@ -51,26 +53,26 @@ export default {
     ],
   }),
   computed: {
+    ...mapGetters({ drawerMiniState: 'getDrawerMiniState' }),
     drawerState: {
       get() {
-        return this.$store.getters.drawerState;
+        return this.$store.getters.getDrawerState;
       },
-      set(val) {
-        this.$store.commit('toggleDrawerState', val);
+      set(newValue) {
+        this.setDrawerState({ state: newValue });
       },
-    },
-    drawerMiniState() {
-      return this.$store.getters.drawerMiniState;
     },
   },
   methods: {
+    ...mapMutations({ setDrawerState: 'SET_DRAWER_STATE', setDrawerMiniState: 'SET_DRAWER_MINI_STATE' }),
+    ...mapActions(['logoutUser']),
     onResize() {
       if (this.$vuetify.breakpoint.mdAndDown) {
-        this.$store.commit('resetDrawerMiniState');
+        this.setDrawerMiniState({ state: false });
       }
     },
     async logout() {
-      await this.$store.dispatch('logout');
+      this.logoutUser();
       this.$router.push('/login');
     },
   },
