@@ -6,6 +6,7 @@ import createPersistedState from 'vuex-persistedstate';
 import auth from './modules/auth';
 import navDrawer from './modules/navDrawer';
 import family from './modules/family';
+import snackbar from './modules/snackbar';
 
 Vue.use(Vuex);
 export default new Vuex.Store({
@@ -13,6 +14,7 @@ export default new Vuex.Store({
     auth,
     navDrawer,
     family,
+    snackbar,
   },
   plugins: [createPersistedState({ key: 'appStore', storage: window.sessionStorage })],
 });

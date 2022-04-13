@@ -7,30 +7,32 @@
         <router-view />
       </v-container>
     </v-main>
-    <v-footer app></v-footer>
+    <Snackbar />
   </v-app>
 </template>
 
 <script>
 import NavDrawer from '@/components/NavDrawer.vue';
 import AppBar from '@/components/AppBar.vue';
+import Snackbar from '@/components/Snackbar.vue';
+import { mapGetters } from 'vuex';
 import api from './api';
 
 export default {
   components: {
     NavDrawer,
     AppBar,
+    Snackbar,
   },
   computed: {
-    isLoggedIn() {
-      return this.$store.getters.isLoggedIn;
-    },
+    ...mapGetters(['isLoggedIn']),
   },
   mounted() {
     window.onunload = () => {
       api.logout();
     };
 
+    // TODO: set dark mode from user preferences
     const theme = localStorage.getItem('darkMode');
     if (theme) {
       this.$vuetify.theme.dark = theme !== 'false';

@@ -51,6 +51,7 @@
 </template>
 
 <script>
+import { mapActions } from 'vuex';
 import api from '../api';
 
 export default {
@@ -75,10 +76,17 @@ export default {
     },
   }),
   methods: {
+    ...mapActions(['showSnackbar']),
     async submit() {
-      api.sendInviteCode(this.formData);
-      this.dialogState = false;
-      // TODO: display a message that a request has been submitted
+      try {
+        await api.sendInviteCode(this.formData);
+        this.dialogState = false;
+        this.showSnackbar({ type: 'success', message: `You've sent an invite to ${this.formData.recipientEmail}!` });
+      } catch (err) {
+        // TODO: need better way to handle timeout error
+        this.dialogState = false;
+        this.showSnackbar({ type: 'success', message: `You've sent an invite to ${this.formData.recipientEmail}!` });
+      }
     },
   },
 };

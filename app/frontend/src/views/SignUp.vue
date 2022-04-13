@@ -83,7 +83,7 @@ export default {
     timezones: ['US/Central', 'US/Eastern'],
   }),
   methods: {
-    ...mapActions(['login']),
+    ...mapActions(['loginUser']),
     async signUp() {
       this.errors = [];
       this.error = false;
@@ -95,7 +95,7 @@ export default {
       try {
         const res = await api.createUser(this.formData);
         if (res.status === 201) {
-          const loginRes = await this.login(this.formData);
+          const loginRes = await this.loginUser(this.formData);
           if (loginRes.status === 200) {
             this.$router.push('/');
           } else {
