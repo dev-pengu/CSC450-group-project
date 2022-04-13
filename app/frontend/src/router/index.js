@@ -14,13 +14,21 @@ import ResultViewer from '../views/poll-app/ResultViewer.vue';
 Vue.use(VueRouter);
 const routes = [
   {
-    path: '/',
+    path: '/dashboard',
     name: 'Home',
     component: Home,
     meta: {
       requiresAuth: true,
       title: 'Home',
     },
+  },
+  {
+    path: '/home',
+    redirect: '/dashboard',
+  },
+  {
+    path: '/',
+    redirect: '/dashboard',
   },
   {
     path: '/login',
@@ -38,24 +46,44 @@ const routes = [
     component: PasswordReset,
   },
   {
+    path: '/polls',
+    redirect: '/polls/view',
+  },
+  {
     path: '/polls/view',
     name: 'Family Polling',
     component: Polling,
+    meta: {
+      requiresAuth: true,
+      title: 'Polls',
+    },
   },
   {
     path: '/polls/create',
     name: 'Create a Poll',
     component: CreatePoll,
+    meta: {
+      requiresAuth: true,
+      title: 'Create Poll',
+    },
   },
   {
     path: '/polls/manage',
     name: 'Manage Polls',
     component: PollManager,
+    meta: {
+      requiresAuth: true,
+      title: 'Manage Polls',
+    },
   },
   {
     path: '/polls/results',
     name: 'View Poll Results',
     component: ResultViewer,
+    meta: {
+      requiresAuth: true,
+      title: 'Poll Results',
+    },
   },
   {
     path: '/:pathMatch(.*)*',
