@@ -24,7 +24,9 @@
         <v-dialog v-model="updateDialog" max-width="500px">
           <v-card>
             <v-card-title>
-              <span class="text-h5">Update Poll Information</span>
+              <span class="pt-0 justify-center foa_text_header--text">Update Poll Information</span>
+              <v-spacer></v-spacer>
+              <v-btn class="mr-0" color="error" icon @click="updateDialog = false"><v-icon>mdi-close</v-icon></v-btn>
             </v-card-title>
             <v-card-text>
               <v-container>

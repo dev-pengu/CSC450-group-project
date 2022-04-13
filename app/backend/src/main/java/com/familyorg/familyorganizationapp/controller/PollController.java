@@ -38,8 +38,8 @@ public class PollController {
 
   @PatchMapping()
   public ResponseEntity<String> updatePoll(@RequestBody() PollDto request) {
-    pollService.updatePoll(request);
-    return new ResponseEntity<String>("Poll updated successfully.", HttpStatus.OK);
+    String responseMessage = pollService.updatePoll(request);
+    return new ResponseEntity<String>(responseMessage, HttpStatus.OK);
   }
 
   @GetMapping()

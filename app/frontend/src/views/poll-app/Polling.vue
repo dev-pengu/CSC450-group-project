@@ -7,6 +7,7 @@
             <div class="d-flex justify-space-between">
               <h3 class="text-uppercase foa_text_header--text">Active Filters</h3>
               <v-btn :loading="loading" class="ma-1" color="error" plain @click="resetFilters">Clear</v-btn>
+              <v-btn color="error" icon small @click="filterBarOpen = !filterBarOpen"><v-icon>mdi-close</v-icon></v-btn>
             </div>
             <v-divider class="mb-2" />
             <v-row v-for="filterSet in Object.keys(activeFilters)" :key="filterSet" align="center" justify="start">
@@ -143,15 +144,36 @@
           :loading="loading"
           :no-data-text="`You dont have any polls. Create one for your family!`"
           hide-default-footer
+          :search="searchStr"
         >
           <template #header>
             <v-toolbar class="mb-2 mt-xs-4" color="foa_content_bg" dark flat>
               <v-toolbar-title class="foa_nav_link--text">Polls</v-toolbar-title>
               <v-spacer></v-spacer>
+              <v-text-field
+                v-model="searchStr"
+                color="foa_button"
+                append-icon="mdi-magnify"
+                label="Search"
+                single-line
+                hide-details
+                light
+              ></v-text-field>
               <v-btn icon color="foa_button_dark" :disabled="loading" :loading="loading" @click="search"
                 ><v-icon>mdi-cached</v-icon>
               </v-btn>
               <v-btn
+                v-if="$vuetify.breakpoint.mdAndDown"
+                icon
+                color="foa_button"
+                :disabled="loading"
+                :loading="loading"
+                @click.stop="filterBarOpen = !filterBarOpen"
+              >
+                <v-icon>mdi-filter</v-icon>
+              </v-btn>
+              <v-btn
+                v-else
                 class="foa_button_text--text d-inline-block"
                 color="foa_button"
                 elevation="2"
@@ -236,6 +258,7 @@ export default {
     page: 1,
     autoSearch: false,
     itemsPerPageArray: [4, 8, 12],
+    searchStr: '',
   }),
   computed: {
     numberOfPages() {

@@ -151,7 +151,7 @@ public class PollServiceImpl implements PollService {
 
   @Override
   @Transactional
-  public void updatePoll(PollDto request) {
+  public String updatePoll(PollDto request) {
     if (request.getId() == null) {
       throw new BadRequestException(
           ApiExceptionCode.REQUIRED_PARAM_MISSING, "A poll id is required to update a poll.");
@@ -177,36 +177,40 @@ public class PollServiceImpl implements PollService {
           ApiExceptionCode.USER_PRIVILEGES_TOO_LOW,
           "User is not authorized to perform this action.");
     }
-
+    String responseMessage = "Success.";
     Poll poll = pollOpt.get();
 
-    // if there are any votes recorded we don't want to allow the user to change the poll
-    if (poll.getOptions().stream().anyMatch(option -> !option.getVotes().isEmpty())) {
-      throw new BadRequestException(
-          ApiExceptionCode.ILLEGAL_ACTION_REQUESTED,
-          "A poll cannot be updated once users have started voting. Please delete this poll and "
-              + "create a new one if the action was intended");
+    // if there are any votes recorded we don't want to allow the user to change the poll description or options
+    // but adding respondents and changing notes is fine.
+    boolean hasVotes = poll.getOptions().stream().anyMatch(option -> !option.getVotes().isEmpty());
+    if (hasVotes) {
+      responseMessage = "Poll respondents added and notes updated if applicable, but all other changes ignored." +
+      "Cannot change a poll after respondents have began voting.";
     }
     if (poll.getCloseDateTime().compareTo(Date.from(Instant.now())) < 0) {
       throw new BadRequestException(
           ApiExceptionCode.ILLEGAL_ACTION_REQUESTED, "A poll that is closed cannot be changed.");
     }
 
-    Map<Long, PollOptionDto> reqOptionsById =
-        request.getOptions().stream().collect(Collectors.toMap(PollOptionDto::getId, o -> o));
-    poll.setDescription(request.getDescription());
-    poll.setNotes(request.getNotes());
+    if (!hasVotes) {
+      // update options
+      Map<Long, PollOptionDto> reqOptionsById =
+          request.getOptions().stream().collect(Collectors.toMap(PollOptionDto::getId, o -> o));
+      poll.setDescription(request.getDescription());
+      poll.setNotes(request.getNotes());
 
-    ListIterator<PollOption> iter = poll.getOptions().listIterator();
-    while (iter.hasNext()) {
-      PollOption curItem = iter.next();
-      PollOptionDto requestOption = reqOptionsById.get(curItem.getId());
-      if (requestOption != null) {
-        curItem.setValue(requestOption.getValue());
-      } else {
-        iter.remove();
+      ListIterator<PollOption> iter = poll.getOptions().listIterator();
+      while (iter.hasNext()) {
+        PollOption curItem = iter.next();
+        PollOptionDto requestOption = reqOptionsById.get(curItem.getId());
+        if (requestOption != null) {
+          curItem.setValue(requestOption.getValue());
+        } else {
+          iter.remove();
+        }
       }
     }
+    // update respondents on the poll
     if (request.getRespondents() != null && !request.getRespondents().isEmpty()) {
       List<Long> respondentIds =
           poll.getRespondents().stream()
@@ -219,6 +223,7 @@ public class PollServiceImpl implements PollService {
                 if (respondentIds.contains(respondent.getId())) {
                   respondentIds.remove(respondent.getId());
                 } else {
+                  // add a new respondent to the poll
                   User user = userService.getUserById(respondent.getId());
                   if (user != null) {
                     if (poll.getFamily().isMember(user)) {
@@ -233,18 +238,28 @@ public class PollServiceImpl implements PollService {
                   }
                 }
               });
-      voteRepository.deleteAllById(
-        poll.getRespondents().stream()
-          .filter(p -> respondentIds.contains(p.getUser().getId()))
-          .map(PollVote::getId)
-          .collect(Collectors.toList()));
+      if (!hasVotes) {
+        // remove respondents that are missing from the request
+        voteRepository.deleteAllById(
+          poll.getRespondents().stream()
+            .filter(p -> respondentIds.contains(p.getUser().getId()))
+            .map(PollVote::getId)
+            .collect(Collectors.toList()));
+      }
     }
-    TimeZone timezone =
-        familyService.getUserTimeZoneOrDefault(requestingUser, pollOpt.get().getFamily());
-    poll.setTimezone(timezone.getID());
-    poll.setCloseDateTime(DateUtil.parseTimestamp(request.getClosedDateTime()));
+    // update any of the other fields
+    if (!hasVotes) {
+      TimeZone timezone =
+          familyService.getUserTimeZoneOrDefault(requestingUser, pollOpt.get().getFamily());
+      poll.setTimezone(timezone.getID());
+      poll.setCloseDateTime(DateUtil.parseTimestamp(request.getClosedDateTime()));
+      poll.setDescription(request.getDescription());
+    }
+    poll.setNotes(request.getNotes());
 
+    // save the poll and send back the message
     pollRepository.save(poll);
+    return responseMessage;
   }
 
   @Override
