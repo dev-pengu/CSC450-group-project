@@ -59,6 +59,10 @@ public class PollVote implements Serializable {
     this.poll = poll;
   }
 
+  public VoteId getId() {
+    return new VoteId(poll.getId(), user.getId());
+  }
+
   @Override
   public int hashCode() {
     return Objects.hash(poll, user, vote);

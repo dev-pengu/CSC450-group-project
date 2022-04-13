@@ -19,10 +19,15 @@ public class PollDto {
   private List<PollOptionDto> options;
   @JsonInclude(Include.NON_EMPTY)
   private List<UserDto> respondents;
+  @JsonInclude(Include.NON_NULL)
+  private Long vote;
+  @JsonInclude(Include.NON_NULL)
+  private String familyName;
 
   public PollDto(Long id, Long familyId, UserDto createdBy, String createdDateTime,
       String description, String notes, String closedDateTime, Boolean isClosed,
-      List<PollOptionDto> options, List<UserDto> respondents, Boolean omitCreator) {
+      List<PollOptionDto> options, List<UserDto> respondents, Boolean omitCreator, Long vote,
+      String familyName) {
     super();
     this.id = id;
     this.familyId = familyId;
@@ -35,6 +40,8 @@ public class PollDto {
     this.options = options == null ? new ArrayList<>() : options;
     this.respondents = respondents == null ? new ArrayList<>() : respondents;
     this.omitCreator = omitCreator;
+    this.vote = vote;
+    this.familyName = familyName;
   }
 
   public Long getId() {
@@ -79,6 +86,14 @@ public class PollDto {
 
   public Boolean shouldOmitCreator() {
     return omitCreator;
+  }
+
+  public Long getVote() {
+    return vote;
+  }
+
+  public String getFamilyName() {
+    return familyName;
   }
 
   @Override

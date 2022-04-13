@@ -227,14 +227,17 @@ public class PollServiceImpl implements PollService {
                       vote.setPoll(poll);
                       vote.setUser(user);
                       vote.setVote(null);
-
+                      voteRepository.save(vote);
                       poll.getRespondents().add(vote);
                     }
                   }
                 }
               });
-      poll.getRespondents().removeIf(p -> respondentIds.contains(p.getUser().getId()));
-      voteRepository.deleteAllByUserIdAndPoll(respondentIds, poll.getId());
+      voteRepository.deleteAllById(
+        poll.getRespondents().stream()
+          .filter(p -> respondentIds.contains(p.getUser().getId()))
+          .map(PollVote::getId)
+          .collect(Collectors.toList()));
     }
     TimeZone timezone =
         familyService.getUserTimeZoneOrDefault(requestingUser, pollOpt.get().getFamily());
@@ -360,8 +363,11 @@ public class PollServiceImpl implements PollService {
     boolean allVotesIn =
         pollOpt.get().getRespondents().stream()
             .allMatch(respondent -> respondent.getVote() != null);
+    System.out.println(allVotesIn);
+    System.out.println(pollOpt.get().getCloseDateTime());
+    System.out.println(Date.from(Instant.now()));
     boolean closed = pollOpt.get().getCloseDateTime().compareTo(Date.from(Instant.now())) < 0;
-    if (!allVotesIn || closed) {
+    if (!allVotesIn || !closed) {
       throw new BadRequestException(
           ApiExceptionCode.ILLEGAL_ACTION_REQUESTED,
           "Results cannot be viewed for a poll still in progress.");
@@ -439,8 +445,8 @@ public class PollServiceImpl implements PollService {
     response.setStart(request.getStart());
     response.setEnd(request.getEnd());
     response.setActiveSearchFilters(request.getFilters());
-    List<Long> permittedFamilyIds = familyService.getFamilyIdsByUser(requestingUser.getUsername());
 
+    List<Long> permittedFamilyIds = familyService.getFamilyIdsByUser(requestingUser.getUsername());
     List<Long> requestFamilyIds = request.getIdsByField(PollField.FAMILY);
     List<Poll> polls =
         pollRepository.getFilteredPolls(
@@ -456,6 +462,17 @@ public class PollServiceImpl implements PollService {
             request.getEnd() == null ? null : new Timestamp(request.getEnd().getTime()),
             requestingUser.getId());
 
+    if (request.shouldLimitToCreated()) {
+      polls = polls.stream().filter(poll -> {
+        if (familyService.verfiyMinimumRoleSecurity(poll.getFamily(), requestingUser, Role.ADMIN)) {
+          return true;
+        } else if (poll.getCreatedBy().getId().equals(requestingUser.getId())) {
+          return true;
+        }
+        return false;
+      }).collect(Collectors.toList());
+    }
+
     TimeZone timezone = TimeZone.getTimeZone(requestingUser.getTimezone());
     response.setSearchFilters(getSearchFilters(polls));
     response.setPolls(
@@ -465,6 +482,7 @@ public class PollServiceImpl implements PollService {
                     new PollDtoBuilder()
                         .withId(poll.getId())
                         .withFamilyId(poll.getFamily().getId())
+                        .setFamilyName(poll.getFamily().getName())
                         .withDescription(poll.getDescription())
                         .withNotes(poll.getNotes())
                         .withClosedDateTime(
@@ -498,6 +516,11 @@ public class PollServiceImpl implements PollService {
                             poll.getRespondents().stream()
                                 .map(respondent -> UserDto.fromUserObj(respondent.getUser()))
                                 .collect(Collectors.toList()))
+                        .setVote(
+                            poll.getRespondents().stream()
+                                .filter(respondent -> respondent.getUser().getId().equals(requestingUser.getId()))
+                                .findFirst()
+                                .orElse(null))
                         .build())
             .collect(Collectors.toList()));
 
