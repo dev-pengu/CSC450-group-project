@@ -60,7 +60,11 @@
                     <router-link class="d-block foa_link--text" to="/test">Manage Members</router-link>
                     <router-link class="d-block foa_link--text" to="/test">Family Calendar</router-link>
                     <router-link class="d-block foa_link--text" to="/test">Family To Do List</router-link>
-                    <router-link class="d-block foa_link--text" to="/test">Family Polls</router-link>
+                    <router-link
+                      class="d-block foa_link--text"
+                      :to="{ path: '/polls/view', query: { familyId: family.id, name: family.name } }"
+                      >Family Polls</router-link
+                    >
                     <router-link class="d-block foa_link--text" to="/test">Family Shopping List</router-link>
                     <router-link v-if="isAdmin(family.memberData.role)" class="d-block foa_link--text" to="/test"
                       >Family Settings</router-link

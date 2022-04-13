@@ -6,6 +6,10 @@ import Login from '../views/Login.vue';
 import SignUp from '../views/SignUp.vue';
 import NotFound from '../views/NotFound.vue';
 import PasswordReset from '../views/PasswordReset.vue';
+import Polling from '../views/poll-app/Polling.vue';
+import CreatePoll from '../views/poll-app/CreatePoll.vue';
+import PollManager from '../views/poll-app/ManagePolls.vue';
+import ResultViewer from '../views/poll-app/ResultViewer.vue';
 
 Vue.use(VueRouter);
 const routes = [
@@ -32,6 +36,26 @@ const routes = [
     path: '/passwordReset',
     name: 'Password Reset',
     component: PasswordReset,
+  },
+  {
+    path: '/polls/view',
+    name: 'Family Polling',
+    component: Polling,
+  },
+  {
+    path: '/polls/create',
+    name: 'Create a Poll',
+    component: CreatePoll,
+  },
+  {
+    path: '/polls/manage',
+    name: 'Manage Polls',
+    component: PollManager,
+  },
+  {
+    path: '/polls/results',
+    name: 'View Poll Results',
+    component: ResultViewer,
   },
   {
     path: '/:pathMatch(.*)*',
