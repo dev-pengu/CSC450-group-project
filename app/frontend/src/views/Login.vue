@@ -5,27 +5,31 @@
     <v-row justify="center">
       <v-col cols="10" sm="5" md="4">
         <v-card elevation="4">
-          <v-card-text class="pb-0">
-            <v-form>
+          <v-card-text>
+            <v-form v-model="valid">
               <v-text-field
                 v-model="formData.username"
                 color="foa_button"
                 prepend-icon="mdi-account"
+                :rules="usernameRules"
                 label="Username"
+                required
               />
               <v-text-field
                 v-model="formData.password"
                 color="foa_button"
                 prepend-icon="mdi-lock"
+                :rules="passwordRules"
                 type="password"
                 label="Password"
+                required
                 @keyup.enter="submit"
               />
               <div class="text-center">
                 <router-link class="foa_link--text" to="#" @click="sendReset">Forgot your password?</router-link>
               </div>
             </v-form>
-            <v-alert v-if="error" class="mb-2" text type="error">{{ errorMsg }}</v-alert>
+            <v-alert v-if="error" class="mb-0" text type="error">{{ errorMsg }}</v-alert>
           </v-card-text>
           <v-card-actions class="justify-center">
             <v-btn
@@ -34,7 +38,7 @@
               elevation="2"
               width="50%"
               :loading="loading"
-              :disabled="loading"
+              :disabled="loading || !valid"
               @click="submit"
               >Login</v-btn
             >
@@ -58,6 +62,9 @@ export default {
   name: 'Login',
   components: {},
   data: () => ({
+    valid: false,
+    usernameRules: [(v) => !!v || 'Username is required'],
+    passwordRules: [(v) => !!v || 'Password is required'],
     formData: {
       username: '',
       password: '',
@@ -72,12 +79,7 @@ export default {
       try {
         this.loading = true;
         this.error = false;
-        this.errors = [];
-
-        if (this.formData.username === '' || this.formData.password === '') {
-          this.loading = false;
-          return;
-        }
+        this.errorMsg = '';
 
         const res = await this.loginUser(this.formData);
         if (res.status === 200) {
