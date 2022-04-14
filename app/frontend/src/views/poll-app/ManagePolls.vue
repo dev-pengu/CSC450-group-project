@@ -333,7 +333,7 @@ export default {
         familyId: this.editedItem.familyId,
         description: this.editedItem.description,
         notes: this.editedItem.notes,
-        closedDateTime: `${this.editedItem.closedDateTime} 11:59`,
+        closedDateTime: `${this.editedItem.closedDateTime} 23:59`,
         options: this.editedItem.options.map((option) => ({ id: option.id, value: option.value })),
         respondents: this.editedItem.respondents.map((respondent) => ({ id: respondent })),
       };

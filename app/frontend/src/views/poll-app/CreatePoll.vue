@@ -39,7 +39,7 @@
                 label="Date to close the poll"
                 prepend-icon="mdi-calendar"
                 readonly
-                hint="Poll will close at 11:59 on the date specified"
+                hint="Poll will close at 11:59 PM on the date specified"
                 persistent-hint
                 :rules="closedDateRules"
                 v-bind="attrs"
@@ -184,7 +184,7 @@ export default {
         familyId: this.formData.familyId,
         description: this.formData.description,
         notes: this.formData.notes,
-        closedDateTime: `${this.formData.closedDate} 11:59`,
+        closedDateTime: `${this.formData.closedDate} 23:59`,
         options: this.responseOptions.map((option) => ({ value: option })),
         respondents: this.formData.respondents.map((respondent) => ({ id: respondent })),
       };
