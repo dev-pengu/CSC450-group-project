@@ -47,7 +47,7 @@ export default {
       { title: 'Calendar', icon: 'mdi-calendar', route: '/calendar' },
       { title: 'To-Do', icon: 'mdi-check-circle-outline', route: '/todo' },
       { title: 'Shopping List', icon: 'mdi-cart', route: '/shopping-list' },
-      { title: 'Family Polling', icon: 'mdi-chart-box', route: '/polls' },
+      { title: 'Family Polling', icon: 'mdi-chart-box', route: '/polls/view' },
       { title: 'Family Settings', icon: 'mdi-human-male-female-child', route: '/family-settings' },
       { title: 'User Settings', icon: 'mdi-account-cog', route: '/user-settings' },
     ],

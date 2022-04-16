@@ -11,6 +11,7 @@ import com.familyorg.familyorganizationapp.domain.MemberInvite;
 import com.familyorg.familyorganizationapp.service.FamilyService;
 import com.familyorg.familyorganizationapp.service.InviteService;
 import com.familyorg.familyorganizationapp.service.MessagingService;
+import com.familyorg.familyorganizationapp.DTO.UserDto;
 import java.util.List;
 import java.util.Optional;
 import org.slf4j.Logger;
@@ -33,9 +34,9 @@ public class FamilyController {
 
   private static final Logger logger = LoggerFactory.getLogger(FamilyController.class);
 
-  private FamilyService familyService;
-  private InviteService inviteService;
-  private MessagingService messagingService;
+  private final FamilyService familyService;
+  private final InviteService inviteService;
+  private final MessagingService messagingService;
 
   @Autowired
   FamilyController(
@@ -61,6 +62,18 @@ public class FamilyController {
   public ResponseEntity<List<FamilyDto>> getFamilies() {
     List<FamilyDto> families = familyService.getFamiliesByUser();
     return new ResponseEntity<List<FamilyDto>>(families, HttpStatus.OK);
+  }
+
+  @GetMapping("/familySelect")
+  public ResponseEntity<List<FamilyDto>> getFamiliesForSelect() {
+    List<FamilyDto> families = familyService.getFamiliesForFormSelect();
+    return new ResponseEntity<>(families, HttpStatus.OK);
+  }
+
+  @GetMapping("/memberSelect")
+  public ResponseEntity<List<UserDto>> getMembersForSelect(@RequestParam("id") Long familyId) {
+    List<UserDto> users = familyService.getMembersForFormSelect(familyId);
+    return new ResponseEntity<>(users, HttpStatus.OK);
   }
 
   @GetMapping("/invite/join")

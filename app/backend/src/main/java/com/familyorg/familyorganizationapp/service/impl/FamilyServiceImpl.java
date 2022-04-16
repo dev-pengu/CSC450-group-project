@@ -5,6 +5,9 @@ import com.familyorg.familyorganizationapp.repository.ShoppingListRepository;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.ZoneId;
+import com.familyorg.familyorganizationapp.DTO.UserDto;
+import com.familyorg.familyorganizationapp.DTO.builder.FamilyDtoBuilder;
+import com.familyorg.familyorganizationapp.DTO.builder.UserDtoBuilder;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -14,8 +17,6 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.stream.Collectors;
 import javax.transaction.Transactional;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.familyorg.familyorganizationapp.DTO.FamilyDto;
@@ -309,6 +310,43 @@ public class FamilyServiceImpl implements FamilyService {
     }
   }
 
+  @Override
+  public List<FamilyDto> getFamiliesForFormSelect() {
+    User requestingUser = userService.getRequestingUser();
+    List<Family> families = getFamiliesByUser(requestingUser.getUsername());
+    return families.stream()
+        .map(
+            family ->
+                new FamilyDtoBuilder().withId(family.getId()).withName(family.getName()).build())
+        .collect(Collectors.toList());
+  }
+
+  @Override
+  public List<UserDto> getMembersForFormSelect(Long familyId) {
+    User requestingUser = userService.getRequestingUser();
+    Optional<Family> family = familyRepository.findById(familyId);
+    if (family.isEmpty()) {
+      throw new ResourceNotFoundException(
+          ApiExceptionCode.FAMILY_DOESNT_EXIST, "Family with id " + familyId + " not found.");
+    }
+    boolean hasAppropriatePermissions =
+        verfiyMinimumRoleSecurity(family.get(), requestingUser, Role.ADMIN);
+    if (!hasAppropriatePermissions) {
+      throw new AuthorizationException(
+          ApiExceptionCode.USER_PRIVILEGES_TOO_LOW, "User not authorized to complete this action.");
+    }
+
+    return family.get().getMembers().stream()
+        .map(
+            member ->
+                new UserDtoBuilder()
+                    .withId(member.getUser().getId())
+                    .withFirstName(member.getUser().getFirstName())
+                    .withLastName(member.getUser().getLastName())
+                    .build())
+        .collect(Collectors.toList());
+  }
+
   /**
    * Methods below should only be called from other services and null checking should be used as it
    * is not guaranteed a result will be returned.
@@ -390,4 +428,5 @@ public class FamilyServiceImpl implements FamilyService {
           ApiExceptionCode.BAD_PARAM_VALUE, "Owner event color is not a valid hex code.");
     }
   }
+
 }

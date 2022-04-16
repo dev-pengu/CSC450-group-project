@@ -151,7 +151,7 @@ public class PollServiceImpl implements PollService {
 
   @Override
   @Transactional
-  public void updatePoll(PollDto request) {
+  public String updatePoll(PollDto request) {
     if (request.getId() == null) {
       throw new BadRequestException(
           ApiExceptionCode.REQUIRED_PARAM_MISSING, "A poll id is required to update a poll.");
@@ -177,36 +177,40 @@ public class PollServiceImpl implements PollService {
           ApiExceptionCode.USER_PRIVILEGES_TOO_LOW,
           "User is not authorized to perform this action.");
     }
-
+    String responseMessage = "Success.";
     Poll poll = pollOpt.get();
 
-    // if there are any votes recorded we don't want to allow the user to change the poll
-    if (poll.getOptions().stream().anyMatch(option -> !option.getVotes().isEmpty())) {
-      throw new BadRequestException(
-          ApiExceptionCode.ILLEGAL_ACTION_REQUESTED,
-          "A poll cannot be updated once users have started voting. Please delete this poll and "
-              + "create a new one if the action was intended");
+    // if there are any votes recorded we don't want to allow the user to change the poll description or options
+    // but adding respondents and changing notes is fine.
+    boolean hasVotes = poll.getOptions().stream().anyMatch(option -> !option.getVotes().isEmpty());
+    if (hasVotes) {
+      responseMessage = "Poll respondents added and notes updated if applicable, but all other changes ignored." +
+      "Cannot change a poll after respondents have began voting.";
     }
     if (poll.getCloseDateTime().compareTo(Date.from(Instant.now())) < 0) {
       throw new BadRequestException(
           ApiExceptionCode.ILLEGAL_ACTION_REQUESTED, "A poll that is closed cannot be changed.");
     }
 
-    Map<Long, PollOptionDto> reqOptionsById =
-        request.getOptions().stream().collect(Collectors.toMap(PollOptionDto::getId, o -> o));
-    poll.setDescription(request.getDescription());
-    poll.setNotes(request.getNotes());
+    if (!hasVotes) {
+      // update options
+      Map<Long, PollOptionDto> reqOptionsById =
+          request.getOptions().stream().collect(Collectors.toMap(PollOptionDto::getId, o -> o));
+      poll.setDescription(request.getDescription());
+      poll.setNotes(request.getNotes());
 
-    ListIterator<PollOption> iter = poll.getOptions().listIterator();
-    while (iter.hasNext()) {
-      PollOption curItem = iter.next();
-      PollOptionDto requestOption = reqOptionsById.get(curItem.getId());
-      if (requestOption != null) {
-        curItem.setValue(requestOption.getValue());
-      } else {
-        iter.remove();
+      ListIterator<PollOption> iter = poll.getOptions().listIterator();
+      while (iter.hasNext()) {
+        PollOption curItem = iter.next();
+        PollOptionDto requestOption = reqOptionsById.get(curItem.getId());
+        if (requestOption != null) {
+          curItem.setValue(requestOption.getValue());
+        } else {
+          iter.remove();
+        }
       }
     }
+    // update respondents on the poll
     if (request.getRespondents() != null && !request.getRespondents().isEmpty()) {
       List<Long> respondentIds =
           poll.getRespondents().stream()
@@ -219,6 +223,7 @@ public class PollServiceImpl implements PollService {
                 if (respondentIds.contains(respondent.getId())) {
                   respondentIds.remove(respondent.getId());
                 } else {
+                  // add a new respondent to the poll
                   User user = userService.getUserById(respondent.getId());
                   if (user != null) {
                     if (poll.getFamily().isMember(user)) {
@@ -227,21 +232,34 @@ public class PollServiceImpl implements PollService {
                       vote.setPoll(poll);
                       vote.setUser(user);
                       vote.setVote(null);
-
+                      voteRepository.save(vote);
                       poll.getRespondents().add(vote);
                     }
                   }
                 }
               });
-      poll.getRespondents().removeIf(p -> respondentIds.contains(p.getUser().getId()));
-      voteRepository.deleteAllByUserIdAndPoll(respondentIds, poll.getId());
+      if (!hasVotes) {
+        // remove respondents that are missing from the request
+        voteRepository.deleteAllById(
+          poll.getRespondents().stream()
+            .filter(p -> respondentIds.contains(p.getUser().getId()))
+            .map(PollVote::getId)
+            .collect(Collectors.toList()));
+      }
     }
-    TimeZone timezone =
-        familyService.getUserTimeZoneOrDefault(requestingUser, pollOpt.get().getFamily());
-    poll.setTimezone(timezone.getID());
-    poll.setCloseDateTime(DateUtil.parseTimestamp(request.getClosedDateTime()));
+    // update any of the other fields
+    if (!hasVotes) {
+      TimeZone timezone =
+          familyService.getUserTimeZoneOrDefault(requestingUser, pollOpt.get().getFamily());
+      poll.setTimezone(timezone.getID());
+      poll.setCloseDateTime(DateUtil.parseTimestamp(request.getClosedDateTime()));
+      poll.setDescription(request.getDescription());
+    }
+    poll.setNotes(request.getNotes());
 
+    // save the poll and send back the message
     pollRepository.save(poll);
+    return responseMessage;
   }
 
   @Override
@@ -360,8 +378,11 @@ public class PollServiceImpl implements PollService {
     boolean allVotesIn =
         pollOpt.get().getRespondents().stream()
             .allMatch(respondent -> respondent.getVote() != null);
+    System.out.println(allVotesIn);
+    System.out.println(pollOpt.get().getCloseDateTime());
+    System.out.println(Date.from(Instant.now()));
     boolean closed = pollOpt.get().getCloseDateTime().compareTo(Date.from(Instant.now())) < 0;
-    if (!allVotesIn || closed) {
+    if (!allVotesIn || !closed) {
       throw new BadRequestException(
           ApiExceptionCode.ILLEGAL_ACTION_REQUESTED,
           "Results cannot be viewed for a poll still in progress.");
@@ -439,8 +460,8 @@ public class PollServiceImpl implements PollService {
     response.setStart(request.getStart());
     response.setEnd(request.getEnd());
     response.setActiveSearchFilters(request.getFilters());
-    List<Long> permittedFamilyIds = familyService.getFamilyIdsByUser(requestingUser.getUsername());
 
+    List<Long> permittedFamilyIds = familyService.getFamilyIdsByUser(requestingUser.getUsername());
     List<Long> requestFamilyIds = request.getIdsByField(PollField.FAMILY);
     List<Poll> polls =
         pollRepository.getFilteredPolls(
@@ -456,6 +477,17 @@ public class PollServiceImpl implements PollService {
             request.getEnd() == null ? null : new Timestamp(request.getEnd().getTime()),
             requestingUser.getId());
 
+    if (request.shouldLimitToCreated()) {
+      polls = polls.stream().filter(poll -> {
+        if (familyService.verfiyMinimumRoleSecurity(poll.getFamily(), requestingUser, Role.ADMIN)) {
+          return true;
+        } else if (poll.getCreatedBy().getId().equals(requestingUser.getId())) {
+          return true;
+        }
+        return false;
+      }).collect(Collectors.toList());
+    }
+
     TimeZone timezone = TimeZone.getTimeZone(requestingUser.getTimezone());
     response.setSearchFilters(getSearchFilters(polls));
     response.setPolls(
@@ -465,6 +497,7 @@ public class PollServiceImpl implements PollService {
                     new PollDtoBuilder()
                         .withId(poll.getId())
                         .withFamilyId(poll.getFamily().getId())
+                        .setFamilyName(poll.getFamily().getName())
                         .withDescription(poll.getDescription())
                         .withNotes(poll.getNotes())
                         .withClosedDateTime(
@@ -498,6 +531,11 @@ public class PollServiceImpl implements PollService {
                             poll.getRespondents().stream()
                                 .map(respondent -> UserDto.fromUserObj(respondent.getUser()))
                                 .collect(Collectors.toList()))
+                        .setVote(
+                            poll.getRespondents().stream()
+                                .filter(respondent -> respondent.getUser().getId().equals(requestingUser.getId()))
+                                .findFirst()
+                                .orElse(null))
                         .build())
             .collect(Collectors.toList()));
 

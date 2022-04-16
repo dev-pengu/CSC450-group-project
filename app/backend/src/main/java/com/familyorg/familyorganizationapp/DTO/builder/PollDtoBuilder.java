@@ -5,6 +5,7 @@ import java.util.List;
 import com.familyorg.familyorganizationapp.DTO.PollDto;
 import com.familyorg.familyorganizationapp.DTO.PollOptionDto;
 import com.familyorg.familyorganizationapp.DTO.UserDto;
+import com.familyorg.familyorganizationapp.domain.PollVote;
 
 public class PollDtoBuilder implements DtoBuilder<PollDto> {
 
@@ -18,6 +19,8 @@ public class PollDtoBuilder implements DtoBuilder<PollDto> {
   private Boolean closed;
   private List<PollOptionDto> options;
   private List<UserDto> respondents;
+  private Long vote;
+  private String familyName;
 
   public PollDtoBuilder withId(Long id) {
     this.id = id;
@@ -85,10 +88,30 @@ public class PollDtoBuilder implements DtoBuilder<PollDto> {
     return this;
   }
 
+  public PollDtoBuilder setVote(Long vote) {
+    this.vote = vote;
+    return this;
+  }
+
+  public PollDtoBuilder setVote(PollVote vote) {
+    if (vote != null) {
+      if (vote.getVote() != null) {
+        this.vote = vote.getVote().getId();
+        return this;
+      }
+    }
+    return this;
+  }
+
+  public PollDtoBuilder setFamilyName(String name) {
+    this.familyName = name;
+    return this;
+  }
+
   @Override
   public PollDto build() {
     return new PollDto(id, familyId, createdBy, createdDateTime, description, notes, closedDateTime,
-        closed, options, respondents, null);
+        closed, options, respondents, null, vote, familyName);
   }
 
 }

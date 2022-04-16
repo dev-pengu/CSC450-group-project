@@ -26,6 +26,7 @@ public class CustomControllerAdvice {
 
   @ExceptionHandler(ResourceNotFoundException.class)
   public ResponseEntity<ErrorDto> handleResourceNotFound(ApiException e) {
+    logger.warn(e.getMessage(), e);
     ErrorDto errorResponse = new ErrorDtoBuilder().withErrorCode(e.getApiCode().getCode())
         .withMessage(e.getMessage())
         .build();
@@ -34,6 +35,7 @@ public class CustomControllerAdvice {
 
   @ExceptionHandler(UserNotFoundException.class)
   public ResponseEntity<ErrorDto> handleUserNotFound(ApiException e) {
+    logger.warn(e.getMessage(), e);
     ErrorDto errorResponse = new ErrorDtoBuilder().withErrorCode(e.getApiCode().getCode())
         .withMessage(e.getMessage())
         .addRedirect("/register")
@@ -43,6 +45,7 @@ public class CustomControllerAdvice {
 
   @ExceptionHandler(BadRequestException.class)
   public ResponseEntity<ErrorDto> handleBadRequest(ApiException e) {
+    logger.warn(e.getMessage(), e);
     ErrorDto errorResponse = new ErrorDtoBuilder().withErrorCode(e.getApiCode().getCode())
         .withMessage(e.getMessage())
         .build();
@@ -51,6 +54,7 @@ public class CustomControllerAdvice {
 
   @ExceptionHandler(ExistingUserException.class)
   public ResponseEntity<ErrorDto> handleExistingUser(ApiException e) {
+    logger.warn(e.getMessage(), e);
     ErrorDto errorResponse = new ErrorDtoBuilder().withErrorCode(e.getApiCode().getCode())
         .withMessage(e.getMessage())
         .build();
@@ -59,6 +63,7 @@ public class CustomControllerAdvice {
 
   @ExceptionHandler(IncorrectCredentialsException.class)
   public ResponseEntity<ErrorDto> handleIncorrectCredentials(ApiException e) {
+    logger.warn(e.getMessage(), e);
     ErrorDto errorResponse = new ErrorDtoBuilder().withErrorCode(e.getApiCode().getCode())
         .withMessage(e.getMessage())
         .build();
@@ -67,6 +72,7 @@ public class CustomControllerAdvice {
 
   @ExceptionHandler(BadCredentialsException.class)
   public ResponseEntity<ErrorDto> handleBadCredentials(ApiException e) {
+    logger.warn(e.getMessage(), e);
     ErrorDto errorResponse = new ErrorDtoBuilder().withErrorCode(e.getApiCode().getCode())
         .withMessage(e.getMessage())
         .build();
@@ -75,6 +81,7 @@ public class CustomControllerAdvice {
 
   @ExceptionHandler(AuthorizationException.class)
   public ResponseEntity<ErrorDto> handleUnauthorized(ApiException e) {
+    logger.warn(e.getMessage(), e);
     ErrorDtoBuilder errorResponseBuilder = new ErrorDtoBuilder()
         .withErrorCode(e.getApiCode().getCode())
         .withMessage(e.getMessage());

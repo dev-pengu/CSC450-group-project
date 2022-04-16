@@ -14,18 +14,20 @@ import com.familyorg.familyorganizationapp.domain.search.SearchFilter;
 public class PollSearchRequestDto {
   private Boolean closed;
   private Boolean unVoted;
+  private Boolean limitToCreated;
   private Date start;
   private Date end;
   private Map<PollField, List<SearchFilter>> filters;
 
   public PollSearchRequestDto(Boolean closed, Boolean unVoted, Date start, Date end,
-      Map<PollField, List<SearchFilter>> filters) {
+      Map<PollField, List<SearchFilter>> filters, Boolean limitToCreated) {
     super();
     this.closed = closed;
     this.unVoted = unVoted;
     this.start = start;
     this.end = end;
     this.filters = filters;
+    this.limitToCreated = limitToCreated;
   }
 
   public Boolean getClosed() {
@@ -42,6 +44,17 @@ public class PollSearchRequestDto {
 
   public void setUnVoted(Boolean unVoted) {
     this.unVoted = unVoted;
+  }
+
+  public Boolean shouldLimitToCreated() {
+    if (limitToCreated == null) {
+      return false;
+    }
+    return limitToCreated;
+  }
+
+  public void setLimitToCreated(Boolean limitToCreated) {
+    this.limitToCreated = limitToCreated;
   }
 
   public Date getStart() {

@@ -9,7 +9,7 @@ public interface PollService {
 
   void createPoll(PollDto request);
 
-  void updatePoll(PollDto request);
+  String updatePoll(PollDto request);
 
   void deletePoll(Long id);
 
