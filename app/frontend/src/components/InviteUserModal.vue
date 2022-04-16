@@ -44,9 +44,9 @@
             </v-row>
             <v-row justify="center">
               <v-col cols="6" sm="4">
-                <v-btn :disabled="!valid" block color="foa_button" class="foa_button_text--text" @click="submit"
-                  >Send</v-btn
-                >
+                <v-btn :disabled="!valid" block color="foa_button" class="foa_button_text--text" @click="submit">
+                  Send
+                </v-btn>
               </v-col>
             </v-row>
           </v-form>
