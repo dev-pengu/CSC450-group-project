@@ -28,10 +28,14 @@ export default {
       default: 'Color Picker',
       type: String,
     },
+    initialColor: {
+      default: '#ff0000',
+      type: String,
+    },
   },
-  data: () => ({
+  data: (instance) => ({
     dialogState: false,
-    color: '#ff0000',
+    color: instance.initialColor,
   }),
 };
 </script>

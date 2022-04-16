@@ -144,8 +144,22 @@ export default {
       },
     });
   },
+  getUserSettings() {
+    return http.get('user/settings', {
+      validateStatus(status) {
+        return status < 500;
+      },
+    });
+  },
   votePoll(req) {
     return http.post('poll/vote', req, {
+      validateStatus(status) {
+        return status < 500;
+      },
+    });
+  },
+  updateUserSettings(req) {
+    return http.patch('user/settings', req, {
       validateStatus(status) {
         return status < 500;
       },
@@ -158,8 +172,23 @@ export default {
       },
     });
   },
+  deleteUser(username) {
+    return http.delete('user', {
+      params: { username },
+      validateStatus(status) {
+        return status < 500;
+      },
+    });
+  },
   updatePoll(req) {
     return http.patch('poll', req, {
+      validateStatus(status) {
+        return status < 500;
+      },
+    });
+  },
+  transferFamilyOwnership(req) {
+    return http.patch('/family/admin/transferOwnership', req, {
       validateStatus(status) {
         return status < 500;
       },
@@ -175,9 +204,31 @@ export default {
       },
     });
   },
+  updateFamily(req) {
+    return http.patch('/family/admin/update', req, {
+      validateStatus(status) {
+        return status < 500;
+      },
+    });
+  },
+  deleteFamily(id) {
+    return http.delete('/family/admin/delete', {
+      params: { familyId: id },
+      validateStatus(status) {
+        return status < 500;
+      },
+    });
+  },
   getPollResults(id) {
     return http.get('poll/results', {
       params: { id },
+      validateStatus(status) {
+        return status < 500;
+      },
+    });
+  },
+  updateFamilyRoles(req) {
+    return http.post('/family/admin/roles', req, {
       validateStatus(status) {
         return status < 500;
       },

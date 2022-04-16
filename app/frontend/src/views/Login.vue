@@ -18,15 +18,19 @@
               <v-text-field
                 v-model="formData.password"
                 color="foa_button"
-                prepend-icon="mdi-lock"
                 :rules="passwordRules"
-                type="password"
+                prepend-icon="mdi-lock"
+                :append-icon="showPass ? 'mdi-eye' : 'mdi-eye-off'"
+                :type="showPass ? 'text' : 'password'"
                 label="Password"
                 required
                 @keyup.enter="submit"
+                @click:append="showPass = !showPass"
               />
               <div class="text-center">
-                <router-link class="foa_link--text" to="#" @click="sendReset">Forgot your password?</router-link>
+                <span style="cursor: pointer" class="foa_link--text text-decoration-underline" to="#" @click="sendReset"
+                  >Forgot your password?</span
+                >
               </div>
             </v-form>
             <v-alert v-if="error" class="mb-0" text type="error">{{ errorMsg }}</v-alert>
@@ -72,9 +76,10 @@ export default {
     error: false,
     errorMsg: '',
     loading: false,
+    showPass: false,
   }),
   methods: {
-    ...mapActions(['loginUser']),
+    ...mapActions(['loginUser', 'showSnackbar']),
     async submit() {
       try {
         this.loading = true;
@@ -83,6 +88,8 @@ export default {
 
         const res = await this.loginUser(this.formData);
         if (res.status === 200) {
+          this.$vuetify.theme.dark = res.data.useDarkMode;
+          localStorage.setItem('darkMode', this.$vuetify.theme.dark.toString());
           this.$router.push('/');
         } else {
           this.error = true;
@@ -107,6 +114,7 @@ export default {
       }
       try {
         api.sendResetCode(this.formData);
+        this.showSnackbar({ type: 'info', message: 'An email has been sent to your email on file.', timeout: 3000 });
       } catch (err) {
         this.error = true;
         const error = { err };

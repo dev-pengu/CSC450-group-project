@@ -10,6 +10,9 @@ import Polling from '../views/poll-app/Polling.vue';
 import CreatePoll from '../views/poll-app/CreatePoll.vue';
 import PollManager from '../views/poll-app/ManagePolls.vue';
 import ResultViewer from '../views/poll-app/ResultViewer.vue';
+import ProfileSettings from '../views/profile/UserProfile.vue';
+import UserSecurity from '../views/profile/UserSecurity.vue';
+import UserFamilies from '../views/profile/UserFamilies.vue';
 
 Vue.use(VueRouter);
 const routes = [
@@ -84,6 +87,37 @@ const routes = [
       requiresAuth: true,
       title: 'Poll Results',
     },
+  },
+  {
+    path: '/profile/settings',
+    name: 'Profile Settings',
+    component: ProfileSettings,
+    meta: {
+      requiresAuth: true,
+      title: 'Edit Profile',
+    },
+  },
+  {
+    path: '/profile/security',
+    name: 'Password & Security',
+    component: UserSecurity,
+    meta: {
+      requiresAuth: true,
+      title: 'Password & Security',
+    },
+  },
+  {
+    path: '/profile/families',
+    name: 'Manage Families',
+    component: UserFamilies,
+    meta: {
+      requiresAuth: true,
+      title: 'Manage Families',
+    },
+  },
+  {
+    path: '/profile',
+    redirect: '/profile/settings',
   },
   {
     path: '/:pathMatch(.*)*',
