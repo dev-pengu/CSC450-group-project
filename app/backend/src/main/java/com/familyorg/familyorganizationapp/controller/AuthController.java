@@ -38,6 +38,9 @@ public class AuthController {
 
   private static final Logger LOG = LoggerFactory.getLogger(AuthController.class);
 
+  @GetMapping("/csrf")
+  public void getCsrf() {}
+
   /**
    * Create a new user. If username or email is already in use, will return HttpStatus 409 and
    * indication of which field is already in use.
