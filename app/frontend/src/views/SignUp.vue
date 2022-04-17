@@ -3,7 +3,7 @@
     <v-img v-if="$vuetify.theme.dark" height="250" contain src="@/assets/logo-dark.png"></v-img>
     <v-img v-else height="250" contain src="@/assets/logo-light.png"></v-img>
     <v-row justify="center">
-      <v-col vols="10" md="7">
+      <v-col cols="10" md="7">
         <v-stepper v-model="currentStep" alt-labels>
           <v-stepper-header>
             <v-stepper-step color="foa_button" step="1" :complete="currentStep > 1">Personal Info</v-stepper-step>
