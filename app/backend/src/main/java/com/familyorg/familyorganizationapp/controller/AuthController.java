@@ -12,10 +12,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.familyorg.familyorganizationapp.DTO.ErrorDto;
 import com.familyorg.familyorganizationapp.DTO.UserDto;
@@ -42,7 +45,7 @@ public class AuthController {
    * @param user
    * @return UserDto populated with currently logged in user
    */
-  @PostMapping()
+  @PostMapping("/register")
   public ResponseEntity<?> saveUser(@RequestBody User user) {
     String originalPassword = user.getPassword();
     UserDto savedUser = userService.createUser(user);
@@ -134,6 +137,24 @@ public class AuthController {
     messagingService.sendHtmlEmail(
         user.getEmail(), "Password Reset for Family Command Center", emailContents);
     return new ResponseEntity<>("Success", HttpStatus.OK);
+  }
+
+  @GetMapping("/usernameCheck")
+  public ResponseEntity<Boolean> checkUsername(@RequestParam() String username) {
+    User user = userService.getUserByUsername(username);
+    if (user == null) {
+      return new ResponseEntity<>(true, HttpStatus.OK);
+    }
+    return new ResponseEntity<>(false, HttpStatus.OK);
+  }
+
+  @GetMapping("/emailCheck")
+  public ResponseEntity<Boolean> checkEmail(@RequestParam() String email) {
+    User user = userService.getUserByEmail(email);
+    if (user == null) {
+      return new ResponseEntity<>(true, HttpStatus.OK);
+    }
+    return new ResponseEntity<>(false, HttpStatus.OK);
   }
 
   private void validateReauthenticatedResetRequest(UserDto request) {

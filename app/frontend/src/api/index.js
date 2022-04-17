@@ -39,7 +39,7 @@ export default {
     return authHttp.post('/auth/logout');
   },
   createUser(formData) {
-    return authHttp.post('/auth', {
+    return authHttp.post('/auth/register', {
       username: formData.username,
       firstName: formData.firstName,
       lastName: formData.lastName,
@@ -59,6 +59,16 @@ export default {
       resetCode: formData.resetCode !== null && formData.resetCode !== undefined ? formData.resetCode : null,
       oldPassword: formData.oldPassword !== null && formData.oldPassword !== undefined ? formData.oldPassword : null,
       newPassword: formData.newPassword,
+    });
+  },
+  usernameFree(username) {
+    return authHttp.get('/auth/usernameCheck', {
+      params: { username },
+    });
+  },
+  emailFree(email) {
+    return authHttp.get('/auth/emailCheck', {
+      params: { email },
     });
   },
   getTimezones() {
