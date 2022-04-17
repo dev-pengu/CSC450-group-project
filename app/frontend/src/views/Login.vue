@@ -85,6 +85,7 @@ export default {
         this.loading = true;
         this.error = false;
         this.errorMsg = '';
+        await api.getCsrf();
 
         const res = await this.loginUser(this.formData);
         if (res.status === 200) {

@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const authHttp = axios.create({
-  baseURL: '/api/services',
+  baseURL: '/api/services/auth',
   timeout: 1000,
   headers: {
     'Content-Type': 'application/json',
@@ -21,9 +21,12 @@ const http = axios.create({
 });
 
 export default {
+  getCsrf() {
+    return authHttp.get('/csrf');
+  },
   login(formData) {
     return authHttp.post(
-      '/auth/login',
+      '/login',
       {
         username: formData.username,
         password: formData.password,
@@ -36,10 +39,10 @@ export default {
     );
   },
   logout() {
-    return authHttp.post('/auth/logout');
+    return authHttp.post('/logout');
   },
   createUser(formData) {
-    return authHttp.post('/auth/register', {
+    return authHttp.post('/register', {
       username: formData.username,
       firstName: formData.firstName,
       lastName: formData.lastName,
@@ -48,12 +51,12 @@ export default {
     });
   },
   sendResetCode(formData) {
-    return authHttp.post('/auth/passwordReset', {
+    return authHttp.post('/passwordReset', {
       username: formData.username,
     });
   },
   changePassword(formData) {
-    return authHttp.post('/auth/changePassword', {
+    return authHttp.post('/changePassword', {
       username: formData.username !== null && formData.username !== undefined ? formData.username : null,
       email: formData.email !== null && formData.email !== undefined ? formData.email : null,
       resetCode: formData.resetCode !== null && formData.resetCode !== undefined ? formData.resetCode : null,
@@ -62,12 +65,12 @@ export default {
     });
   },
   usernameFree(username) {
-    return authHttp.get('/auth/usernameCheck', {
+    return authHttp.get('/usernameCheck', {
       params: { username },
     });
   },
   emailFree(email) {
-    return authHttp.get('/auth/emailCheck', {
+    return authHttp.get('/emailCheck', {
       params: { email },
     });
   },
