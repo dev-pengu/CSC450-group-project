@@ -1,5 +1,17 @@
 package com.familyorg.familyorganizationapp.controller;
 
+import com.familyorg.familyorganizationapp.DTO.FamilyDto;
+import com.familyorg.familyorganizationapp.DTO.FamilyRoleUpdateRequest;
+import com.familyorg.familyorganizationapp.DTO.MemberInviteDto;
+import com.familyorg.familyorganizationapp.Exception.ApiExceptionCode;
+import com.familyorg.familyorganizationapp.Exception.BadRequestException;
+import com.familyorg.familyorganizationapp.domain.FamilyMembers;
+import com.familyorg.familyorganizationapp.domain.InviteCode;
+import com.familyorg.familyorganizationapp.domain.MemberInvite;
+import com.familyorg.familyorganizationapp.service.FamilyService;
+import com.familyorg.familyorganizationapp.service.InviteService;
+import com.familyorg.familyorganizationapp.service.MessagingService;
+import com.familyorg.familyorganizationapp.DTO.UserDto;
 import java.util.List;
 import java.util.Optional;
 import org.slf4j.Logger;
@@ -7,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -15,30 +28,21 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import com.familyorg.familyorganizationapp.DTO.FamilyDto;
-import com.familyorg.familyorganizationapp.DTO.FamilyRoleUpdateRequest;
-import com.familyorg.familyorganizationapp.DTO.MemberInviteDto;
-import com.familyorg.familyorganizationapp.domain.FamilyMembers;
-import com.familyorg.familyorganizationapp.domain.InviteCode;
-import com.familyorg.familyorganizationapp.domain.MemberInvite;
-import com.familyorg.familyorganizationapp.service.FamilyService;
-import com.familyorg.familyorganizationapp.service.InviteService;
-import com.familyorg.familyorganizationapp.service.MessagingService;
 
+@CrossOrigin(origins = "http://localhost:8081")
 @RestController
 @RequestMapping("/api/v1/family")
-
 public class FamilyController {
 
   private static final Logger logger = LoggerFactory.getLogger(FamilyController.class);
 
-  private FamilyService familyService;
-  private InviteService inviteService;
-  private MessagingService messagingService;
+  private final FamilyService familyService;
+  private final InviteService inviteService;
+  private final MessagingService messagingService;
 
   @Autowired
-  FamilyController(FamilyService familyService, InviteService inviteService,
-      MessagingService messagingService) {
+  FamilyController(
+      FamilyService familyService, InviteService inviteService, MessagingService messagingService) {
     this.familyService = familyService;
     this.inviteService = inviteService;
     this.messagingService = messagingService;
@@ -54,7 +58,6 @@ public class FamilyController {
   public ResponseEntity<FamilyDto> getFamily(@RequestBody FamilyDto familyRequest) {
     FamilyDto family = familyService.getFamily(familyRequest);
     return new ResponseEntity<FamilyDto>(family, HttpStatus.OK);
-
   }
 
   @GetMapping("/get-family")
@@ -63,12 +66,29 @@ public class FamilyController {
     return new ResponseEntity<List<FamilyDto>>(families, HttpStatus.OK);
   }
 
+  @GetMapping("/familySelect")
+  public ResponseEntity<List<FamilyDto>> getFamiliesForSelect() {
+    List<FamilyDto> families = familyService.getFamiliesForFormSelect();
+    return new ResponseEntity<>(families, HttpStatus.OK);
+  }
+
+  @GetMapping("/memberSelect")
+  public ResponseEntity<List<UserDto>> getMembersForSelect(@RequestParam("id") Long familyId) {
+    List<UserDto> users = familyService.getMembersForFormSelect(familyId);
+    return new ResponseEntity<>(users, HttpStatus.OK);
+  }
+
   @GetMapping("/invite/join")
-  public ResponseEntity<String> joinFamily(@RequestParam("code") String inviteCode,
-      @RequestParam("eventColor") String eventColor) {
-    InviteCode inviteCodeObj = InviteCode.parseFromCodeString(inviteCode);
-    inviteService.verifyMemberInvite(inviteCodeObj, eventColor);
-    return new ResponseEntity<String>("Success", HttpStatus.OK);
+  public ResponseEntity<String> joinFamily(
+      @RequestParam("code") String inviteCode, @RequestParam("eventColor") String eventColor) {
+    try {
+      InviteCode inviteCodeObj = InviteCode.parseFromCodeString(inviteCode);
+      inviteService.verifyMemberInvite(inviteCodeObj, eventColor);
+      return new ResponseEntity<String>("Success", HttpStatus.OK);
+    } catch (IllegalStateException e) {
+      throw new BadRequestException(
+          ApiExceptionCode.BAD_PARAM_VALUE, "Invite code passed is malformed.");
+    }
   }
 
   @PatchMapping("/admin/update")
@@ -78,10 +98,9 @@ public class FamilyController {
   }
 
   @DeleteMapping("/admin/delete")
-  public ResponseEntity<String> deleteFamily(@RequestParam("familyId") Long familyId) {
+  public ResponseEntity<String> deleteFamily(@RequestParam("id") Long familyId) {
     familyService.deleteFamily(familyId);
     return new ResponseEntity<String>("Family successfully deleted", HttpStatus.OK);
-
   }
 
   @PatchMapping("/admin/transferOwnership")
@@ -106,20 +125,25 @@ public class FamilyController {
       // Generate the Invite
       MemberInvite invite = null;
       if (memberInvite.getInitialRole() != null) {
-        invite = inviteService.createUniqueMemberInviteWithRole(memberInvite.getFamilyId(),
-            memberInvite.getRecipientEmail(), memberInvite.getInitialRole());
+        invite =
+            inviteService.createUniqueMemberInviteWithRole(
+                memberInvite.getFamilyId(),
+                memberInvite.getRecipientEmail(),
+                memberInvite.getInitialRole());
       } else {
-        invite = inviteService.createUniqueMemberInvite(memberInvite.getFamilyId(),
-            memberInvite.getRecipientEmail());
+        invite =
+            inviteService.createUniqueMemberInvite(
+                memberInvite.getFamilyId(), memberInvite.getRecipientEmail());
       }
       // Send the invite via email
       Optional<FamilyMembers> owner = invite.getFamily().getOwner();
       if (owner.isPresent()) {
-        String emailContents = messagingService.buildInviteContent(
-            invite.getInviteCodeObj().getInviteCodeString(),
-            owner.get().getUser().getFullname().toUpperCase());
-        messagingService.sendHtmlEmail(invite.getUserEmail(), "You've been invited to a family!",
-            emailContents);
+        String emailContents =
+            messagingService.buildInviteContent(
+                invite.getInviteCodeObj().getInviteCodeString(),
+                owner.get().getUser().getFullname().toUpperCase());
+        messagingService.sendHtmlEmail(
+            invite.getUserEmail(), "You've been invited to a family!", emailContents);
       }
       // Assuming no errors were thrown, an invitation was sent successfully, respond with 200
       // status

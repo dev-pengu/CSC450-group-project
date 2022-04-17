@@ -5,27 +5,35 @@
     <v-row justify="center">
       <v-col cols="10" sm="5" md="4">
         <v-card elevation="4">
-          <v-card-text class="pb-0">
-            <v-form>
+          <v-card-text>
+            <v-form v-model="valid">
               <v-text-field
                 v-model="formData.username"
                 color="foa_button"
                 prepend-icon="mdi-account"
+                :rules="usernameRules"
                 label="Username"
+                required
               />
               <v-text-field
                 v-model="formData.password"
                 color="foa_button"
+                :rules="passwordRules"
                 prepend-icon="mdi-lock"
-                type="password"
+                :append-icon="showPass ? 'mdi-eye' : 'mdi-eye-off'"
+                :type="showPass ? 'text' : 'password'"
                 label="Password"
+                required
                 @keyup.enter="submit"
+                @click:append="showPass = !showPass"
               />
               <div class="text-center">
-                <router-link class="foa_link--text" to="#" @click="sendReset">Forgot your password?</router-link>
+                <span style="cursor: pointer" class="foa_link--text text-decoration-underline" to="#" @click="sendReset"
+                  >Forgot your password?</span
+                >
               </div>
             </v-form>
-            <v-alert v-if="error" class="mb-2" text type="error">{{ errorMsg }}</v-alert>
+            <v-alert v-if="error" class="mb-0" text type="error">{{ errorMsg }}</v-alert>
           </v-card-text>
           <v-card-actions class="justify-center">
             <v-btn
@@ -34,7 +42,7 @@
               elevation="2"
               width="50%"
               :loading="loading"
-              :disabled="loading"
+              :disabled="loading || !valid"
               @click="submit"
               >Login</v-btn
             >
@@ -58,6 +66,9 @@ export default {
   name: 'Login',
   components: {},
   data: () => ({
+    valid: false,
+    usernameRules: [(v) => !!v || 'Username is required'],
+    passwordRules: [(v) => !!v || 'Password is required'],
     formData: {
       username: '',
       password: '',
@@ -65,36 +76,31 @@ export default {
     error: false,
     errorMsg: '',
     loading: false,
+    showPass: false,
   }),
   methods: {
-    ...mapActions(['login']),
+    ...mapActions(['loginUser', 'showSnackbar']),
     async submit() {
-      this.loading = true;
-      this.error = false;
-      this.errorMsg = '';
-      if (this.formData.username === '' || this.formData.password === '') {
-        this.loading = false;
-        return;
-      }
       try {
-        const res = await this.login(this.formData);
+        this.loading = true;
+        this.error = false;
+        this.errorMsg = '';
+
+        const res = await this.loginUser(this.formData);
         if (res.status === 200) {
+          this.$vuetify.theme.dark = res.data.useDarkMode;
+          localStorage.setItem('darkMode', this.$vuetify.theme.dark.toString());
           this.$router.push('/');
         } else {
           this.error = true;
-          this.errorMsg = 'Your username or password was incorrect';
+          this.errorMsg = 'Your username or password was incorrect.';
         }
       } catch (err) {
         this.error = true;
-        const error = { err };
-        if (error.err.isAxiosError) {
-          this.errorMsg = error.err.response.data;
-        } else {
-          this.errorMsg = err;
-        }
+        this.errorMsg = 'Login failed, please try again.';
+      } finally {
+        this.loading = false;
       }
-
-      this.loading = false;
     },
     async sendReset() {
       this.loading = true;
@@ -108,6 +114,7 @@ export default {
       }
       try {
         api.sendResetCode(this.formData);
+        this.showSnackbar({ type: 'info', message: 'An email has been sent to your email on file.', timeout: 3000 });
       } catch (err) {
         this.error = true;
         const error = { err };

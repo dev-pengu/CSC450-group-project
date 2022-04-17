@@ -5,25 +5,30 @@ export default {
     families: [],
   },
   mutations: {
-    fetch_families_success(state, payload) {
-      state.families = payload;
+    FETCH_FAMILIES_SUCCESS(state, payload) {
+      state.families = payload.families;
     },
-    fetch_families_failure(state) {
+    FETCH_FAMILIES_FAILURE(state) {
       state.families = [];
     },
   },
   actions: {
-    async getFamilies({ commit }) {
-      const res = await api.getFamilies();
-      if (res.status === 200) {
-        commit('fetch_families_success', res.data);
-      } else {
-        commit('fetch_families_failure');
-        throw new Error('Could not fetch families');
+    async fetchFamilies({ commit }) {
+      try {
+        const res = await api.getFamilies();
+        if (res.status === 200) {
+          commit('FETCH_FAMILIES_SUCCESS', { families: res.data });
+        } else {
+          commit('FETCH_FAMILIES_FAILURE');
+        }
+        return res;
+      } catch (err) {
+        commit('FETCH_FAMILIES_FAILURE');
+        throw err;
       }
     },
   },
   getters: {
-    families: (state) => state.families,
+    getFamilies: (state) => state.families,
   },
 };

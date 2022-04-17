@@ -8,7 +8,7 @@
           <v-card-text class="pb-0">
             <v-form>
               <v-text-field
-                v-model="formData.identifier"
+                v-model="identifier"
                 color="foa_button"
                 prepend-icon="mdi-account"
                 label="Username/Email"
@@ -83,6 +83,7 @@
 </template>
 
 <script>
+import { mapActions } from 'vuex';
 import api from '../api';
 import PasswordRequirement from '../components/PasswordRequirement.vue';
 import passwordChecker from '../util/PasswordRequirementChecker';
@@ -116,6 +117,7 @@ export default {
     },
   }),
   methods: {
+    ...mapActions(['showSnackbar']),
     async submit() {
       this.formData.resetCode = this.$route.query.code;
       if (this.identifier.includes('@')) {
@@ -137,8 +139,8 @@ export default {
       try {
         const res = await api.changePassword(this.formData);
         if (res.status === 200) {
+          this.showSnackbar({ type: 'success', message: 'Your password was updated successfully!', timeout: 3000 });
           this.$router.push('/');
-          // TODO: add snackbar notification indicating password has been changed successfully
         } else if (res.data.errorCode === 1001) {
           this.error = true;
           this.errorMsg = 'User profile not found. Check your username/email.';
@@ -157,8 +159,9 @@ export default {
         } else {
           this.errorMsg = err;
         }
+      } finally {
+        this.loading = false;
       }
-      this.loading = false;
     },
     comparePasswords() {
       if (this.formData.confirmPassword.length === 0) {

@@ -169,7 +169,7 @@ public class CalendarServiceImpl implements CalendarService {
       event.getAssignees().add(requestingUser);
     }
 
-    TimeZone timezone = getUserTimeZoneOrDefault(requestingUser, family);
+    TimeZone timezone = familyService.getUserTimeZoneOrDefault(requestingUser, family);
     event.setTimezone(timezone.getID());
     event.setStartDatetime(DateUtil.parseTimestamp(request.getStartDate()));
     event.setEndDatetime(DateUtil.parseTimestamp(request.getEndDate()));
@@ -413,7 +413,8 @@ public class CalendarServiceImpl implements CalendarService {
       throw new AuthorizationException(ApiExceptionCode.USER_PRIVILEGES_TOO_LOW,
           "User not authorized to complete this action.");
     CalendarEvent event = eventOpt.get();
-    TimeZone timezone = getUserTimeZoneOrDefault(requestingUser, event.getCalendar().getFamily());
+    TimeZone timezone =
+        familyService.getUserTimeZoneOrDefault(requestingUser, event.getCalendar().getFamily());
 
     return buildEventDtoFromCalendarEvent(event, timezone, requestingUser);
   }
@@ -433,7 +434,8 @@ public class CalendarServiceImpl implements CalendarService {
       throw new AuthorizationException(ApiExceptionCode.USER_PRIVILEGES_TOO_LOW,
           "User not authorized to complete this action.");
 
-    TimeZone timezone = getUserTimeZoneOrDefault(requestingUser, event.getCalendar().getFamily());
+    TimeZone timezone =
+        familyService.getUserTimeZoneOrDefault(requestingUser, event.getCalendar().getFamily());
 
     CalendarEventDto response =
         buildEventDtoFromRecurringEvent(recurringEvent.get(), timezone, requestingUser);
@@ -447,7 +449,8 @@ public class CalendarServiceImpl implements CalendarService {
       calendar.setEvents(eventsByCalendar.getOrDefault(calendar.getId(), Collections.emptyList()));
     });
     return calendars.stream().map(calendar -> {
-      TimeZone timezone = getUserTimeZoneOrDefault(requestingUser, calendar.getFamily());
+      TimeZone timezone =
+          familyService.getUserTimeZoneOrDefault(requestingUser, calendar.getFamily());
       List<CalendarEventDto> events = calendar.getEvents()
           .stream()
           .map(event -> buildEventDtoFromCalendarEvent(event, timezone, requestingUser))
@@ -689,7 +692,7 @@ public class CalendarServiceImpl implements CalendarService {
   private CalendarEvent breakRecurringEvent(RecurringCalendarEvent recurringEvent,
       CalendarEventDto request) {
     recurringEventRepository.deleteById(recurringEvent.getId());
-    TimeZone timezone = getUserTimeZoneOrDefault(userService.getRequestingUser(),
+    TimeZone timezone = familyService.getUserTimeZoneOrDefault(userService.getRequestingUser(),
         recurringEvent.getOriginatingEvent().getCalendar().getFamily());
     CalendarEvent event = new CalendarEvent();
     event.setCalendar(recurringEvent.getOriginatingEvent().getCalendar());
@@ -715,11 +718,6 @@ public class CalendarServiceImpl implements CalendarService {
             .get()
             .getEventColor();
     return color;
-  }
-
-  private TimeZone getUserTimeZoneOrDefault(User requestingUser, Family family) {
-    return requestingUser.getTimezone() != null ? TimeZone.getTimeZone(requestingUser.getTimezone())
-        : TimeZone.getTimeZone(family.getTimezone());
   }
 
   private Map<CalendarField, List<SearchFilter>> getSearchFilters(User user, List<Long> familyIds,

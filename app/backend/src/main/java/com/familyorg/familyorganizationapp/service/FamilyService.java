@@ -1,7 +1,10 @@
 package com.familyorg.familyorganizationapp.service;
 
+import com.familyorg.familyorganizationapp.DTO.FamilyMemberDto;
+import com.familyorg.familyorganizationapp.DTO.UserDto;
 import java.util.List;
 import java.util.Optional;
+import java.util.TimeZone;
 import com.familyorg.familyorganizationapp.DTO.FamilyDto;
 import com.familyorg.familyorganizationapp.DTO.FamilyRoleUpdateRequest;
 import com.familyorg.familyorganizationapp.Exception.AuthorizationException;
@@ -14,8 +17,7 @@ import com.familyorg.familyorganizationapp.domain.User;
 public interface FamilyService {
   FamilyDto createFamily(FamilyDto familyRequest) throws BadRequestException, UserNotFoundException;
 
-  FamilyDto getFamily(FamilyDto familyRequest)
-      throws AuthorizationException;
+  FamilyDto getFamily(FamilyDto familyRequest) throws AuthorizationException;
 
   Optional<Family> getFamilyById(Long id);
 
@@ -28,8 +30,8 @@ public interface FamilyService {
 
   void deleteFamily(Long id) throws AuthorizationException;
 
-  FamilyDto transferOwnership(FamilyDto request) throws AuthorizationException,
-      UserNotFoundException, BadRequestException;
+  FamilyDto transferOwnership(FamilyDto request)
+      throws AuthorizationException, UserNotFoundException, BadRequestException;
 
   Family getFamilyByInviteCode(String inviteCode);
 
@@ -39,5 +41,13 @@ public interface FamilyService {
 
   List<Family> getFamiliesByUser(String username);
 
+  Iterable<Family> findAllByIds(List<Long> familyIds);
+
   void updateMemberRoles(FamilyRoleUpdateRequest request);
+
+  TimeZone getUserTimeZoneOrDefault(User requestingUser, Family family);
+
+  List<FamilyDto> getFamiliesForFormSelect();
+
+  List<UserDto> getMembersForFormSelect(Long familyId);
 }

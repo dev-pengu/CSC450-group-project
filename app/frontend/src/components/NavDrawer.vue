@@ -37,6 +37,8 @@
 </template>
 
 <script>
+import { mapActions, mapGetters, mapMutations } from 'vuex';
+
 export default {
   name: 'NavDrawer',
   data: () => ({
@@ -45,32 +47,32 @@ export default {
       { title: 'Calendar', icon: 'mdi-calendar', route: '/calendar' },
       { title: 'To-Do', icon: 'mdi-check-circle-outline', route: '/todo' },
       { title: 'Shopping List', icon: 'mdi-cart', route: '/shopping-list' },
-      { title: 'Family Polling', icon: 'mdi-chart-box', route: '/polls' },
-      { title: 'Family Settings', icon: 'mdi-human-male-female-child', route: '/family-settings' },
-      { title: 'User Settings', icon: 'mdi-account-cog', route: '/user-settings' },
+      { title: 'Family Polling', icon: 'mdi-chart-box', route: '/polls/view' },
+      { title: 'Family Settings', icon: 'mdi-human-male-female-child', route: '/profile/families' },
+      { title: 'User Settings', icon: 'mdi-account-cog', route: '/profile/settings' },
     ],
   }),
   computed: {
+    ...mapGetters({ drawerMiniState: 'getDrawerMiniState' }),
     drawerState: {
       get() {
-        return this.$store.getters.drawerState;
+        return this.$store.getters.getDrawerState;
       },
-      set(val) {
-        this.$store.commit('toggleDrawerState', val);
+      set(newValue) {
+        this.setDrawerState({ state: newValue });
       },
-    },
-    drawerMiniState() {
-      return this.$store.getters.drawerMiniState;
     },
   },
   methods: {
+    ...mapMutations({ setDrawerState: 'SET_DRAWER_STATE', setDrawerMiniState: 'SET_DRAWER_MINI_STATE' }),
+    ...mapActions(['logoutUser']),
     onResize() {
       if (this.$vuetify.breakpoint.mdAndDown) {
-        this.$store.commit('resetDrawerMiniState');
+        this.setDrawerMiniState({ state: false });
       }
     },
     async logout() {
-      await this.$store.dispatch('logout');
+      this.logoutUser();
       this.$router.push('/login');
     },
   },

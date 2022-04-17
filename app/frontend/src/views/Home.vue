@@ -10,7 +10,7 @@
           </div>
           <v-carousel hide-delimiters cycle interval="6000" height="340">
             <v-carousel-item v-for="(family, i) in families" :key="i">
-              <v-card class="mx-auto" width="65%" max-height="95%">
+              <v-card class="mx-auto" width="65%" height="95%">
                 <v-card-text class="pt-1">
                   <div class="text-h6 foa_text--text">{{ family.name }}</div>
                   <div class="pl-4">
@@ -19,11 +19,11 @@
                       <v-sheet
                         color="grey lighten-1"
                         rounded
-                        height="15"
-                        width="15"
+                        height="16"
+                        width="16"
                         class="d-inline-flex align-center justify-center ml-2"
                       >
-                        <v-sheet rounded height="80%" width="80%" :color="'#' + family.eventColor"></v-sheet>
+                        <v-sheet rounded height="12" width="12" :color="'#' + family.eventColor"></v-sheet>
                       </v-sheet>
                     </div>
                     <div class="d-inline-flex align-center foa_text--text ml-3">
@@ -31,11 +31,11 @@
                       <v-sheet
                         color="grey lighten-1"
                         rounded
-                        height="15"
-                        width="15"
+                        height="16"
+                        width="16"
                         class="d-inline-flex align-center justify-center ml-2"
                       >
-                        <v-sheet rounded height="80%" width="80%" :color="'#' + family.memberData.eventColor"></v-sheet>
+                        <v-sheet rounded height="12" width="12" :color="'#' + family.memberData.eventColor"></v-sheet>
                       </v-sheet>
                     </div>
                     <div class="foa_text--text">
@@ -60,7 +60,11 @@
                     <router-link class="d-block foa_link--text" to="/test">Manage Members</router-link>
                     <router-link class="d-block foa_link--text" to="/test">Family Calendar</router-link>
                     <router-link class="d-block foa_link--text" to="/test">Family To Do List</router-link>
-                    <router-link class="d-block foa_link--text" to="/test">Family Polls</router-link>
+                    <router-link
+                      class="d-block foa_link--text"
+                      :to="{ path: '/polls/view', query: { familyId: family.id, name: family.name } }"
+                      >Family Polls</router-link
+                    >
                     <router-link class="d-block foa_link--text" to="/test">Family Shopping List</router-link>
                     <router-link v-if="isAdmin(family.memberData.role)" class="d-block foa_link--text" to="/test"
                       >Family Settings</router-link
@@ -117,8 +121,7 @@ export default {
     InviteModal,
   },
   data: () => ({
-    // this is all dummy data
-    // will be replaced by proper API calls later
+    // TODO: replace with real api calls
     events: [
       {
         name: 'Event #1',
@@ -135,22 +138,33 @@ export default {
     ],
   }),
   computed: {
-    ...mapGetters(['families', 'user']),
+    ...mapGetters({ families: 'getFamilies', user: 'getUser' }),
     btnColor() {
       return this.$vuetify.theme.dark ? 'foa_button' : 'foa_button_dark';
     },
   },
   created() {
-    this.getFamilies();
+    this.fetchFamilies();
   },
   methods: {
-    ...mapActions(['getFamilies']),
+    ...mapActions(['fetchFamilies', 'showSnackbar']),
     async generateInviteCode(id) {
-      const res = await api.generateInviteCode(id);
-      if (res.status === 200) {
-        this.getFamilies();
+      try {
+        const res = await api.generateInviteCode(id);
+        if (res.status === 200) {
+          this.fetchFamilies();
+        } else {
+          this.showSnackbar({
+            type: 'error',
+            message: 'There was a problem generating an invite code for this family, please try again.',
+          });
+        }
+      } catch (err) {
+        this.showSnackbar({
+          type: 'error',
+          message: 'There was a problem generating an invite code for this family, please try again.',
+        });
       }
-      // TODO: add an error to snackbar stating there was an error with adding invite code
     },
     isAdmin,
   },

@@ -4,18 +4,15 @@ export default {
     drawerMiniState: true,
   },
   mutations: {
-    toggleDrawerState(state, val) {
-      state.drawerState = val;
+    SET_DRAWER_STATE(state, payload) {
+      state.drawerState = payload.state;
     },
-    toggleDrawerMiniState(state) {
-      state.drawerMiniState = !state.drawerMiniState;
-    },
-    resetDrawerMiniState(state) {
-      state.drawerMiniState = false;
+    SET_DRAWER_MINI_STATE(state, payload) {
+      state.drawerMiniState = payload.state;
     },
   },
   getters: {
-    drawerState: (state) => state.drawerState,
-    drawerMiniState: (state) => state.drawerMiniState,
+    getDrawerState: (state) => state.drawerState,
+    getDrawerMiniState: (state) => state.drawerMiniState,
   },
 };

@@ -9,12 +9,14 @@ const authHttp = axios.create({
   },
 });
 
+const XSRF_TOKEN = document.cookie.match(new RegExp(`XSRF-TOKEN=([^;]+)`));
 const http = axios.create({
   baseURL: '/api/v1',
   timeout: 1000,
   headers: {
     'Content-Type': 'application/json',
     Accept: 'application/json',
+    'X-XSRF-TOKEN': XSRF_TOKEN === null ? null : XSRF_TOKEN[1],
   },
 });
 
@@ -138,5 +140,108 @@ export default {
         },
       }
     );
+  },
+  getFamiliesForSelect() {
+    return http.get('family/familySelect');
+  },
+  getMembersForSelect(familyId) {
+    return http.get('family/memberSelect', { params: { id: familyId } });
+  },
+  searchPolls(req) {
+    return http.post('poll/search', req, {
+      validateStatus(status) {
+        return status < 500;
+      },
+    });
+  },
+  getUserSettings() {
+    return http.get('user/settings', {
+      validateStatus(status) {
+        return status < 500;
+      },
+    });
+  },
+  votePoll(req) {
+    return http.post('poll/vote', req, {
+      validateStatus(status) {
+        return status < 500;
+      },
+    });
+  },
+  updateUserSettings(req) {
+    return http.patch('user/settings', req, {
+      validateStatus(status) {
+        return status < 500;
+      },
+    });
+  },
+  createPoll(req) {
+    return http.post('poll', req, {
+      validateStatus(status) {
+        return status < 500;
+      },
+    });
+  },
+  deleteUser(username) {
+    return http.delete('user', {
+      params: { username },
+      validateStatus(status) {
+        return status < 500;
+      },
+    });
+  },
+  updatePoll(req) {
+    return http.patch('poll', req, {
+      validateStatus(status) {
+        return status < 500;
+      },
+    });
+  },
+  transferFamilyOwnership(req) {
+    return http.patch('/family/admin/transferOwnership', req, {
+      validateStatus(status) {
+        return status < 500;
+      },
+    });
+  },
+  deletePoll(id) {
+    return http.delete('poll', {
+      params: {
+        id,
+      },
+      validateStatus(status) {
+        return status < 500;
+      },
+    });
+  },
+  updateFamily(req) {
+    return http.patch('/family/admin/update', req, {
+      validateStatus(status) {
+        return status < 500;
+      },
+    });
+  },
+  deleteFamily(id) {
+    return http.delete('/family/admin/delete', {
+      params: { familyId: id },
+      validateStatus(status) {
+        return status < 500;
+      },
+    });
+  },
+  getPollResults(id) {
+    return http.get('poll/results', {
+      params: { id },
+      validateStatus(status) {
+        return status < 500;
+      },
+    });
+  },
+  updateFamilyRoles(req) {
+    return http.post('/family/admin/roles', req, {
+      validateStatus(status) {
+        return status < 500;
+      },
+    });
   },
 };
