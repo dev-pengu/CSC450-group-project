@@ -43,7 +43,7 @@ export default {
     voteOption: instance.poll.vote,
   }),
   computed: {
-    ...mapGetters(['user']),
+    ...mapGetters({ user: 'getUser' }),
   },
   methods: {
     async vote() {

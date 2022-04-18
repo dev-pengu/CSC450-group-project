@@ -1,14 +1,8 @@
 <template>
   <div class="snackbar">
     <v-snackbar v-model="snackbarState" text :color="snackbarColor" :timeout="timeout" top app>
-      <v-row>
-        <v-col cols="2" sm="1" align-self="center">
-          <v-icon :color="snackbarColor">{{ snackbarIcon }}</v-icon>
-        </v-col>
-        <v-col cols="10" sm="11">
-          {{ snackbarMessage }}
-        </v-col>
-      </v-row>
+      <v-icon :color="snackbarColor">{{ snackbarIcon }}</v-icon>
+      <span class="ml-2">{{ snackbarMessage }}</span>
       <template #action="{ attrs }">
         <v-btn text v-bind="attrs" @click="closeSnackbar">Close</v-btn>
       </template>

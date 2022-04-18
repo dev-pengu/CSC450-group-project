@@ -43,10 +43,10 @@ export default {
   name: 'NavDrawer',
   data: () => ({
     navItems: [
-      { title: 'Home', icon: 'mdi-home', route: '/' },
+      { title: 'Home', icon: 'mdi-home', route: '/dashboard' },
       { title: 'Calendar', icon: 'mdi-calendar', route: '/calendar' },
       { title: 'To-Do', icon: 'mdi-check-circle-outline', route: '/todo' },
-      { title: 'Shopping List', icon: 'mdi-cart', route: '/shopping-list' },
+      { title: 'Shopping Lists', icon: 'mdi-cart', route: '/shopping/view' },
       { title: 'Family Polling', icon: 'mdi-chart-box', route: '/polls/view' },
       { title: 'Family Settings', icon: 'mdi-human-male-female-child', route: '/profile/families' },
       { title: 'User Settings', icon: 'mdi-account-cog', route: '/profile/settings' },

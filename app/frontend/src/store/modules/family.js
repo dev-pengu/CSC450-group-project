@@ -30,5 +30,6 @@ export default {
   },
   getters: {
     getFamilies: (state) => state.families,
+    getFamily: (state) => (id) => state.families.find((family) => family.id === id),
   },
 };
