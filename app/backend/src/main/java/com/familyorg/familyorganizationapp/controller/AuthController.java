@@ -27,7 +27,7 @@ import com.familyorg.familyorganizationapp.domain.User;
 import com.familyorg.familyorganizationapp.service.SecurityService;
 import com.familyorg.familyorganizationapp.service.UserService;
 
-@CrossOrigin(origins = "http://localhost:8081")
+@CrossOrigin(origins = "http://localhost")
 @RestController
 @RequestMapping("/api/services/auth")
 public class AuthController {
@@ -73,9 +73,17 @@ public class AuthController {
    */
   @PostMapping("/login")
   public ResponseEntity<UserDto> login(@RequestBody User user) {
-    securityService.autologin(user.getUsername(), user.getPassword());
-    User loggedInUser = userService.getUserByUsername(user.getUsername());
-    return new ResponseEntity<>(UserDto.fromUserObj(loggedInUser), HttpStatus.OK);
+    User userObj;
+    if (user.getUsername() == null && user.getEmail() != null) {
+      userObj = userService.getUserByEmail(user.getEmail());
+    } else {
+      userObj = userService.getUserByUsername(user.getUsername());
+    }
+    if (userObj == null) {
+      throw new UserNotFoundException(ApiExceptionCode.USER_DOESNT_EXIST, "User is not registered.");
+    }
+    securityService.autologin(userObj.getUsername(), user.getPassword());
+    return new ResponseEntity<>(UserDto.fromUserObj(userObj), HttpStatus.OK);
   }
 
   @PostMapping("/changePassword")
