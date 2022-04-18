@@ -38,8 +38,14 @@
                         <v-sheet rounded height="12" width="12" :color="'#' + family.memberData.eventColor"></v-sheet>
                       </v-sheet>
                     </div>
-                    <div class="foa_text--text">
-                      Owner: {{ family.owner.user.firstName + ' ' + family.owner.user.lastName }}
+                    <div class="foa_text--text" :class="{ 'font-weight-bold': family.owner.user.id === user.id }">
+                      Owner:
+                      {{
+                        family.owner.user.firstName +
+                        ' ' +
+                        family.owner.user.lastName +
+                        (family.owner.user.id === user.id ? ' (me)' : '')
+                      }}
                     </div>
                     <div class="d-flex align-center foa_text--text">
                       Invite code: {{ family.inviteCode }}
@@ -65,7 +71,11 @@
                       :to="{ path: '/polls/view', query: { familyId: family.id, name: family.name } }"
                       >Family Polls</router-link
                     >
-                    <router-link class="d-block foa_link--text" to="/test">Family Shopping List</router-link>
+                    <router-link
+                      class="d-block foa_link--text"
+                      :to="{ path: '/shopping/view', query: { familyId: family.id, name: family.name } }"
+                      >Family Shopping List</router-link
+                    >
                     <router-link v-if="isAdmin(family.memberData.role)" class="d-block foa_link--text" to="/test"
                       >Family Settings</router-link
                     >

@@ -32,7 +32,6 @@ export default {
       api.logout();
     };
 
-    // TODO: set dark mode from user preferences
     const theme = localStorage.getItem('darkMode');
     if (theme) {
       this.$vuetify.theme.dark = theme !== 'false';

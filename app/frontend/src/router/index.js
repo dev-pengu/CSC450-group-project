@@ -13,6 +13,8 @@ import ResultViewer from '../views/poll-app/ResultViewer.vue';
 import ProfileSettings from '../views/profile/UserProfile.vue';
 import UserSecurity from '../views/profile/UserSecurity.vue';
 import UserFamilies from '../views/profile/UserFamilies.vue';
+import Shopping from '../views/shopping-app/Shopping.vue';
+import ShoppingList from '../views/shopping-app/ShoppingList.vue';
 
 Vue.use(VueRouter);
 const routes = [
@@ -118,6 +120,28 @@ const routes = [
   {
     path: '/profile',
     redirect: '/profile/settings',
+  },
+  {
+    path: '/shopping',
+    redirect: '/shopping/view',
+  },
+  {
+    path: '/shopping/view',
+    name: 'Family Shopping Lists',
+    component: Shopping,
+    meta: {
+      requiresAuth: true,
+      title: 'Shopping Lists',
+    },
+  },
+  {
+    path: '/shopping/list',
+    name: 'Shopping List',
+    component: ShoppingList,
+    meta: {
+      requiresAuth: true,
+      title: 'Shopping List',
+    },
   },
   {
     path: '/:pathMatch(.*)*',
