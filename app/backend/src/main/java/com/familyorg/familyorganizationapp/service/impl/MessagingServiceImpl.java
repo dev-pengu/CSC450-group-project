@@ -5,42 +5,53 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.Objects;
-import java.util.Properties;
-import javax.mail.Authenticator;
-import javax.mail.Message;
 import javax.mail.MessagingException;
-import javax.mail.PasswordAuthentication;
-import javax.mail.Session;
-import javax.mail.Transport;
-import javax.mail.internet.AddressException;
-import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
+import org.springframework.core.task.TaskExecutor;
+import org.springframework.mail.MailParseException;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import com.familyorg.familyorganizationapp.service.MessagingService;
 
 @Service
 public class MessagingServiceImpl implements MessagingService {
 
-  private static Logger LOG = LoggerFactory.getLogger(MessagingServiceImpl.class);
+  private static Logger logger = LoggerFactory.getLogger(MessagingServiceImpl.class);
+
+  private Environment env;
+  private String domain;
+
+  private JavaMailSender mailSender;
+  private TaskExecutor taskExecutor;
 
   @Autowired
-  private Environment env;
+  public MessagingServiceImpl(
+      Environment env, JavaMailSender mailSender, TaskExecutor taskExecutor) {
+    this.env = env;
+    domain =
+        env.getProperty("server.domain") != null
+            ? env.getProperty("server.domain")
+            : (env.getProperty("server.host") + ":" + env.getProperty("server.port"));
+    this.mailSender = mailSender;
+    this.taskExecutor = taskExecutor;
+  }
 
   private static String inviteTemplateContents;
+  private static String passwordResetTemplateContents;
 
   private static String getInviteTemplateContents() {
     if (inviteTemplateContents != null) {
       return inviteTemplateContents;
     }
-    try {
-      FileReader fileReader =
-          new FileReader("src/main/resources/email_templates/invite-template/index.html");
+    try (FileReader fileReader =
+        new FileReader("src/main/resources/email_templates/invite-template/index.html")) {
       try (BufferedReader bufferedReader = new BufferedReader(fileReader)) {
-        StringBuilder content = new StringBuilder(19321);
+        StringBuilder content = new StringBuilder(20000);
         String s;
         while ((s = bufferedReader.readLine()) != null) {
           content.append(s);
@@ -49,48 +60,104 @@ public class MessagingServiceImpl implements MessagingService {
       }
       return inviteTemplateContents;
     } catch (FileNotFoundException e) {
-      LOG.error(e.getMessage(), e);
+      logger.error(e.getMessage(), e);
       return null;
     } catch (IOException e) {
-      LOG.error(e.getMessage(), e);
+      logger.error(e.getMessage(), e);
       return null;
     }
   }
 
-  public void sendHtmlEmail(String recipient, String subject, String content)
-      throws AddressException, MessagingException {
+  private static String getPasswordResetTemplateContents() {
+    if (passwordResetTemplateContents != null) {
+      return passwordResetTemplateContents;
+    }
+    try (FileReader fileReader =
+        new FileReader("src/main/resources/email_templates/password-reset-template/index.html")) {
+      try (BufferedReader bufferedReader = new BufferedReader(fileReader)) {
+        StringBuilder content = new StringBuilder(18000);
+        String s;
+        while ((s = bufferedReader.readLine()) != null) {
+          content.append(s);
+        }
+        passwordResetTemplateContents = content.toString();
+      }
+      return passwordResetTemplateContents;
+    } catch (FileNotFoundException e) {
+      logger.error(e.getMessage(), e);
+      return null;
+    } catch (IOException e) {
+      logger.error(e.getMessage(), e);
+      return null;
+    }
+  }
+
+  public void sendHtmlEmail(String recipient, String subject, String content) {
+
     Objects.requireNonNull(recipient);
     Objects.requireNonNull(subject);
     Objects.requireNonNull(content);
-
-    Message message = new MimeMessage(getSession());
-    message.setFrom(new InternetAddress(env.getProperty("messaging.email")));
-    message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(recipient));
-    message.setSubject(subject);
-    message.setContent(content, "text/html");
-
-    Transport.send(message);
+    try {
+      sendMail(content, env.getProperty("messaging.email"), recipient, subject, true);
+    } catch (Exception e) {
+      logger.error("Failed to send email. Reason: " + e.getMessage());
+    }
   }
 
-  public void sendPlainTextEmail(String recipient, String subject, String content)
-      throws AddressException, MessagingException {
+  public void sendPlainTextEmail(String recipient, String subject, String content) {
     Objects.requireNonNull(recipient);
     Objects.requireNonNull(subject);
     Objects.requireNonNull(content);
-
-    Message message = new MimeMessage(getSession());
-    message.setFrom(new InternetAddress(env.getProperty("messaging.email")));
-    message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(recipient));
-    message.setSubject(subject);
-    message.setText(content);
-
-    Transport.send(message);
+    try {
+      sendMail(content, env.getProperty("messaging.email"), recipient, subject, false);
+    } catch (Exception e) {
+      logger.error("Failed to send email. Reason: " + e.getMessage());
+    }
   }
 
+  public void sendMail(
+      final String text,
+      final String from,
+      final String to,
+      final String subject,
+      final boolean isHtml)
+      throws Exception {
+    taskExecutor.execute(
+        new Runnable() {
+          @Override
+          public void run() {
+            try {
+              sendMailSimple(text, from, to, subject, isHtml);
+            } catch (Exception e) {
+              logger.error("Failed to send email to: " + to + " reason: " + e.getMessage());
+            }
+          }
+        });
+  }
+
+  private void sendMailSimple(String text, String from, String to, String subject, boolean isHtml)
+      throws Exception {
+    MimeMessage message = mailSender.createMimeMessage();
+    try {
+      MimeMessageHelper helper = new MimeMessageHelper(message, true);
+      helper.setFrom(from);
+      helper.setTo(to);
+      helper.setSubject(subject);
+      helper.setText(text, isHtml);
+    } catch (MessagingException e) {
+      throw new MailParseException(e);
+    }
+    mailSender.send(message);
+
+    if (logger.isDebugEnabled()) {
+      logger.debug("Mail was sent successfully to: " + to);
+    }
+  }
+
+  @Override
   public String buildInviteContent(String inviteCode, String owner) {
     // TODO: replace unsub link |UNSUB-LINK| in the template
-    String joinLink = "http://" + env.getProperty("server.host") + ":"
-        + env.getProperty("server.port") + "/family/join&code=" + inviteCode;
+    String joinLink = "http://" + domain + "/family/join?code=" + inviteCode;
     String contents = getInviteTemplateContents();
     if (contents == null) {
       return null;
@@ -102,21 +169,16 @@ public class MessagingServiceImpl implements MessagingService {
     return contents;
   }
 
-  private Session getSession() {
-    Properties props = new Properties();
-    props.put("mail.smtp.host", env.getProperty("messaging.smtp.server"));
-    props.put("mail.smtp.socketFactory.port", env.getProperty("messaging.smtp.port"));
-    props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
-    props.put("mail.smtp.auth", "true");
-    props.put("mail.smtp.port", env.getProperty("messaging.smtp.port"));
-    Authenticator auth = new SMTPAuthenticator();
-    return Session.getInstance(props, auth);
-  }
-
-  private class SMTPAuthenticator extends Authenticator {
-    public PasswordAuthentication getPasswordAuthentication() {
-      return new PasswordAuthentication(env.getProperty("messaging.email"),
-          env.getProperty("messaging.password"));
+  @Override
+  public String buildPasswordResetContent(String resetCode) {
+    // TODO: replace unsub link |UNSUB-LINK| in the template
+    String resetLink = "http://" + domain + "/passwordReset?code=" + resetCode;
+    String contents = getPasswordResetTemplateContents();
+    if (contents == null) {
+      return null;
     }
+    contents = contents.replace("|RESET-LINK|", resetLink);
+
+    return contents;
   }
 }

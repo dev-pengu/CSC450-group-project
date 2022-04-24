@@ -8,10 +8,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.familyorg.familyorganizationapp.DTO.FamilyDto;
+import com.familyorg.familyorganizationapp.Exception.ApiExceptionCode;
 import com.familyorg.familyorganizationapp.Exception.AuthorizationException;
 import com.familyorg.familyorganizationapp.Exception.BadRequestException;
-import com.familyorg.familyorganizationapp.Exception.FamilyNotFoundException;
-import com.familyorg.familyorganizationapp.Exception.InviteCodeNotFoundException;
+import com.familyorg.familyorganizationapp.Exception.ResourceNotFoundException;
 import com.familyorg.familyorganizationapp.domain.Family;
 import com.familyorg.familyorganizationapp.domain.FamilyMembers;
 import com.familyorg.familyorganizationapp.domain.InviteCode;
@@ -27,30 +27,38 @@ import com.familyorg.familyorganizationapp.util.ColorUtil;
 
 @Service
 public class InviteServiceImpl implements InviteService {
-  private Logger LOG = LoggerFactory.getLogger(InviteServiceImpl.class);
+  private Logger logger = LoggerFactory.getLogger(InviteServiceImpl.class);
+
+  MemberInviteRepository memberInviteRepository;
+  FamilyService familyService;
+  AuthService authService;
+  UserService userService;
+
 
   @Autowired
-  MemberInviteRepository memberInviteRepository;
-  @Autowired
-  FamilyService familyService;
-  @Autowired
-  AuthService authService;
-  @Autowired
-  UserService userService;
+  public InviteServiceImpl(MemberInviteRepository memberInviteRepository,
+      FamilyService familyService, AuthService authService, UserService userService) {
+    this.memberInviteRepository = memberInviteRepository;
+    this.familyService = familyService;
+    this.authService = authService;
+    this.userService = userService;
+  }
 
   @Override
   @Transactional
   public MemberInvite createUniqueMemberInvite(Long familyId, String userEmail)
-      throws FamilyNotFoundException, AuthorizationException {
+      throws AuthorizationException {
     Optional<Family> family = familyService.getFamilyById(familyId);
     if (family.isEmpty()) {
-      throw new FamilyNotFoundException("Family with id " + familyId + " not found");
+      throw new ResourceNotFoundException(ApiExceptionCode.FAMILY_DOESNT_EXIST,
+          "Family with id " + familyId + " not found");
     }
     User requestingUser = userService.getRequestingUser();
-    FamilyMembers userMemberEntry = family.get().getMembers().stream()
-        .filter(member -> member.getUser().getUsername().equals(requestingUser.getUsername())
-            && member.getRole().getLevel() >= Role.ADULT.getLevel())
-        .findFirst().orElseThrow(AuthorizationException::new);
+    boolean hasAppropriatePermissions =
+        familyService.verfiyMinimumRoleSecurity(family.get(), requestingUser, Role.ADULT);
+    if (!hasAppropriatePermissions)
+      throw new AuthorizationException(ApiExceptionCode.USER_PRIVILEGES_TOO_LOW,
+          "User not authorized to complete this action.");
     MemberInvite invite = new MemberInvite(family.get(), userEmail);
     MemberInvite savedInvite = memberInviteRepository.save(invite);
     return savedInvite;
@@ -59,16 +67,18 @@ public class InviteServiceImpl implements InviteService {
   @Override
   @Transactional
   public MemberInvite createUniqueMemberInviteWithRole(Long familyId, String userEmail, Role role)
-      throws FamilyNotFoundException, AuthorizationException {
+      throws AuthorizationException {
     Optional<Family> family = familyService.getFamilyById(familyId);
     if (family.isEmpty()) {
-      throw new FamilyNotFoundException("Family with id " + familyId + " not found");
+      throw new ResourceNotFoundException(ApiExceptionCode.FAMILY_DOESNT_EXIST,
+          "Family with id " + familyId + " not found");
     }
     User requestingUser = userService.getRequestingUser();
-    FamilyMembers userMemberEntry = family.get().getMembers().stream()
-        .filter(member -> member.getUser().getUsername().equals(requestingUser.getUsername())
-            && member.getRole().getLevel() >= Role.ADULT.getLevel())
-        .findFirst().orElseThrow(AuthorizationException::new);
+    boolean hasAppropriatePermissions =
+        familyService.verfiyMinimumRoleSecurity(family.get(), requestingUser, Role.ADULT);
+    if (!hasAppropriatePermissions)
+      throw new AuthorizationException(ApiExceptionCode.USER_PRIVILEGES_TOO_LOW,
+          "User not authorized to complete this action.");
     MemberInvite invite = new MemberInvite(family.get(), userEmail, role);
     MemberInvite savedInvite = memberInviteRepository.save(invite);
     return savedInvite;
@@ -77,16 +87,18 @@ public class InviteServiceImpl implements InviteService {
   @Override
   @Transactional
   public FamilyDto generatePersistentMemberInvite(Long familyId)
-      throws FamilyNotFoundException, AuthorizationException {
+      throws AuthorizationException {
     Optional<Family> family = familyService.getFamilyById(familyId);
     if (family.isEmpty()) {
-      throw new FamilyNotFoundException("Family with id " + familyId + " not found");
+      throw new ResourceNotFoundException(ApiExceptionCode.FAMILY_DOESNT_EXIST,
+          "Family with id " + familyId + " not found");
     }
     User requestingUser = userService.getRequestingUser();
-    FamilyMembers userMemberEntry = family.get().getMembers().stream()
-        .filter(member -> member.getUser().getUsername().equals(requestingUser.getUsername())
-            && member.getRole().getLevel() >= Role.ADMIN.getLevel())
-        .findFirst().orElseThrow(AuthorizationException::new);
+    boolean hasAppropriatePermissions =
+        familyService.verfiyMinimumRoleSecurity(family.get(), requestingUser, Role.ADMIN);
+    if (!hasAppropriatePermissions)
+      throw new AuthorizationException(ApiExceptionCode.USER_PRIVILEGES_TOO_LOW,
+          "User not authorized to complete this action.");
 
     InviteCode inviteCode = new InviteCode(true);
     family.get().setInviteCode(inviteCode);
@@ -98,17 +110,19 @@ public class InviteServiceImpl implements InviteService {
   @Override
   @Transactional
   public void verifyMemberInvite(InviteCode invite, String eventColor)
-      throws AuthorizationException, FamilyNotFoundException, InviteCodeNotFoundException {
+      throws AuthorizationException {
     // Get the currently signed in user
     User requestingUser = userService.getRequestingUser();
     if (!ColorUtil.isValidHexCode(eventColor)) {
-      throw new BadRequestException("Event color is not a valid hexcode");
+      throw new BadRequestException(ApiExceptionCode.BAD_PARAM_VALUE,
+          "Event color is not a valid hexcode");
     }
     if (invite.isPersistent()) {
       // Find the family with the persistent invite code
       Family family = familyService.getFamilyByInviteCode(invite.toString());
       if (family == null) {
-        throw new InviteCodeNotFoundException("Invalid invite code");
+        throw new ResourceNotFoundException(ApiExceptionCode.INVITE_CODE_DOESNT_EXIST,
+            "Invalid invite code");
       }
       // Add the user to the family
       FamilyMembers member = new FamilyMembers(requestingUser, family, Role.CHILD, eventColor);
@@ -118,16 +132,19 @@ public class InviteServiceImpl implements InviteService {
       // Get the invite data
       MemberInvite memberInvite = memberInviteRepository.findByInviteCode(invite.toString());
       if (memberInvite == null) {
-        throw new InviteCodeNotFoundException("Invalid invite code");
+        throw new ResourceNotFoundException(ApiExceptionCode.INVITE_CODE_DOESNT_EXIST,
+            "Invalid invite code");
       }
       if (!memberInvite.getUserEmail().equals(requestingUser.getEmail())) {
-        throw new AuthorizationException("You are not authorized to use this invite code", false);
+        throw new AuthorizationException(ApiExceptionCode.ILLEGAL_ACTION_REQUESTED,
+            "You are not authorized to use this invite code", false);
       }
       // Get the family from the invite
       Optional<Family> family = familyService.getFamilyById(memberInvite.getFamilyId());
       if (family.isEmpty()) {
-        throw new FamilyNotFoundException("Family not found for invite code " + invite.toString()
-            + ". The family may have been removed before you joined.");
+        throw new ResourceNotFoundException(ApiExceptionCode.FAMILY_DOESNT_EXIST,
+            "Family not found for invite code " + invite.toString()
+                + ". The family may have been removed before you joined.");
       }
       // Add the user to the family
       FamilyMembers member =
@@ -140,55 +157,20 @@ public class InviteServiceImpl implements InviteService {
   }
 
   @Override
-  public List<MemberInvite> getInvites(Long familyId) throws FamilyNotFoundException {
+  public List<MemberInvite> getInvites(Long familyId) {
     User requestingUser = userService.getRequestingUser();
 
     Optional<Family> family = familyService.getFamilyById(familyId);
     if (family.isEmpty()) {
-      throw new FamilyNotFoundException("Family with id " + familyId + " not found");
+      throw new ResourceNotFoundException(ApiExceptionCode.FAMILY_DOESNT_EXIST,
+          "Family with id " + familyId + " not found");
     }
-    FamilyMembers userMemberEntry = family.get().getMembers().stream()
-        .filter(member -> member.getUser().getUsername().equals(requestingUser.getUsername())
-            && member.getRole().getLevel() >= Role.ADULT.getLevel())
-        .findFirst().orElseThrow(AuthorizationException::new);
+    boolean hasAppropriatePermissions =
+        familyService.verfiyMinimumRoleSecurity(family.get(), requestingUser, Role.ADULT);
+    if (!hasAppropriatePermissions)
+      throw new AuthorizationException(ApiExceptionCode.USER_PRIVILEGES_TOO_LOW,
+          "User not authorized to complete this action.");
 
     return memberInviteRepository.getByFamilyId(family.get().getId());
   }
-
-  /**
-   * This should only be called for testing to mock the injected class
-   *
-   * @param memberInviteRepository
-   */
-  void setMemberInviteRepository(MemberInviteRepository memberInviteRepository) {
-    this.memberInviteRepository = memberInviteRepository;
-  }
-
-  /**
-   * This should only be called for testing to mock the injected class
-   *
-   * @param familyService
-   */
-  void setFamilyService(FamilyService familyService) {
-    this.familyService = familyService;
-  }
-
-  /**
-   * This should only be called for testing to mock the injected class
-   *
-   * @param authService
-   */
-  void setAuthService(AuthService authService) {
-    this.authService = authService;
-  }
-
-  /**
-   * This should only be called for testing to mock the injected class
-   *
-   * @param userService
-   */
-  void setUserService(UserService userService) {
-    this.userService = userService;
-  }
-
 }

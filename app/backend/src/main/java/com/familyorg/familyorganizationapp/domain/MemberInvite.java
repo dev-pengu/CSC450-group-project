@@ -9,6 +9,7 @@ import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.IdClass;
+import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import com.familyorg.familyorganizationapp.domain.id.MemberInviteId;
@@ -29,6 +30,8 @@ public class MemberInvite implements Serializable {
   @JsonIgnore
   @Id
   @ManyToOne(fetch = FetchType.EAGER)
+  @JoinColumn(name = "family_id", referencedColumnName = "family_id",
+      columnDefinition = "BIGINT")
   private Family family;
 
   @Id

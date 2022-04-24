@@ -15,7 +15,6 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
@@ -25,7 +24,8 @@ public class Family implements Serializable {
   private static final long serialVersionUID = 6681350428367318335L;
 
   @Id
-  @GeneratedValue(strategy = GenerationType.AUTO)
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Column(name = "family_id", columnDefinition = "BIGSERIAL")
   private Long id;
 
   @Column(name = "name", columnDefinition = "VARCHAR(50)", nullable = false)
@@ -34,7 +34,7 @@ public class Family implements Serializable {
   @Column(name = "event_color", columnDefinition = "VARCHAR(6)", nullable = false)
   private String eventColor;
 
-  @Column(name = "timezone", columnDefinition = "VARCHAR(32)", nullable = false)
+  @Column(name = "timezone", columnDefinition = "VARCHAR(256)", nullable = false)
   private String timezone;
 
   @Column(name = "invite_code", columnDefinition = "VARCHAR(36)")
@@ -44,6 +44,15 @@ public class Family implements Serializable {
   @OneToMany(mappedBy = "family", fetch = FetchType.LAZY, cascade = CascadeType.ALL,
       orphanRemoval = true)
   private Set<FamilyMembers> members;
+
+  @JsonIgnore
+  @OneToMany(mappedBy = "family", fetch = FetchType.LAZY, cascade = CascadeType.ALL,
+      orphanRemoval = true)
+  private Set<Calendar> calendars;
+
+  @JsonIgnore
+  @OneToMany(mappedBy = "family", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+  private Set<ShoppingList> shoppingLists;
 
   public Family() {}
 
@@ -148,6 +157,43 @@ public class Family implements Serializable {
 
   public Optional<FamilyMembers> getOwner() {
     return this.members.stream().filter(member -> Role.OWNER.equals(member.getRole())).findFirst();
+  }
+
+  public Set<Calendar> getCalendars() {
+    return calendars;
+  }
+
+  public void setCalendars(Set<Calendar> calendars) {
+    this.calendars = calendars;
+  }
+
+  public void addCalendar(Calendar calendar) {
+    if (calendars == null) {
+      calendars = new HashSet<>();
+    }
+    this.calendars.add(calendar);
+  }
+
+  public Set<ShoppingList> getShoppingLists() {
+    return shoppingLists;
+  }
+
+  public void setShoppingLists(
+    Set<ShoppingList> shoppingLists) {
+    this.shoppingLists = shoppingLists;
+  }
+
+  public void addShoppingList(ShoppingList list) {
+    if (shoppingLists == null) {
+      shoppingLists = new HashSet<>();
+    }
+    this.shoppingLists.add(list);
+  }
+
+  public boolean isMember(User user) {
+    return this.members.stream()
+        .filter(member -> member.getUser().getId().equals(user.getId()))
+        .count() > 0;
   }
 
   @Override

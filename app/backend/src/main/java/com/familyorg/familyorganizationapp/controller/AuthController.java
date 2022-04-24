@@ -1,38 +1,45 @@
 package com.familyorg.familyorganizationapp.controller;
 
+import com.familyorg.familyorganizationapp.Exception.ApiExceptionCode;
+import com.familyorg.familyorganizationapp.Exception.AuthorizationException;
+import com.familyorg.familyorganizationapp.Exception.BadRequestException;
+import com.familyorg.familyorganizationapp.Exception.UserNotFoundException;
+import com.familyorg.familyorganizationapp.service.AuthService;
+import com.familyorg.familyorganizationapp.service.MessagingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.familyorg.familyorganizationapp.DTO.ErrorDto;
 import com.familyorg.familyorganizationapp.DTO.UserDto;
 import com.familyorg.familyorganizationapp.DTO.builder.ErrorDtoBuilder;
-import com.familyorg.familyorganizationapp.Exception.AuthorizationException;
-import com.familyorg.familyorganizationapp.Exception.BadRequestException;
-import com.familyorg.familyorganizationapp.Exception.ExistingUserException;
-import com.familyorg.familyorganizationapp.Exception.IncorrectCredentialsException;
-import com.familyorg.familyorganizationapp.Exception.UserNotFoundException;
 import com.familyorg.familyorganizationapp.domain.User;
 import com.familyorg.familyorganizationapp.service.SecurityService;
 import com.familyorg.familyorganizationapp.service.UserService;
 
+@CrossOrigin(origins = "http://localhost:8081")
 @RestController
 @RequestMapping("/api/services/auth")
 public class AuthController {
-  @Autowired
-  private UserService userService;
-  @Autowired
-  private SecurityService securityService;
+  @Autowired private UserService userService;
+  @Autowired private SecurityService securityService;
+  @Autowired private AuthService authService;
+  @Autowired private MessagingService messagingService;
 
   private static final Logger LOG = LoggerFactory.getLogger(AuthController.class);
 
+  @GetMapping("/csrf")
+  public void getCsrf() {}
 
   /**
    * Create a new user. If username or email is already in use, will return HttpStatus 409 and
@@ -41,35 +48,19 @@ public class AuthController {
    * @param user
    * @return UserDto populated with currently logged in user
    */
-  @PostMapping()
+  @PostMapping("/register")
   public ResponseEntity<?> saveUser(@RequestBody User user) {
-    try {
-      String originalPassword = user.getPassword();
-      UserDto savedUser = userService.createUser(user);
-      if (savedUser != null) {
-        securityService.autologin(user.getUsername(), originalPassword);
-        return new ResponseEntity<>(savedUser, HttpStatus.CREATED);
-      } else {
-        ErrorDto errorResponse =
-            new ErrorDtoBuilder().withErrorCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                .withMessage("Error processing request.").build();
-        return new ResponseEntity<ErrorDto>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
-      }
-    } catch (ExistingUserException e) {
-      LOG.error(e.getMessage(), e);
-      ErrorDto errorResponse = new ErrorDtoBuilder().withErrorCode(HttpStatus.CONFLICT.value())
-          .withMessage(e.getMessage()).build();
-      return new ResponseEntity<ErrorDto>(errorResponse, HttpStatus.CONFLICT);
-    } catch (BadRequestException e) {
-      LOG.error(e.getMessage(), e);
-      ErrorDto errorResponse = new ErrorDtoBuilder().withErrorCode(HttpStatus.BAD_REQUEST.value())
-          .withMessage(e.getMessage()).build();
-      return new ResponseEntity<ErrorDto>(errorResponse, HttpStatus.BAD_REQUEST);
-    } catch (Exception e) {
-      LOG.error(e.getMessage(), e);
+    String originalPassword = user.getPassword();
+    UserDto savedUser = userService.createUser(user);
+    if (savedUser != null) {
+      securityService.autologin(user.getUsername(), originalPassword);
+      return new ResponseEntity<>(savedUser, HttpStatus.CREATED);
+    } else {
       ErrorDto errorResponse =
-          new ErrorDtoBuilder().withErrorCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
-              .withMessage("Error processing request.").build();
+          new ErrorDtoBuilder()
+              .withErrorCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+              .withMessage("Error processing request.")
+              .build();
       return new ResponseEntity<ErrorDto>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
@@ -81,59 +72,122 @@ public class AuthController {
    * @return Currently logged in user on success.
    */
   @PostMapping("/login")
-  public ResponseEntity<?> login(@RequestBody User user) {
-    try {
-      securityService.autologin(user.getUsername(), user.getPassword());
-      User loggedInUser = userService.getUserByUsername(user.getUsername());
-      return new ResponseEntity<>(UserDto.fromUserObj(loggedInUser), HttpStatus.OK);
-    } catch (IncorrectCredentialsException e) {
-      LOG.error(e.getMessage(), e);
-      ErrorDto errorResponse = new ErrorDtoBuilder().withErrorCode(HttpStatus.UNAUTHORIZED.value())
-          .withMessage(e.getMessage()).build();
-      return new ResponseEntity<ErrorDto>(errorResponse, HttpStatus.UNAUTHORIZED);
-    } catch (BadCredentialsException e) {
-      LOG.error(e.getMessage(), e);
-      ErrorDto errorResponse = new ErrorDtoBuilder().withErrorCode(HttpStatus.UNAUTHORIZED.value())
-          .withMessage(e.getMessage()).build();
-      return new ResponseEntity<ErrorDto>(errorResponse, HttpStatus.UNAUTHORIZED);
-    } catch (Exception e) {
-      LOG.error(e.getMessage(), e);
-      ErrorDto errorResponse =
-          new ErrorDtoBuilder().withErrorCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
-              .withMessage("Error processing request.").build();
-      return new ResponseEntity<ErrorDto>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+  public ResponseEntity<UserDto> login(@RequestBody User user) {
+    securityService.autologin(user.getUsername(), user.getPassword());
+    User loggedInUser = userService.getUserByUsername(user.getUsername());
+    return new ResponseEntity<>(UserDto.fromUserObj(loggedInUser), HttpStatus.OK);
+  }
+
+  @PostMapping("/changePassword")
+  public ResponseEntity<String> changePassword(@RequestBody UserDto request) {
+    if ((request.getUsername() == null || request.getUsername().isBlank())
+        && (request.getEmail() == null || request.getEmail().isBlank())) {
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING,
+          "Either a username or a password must be supplied.");
+    }
+    if (request.getResetCode() == null || request.getResetCode().isBlank()) {
+      validateReauthenticatedResetRequest(request);
+      User user = userService.getRequestingUser();
+      UserDetails reauthenticatedUser =
+          securityService.reauthenticate(request.getUsername(), request.getOldPassword());
+      if (reauthenticatedUser == null
+          || !user.getUsername().equals(reauthenticatedUser.getUsername())) {
+        throw new AuthorizationException(
+            ApiExceptionCode.ILLEGAL_ACTION_REQUESTED,
+            "User is not authorized to complete this action");
+      }
+      userService.changePassword(user, request.getNewPassword());
+    } else {
+      validateCodeResetRequest(request);
+      User user;
+      if (request.getUsername() != null && !request.getUsername().isBlank()) {
+        user = userService.getUserByUsername(request.getUsername());
+      } else {
+        user = userService.getUserByEmail(request.getEmail());
+      }
+      if (user == null) {
+        throw new UserNotFoundException(ApiExceptionCode.USER_DOESNT_EXIST, "User not found.");
+      }
+      if (authService.verifyResetCode(request.getResetCode(), user)) {
+        userService.changePassword(user, request.getNewPassword());
+      } else {
+        throw new AuthorizationException(
+            ApiExceptionCode.ILLEGAL_ACTION_REQUESTED,
+            "User is not permitted to perform this action.");
+      }
+    }
+
+    return new ResponseEntity<>("Success", HttpStatus.OK);
+  }
+
+  @PostMapping("/passwordReset")
+  public ResponseEntity<String> requestPasswordReset(@RequestBody UserDto request) {
+    if ((request.getUsername() == null || request.getUsername().isBlank())
+        && (request.getEmail() == null || request.getEmail().isBlank())) {
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING,
+          "Either a username or a password must be supplied.");
+    }
+    User user;
+    if (request.getUsername() != null && !request.getUsername().isBlank()) {
+      user = userService.getUserByUsername(request.getUsername());
+    } else {
+      user = userService.getUserByEmail(request.getEmail());
+    }
+    String emailContents =
+        messagingService.buildPasswordResetContent(authService.generateResetCode(user));
+    messagingService.sendHtmlEmail(
+        user.getEmail(), "Password Reset for Family Command Center", emailContents);
+    return new ResponseEntity<>("Success", HttpStatus.OK);
+  }
+
+  @GetMapping("/usernameCheck")
+  public ResponseEntity<Boolean> checkUsername(@RequestParam() String username) {
+    User user = userService.getUserByUsername(username);
+    if (user == null) {
+      return new ResponseEntity<>(true, HttpStatus.OK);
+    }
+    return new ResponseEntity<>(false, HttpStatus.OK);
+  }
+
+  @GetMapping("/emailCheck")
+  public ResponseEntity<Boolean> checkEmail(@RequestParam() String email) {
+    User user = userService.getUserByEmail(email);
+    if (user == null) {
+      return new ResponseEntity<>(true, HttpStatus.OK);
+    }
+    return new ResponseEntity<>(false, HttpStatus.OK);
+  }
+
+  private void validateReauthenticatedResetRequest(UserDto request) {
+    if (request.getNewPassword() == null || request.getNewPassword().isBlank()) {
+      throw new BadRequestException(
+        ApiExceptionCode.REQUIRED_PARAM_MISSING,
+        "A new password is required to change password.");
+    }
+    if (request.getOldPassword() == null || request.getOldPassword().isBlank()) {
+      throw new BadRequestException(
+        ApiExceptionCode.REQUIRED_PARAM_MISSING,
+        "Old password is required to change password.");
+    }
+    if (!authService.verifyPasswordRequirements(request.getNewPassword())) {
+      throw new BadRequestException(
+        ApiExceptionCode.PASSWORD_MINIMUM_REQUIREMENTS_NOT_MET,
+        "Password does not meet minimum requirements");
     }
   }
 
-  @PatchMapping("/change-password")
-  public ResponseEntity<?> changePassword(@RequestBody UserDto user) {
-    try {
-      userService.changePassword(user);
-      return new ResponseEntity<String>("Success", HttpStatus.OK);
-    } catch (UserNotFoundException e) {
-      LOG.error(e.getMessage(), e);
-      ErrorDto errorResponse = new ErrorDtoBuilder().withErrorCode(HttpStatus.NOT_FOUND.value())
-          .withMessage(e.getMessage()).addRedirect("/register").build();
-      return new ResponseEntity<ErrorDto>(errorResponse, HttpStatus.NOT_FOUND);
-    } catch (AuthorizationException e) {
-      LOG.error(e.getMessage(), e);
-      ErrorDtoBuilder errorResponse = new ErrorDtoBuilder()
-          .withErrorCode(HttpStatus.UNAUTHORIZED.value()).withMessage(e.getMessage());
-      if (e.isRedirect()) {
-        errorResponse = errorResponse.addRedirect("/login");
-      }
-      return new ResponseEntity<ErrorDto>(errorResponse.build(), HttpStatus.UNAUTHORIZED);
-    } catch (BadRequestException e) {
-      LOG.error(e.getMessage(), e);
-      ErrorDto errorResponse = new ErrorDtoBuilder().withErrorCode(HttpStatus.BAD_REQUEST.value())
-          .withMessage(e.getMessage()).build();
-      return new ResponseEntity<ErrorDto>(errorResponse, HttpStatus.BAD_REQUEST);
-    } catch (Exception e) {
-      LOG.error(e.getMessage(), e);
-      ErrorDto errorResponse =
-          new ErrorDtoBuilder().withErrorCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
-              .withMessage("Error processing request.").build();
-      return new ResponseEntity<ErrorDto>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+  private void validateCodeResetRequest(UserDto request) {
+    if (request.getNewPassword() == null || request.getNewPassword().isBlank()) {
+      throw new BadRequestException(
+        ApiExceptionCode.REQUIRED_PARAM_MISSING,
+        "A new password is required to change password.");
+    }
+    if (!authService.verifyPasswordRequirements(request.getNewPassword())) {
+      throw new BadRequestException(
+        ApiExceptionCode.PASSWORD_MINIMUM_REQUIREMENTS_NOT_MET,
+        "Password does not meet minimum requirements");
     }
   }
 }

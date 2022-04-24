@@ -1,45 +1,56 @@
 <template>
   <div class="login">
-    <v-img height="250" contain src="../assets/logo.png"></v-img>
+    <v-img v-if="$vuetify.theme.dark" height="250" contain src="@/assets/logo-dark.png"></v-img>
+    <v-img v-else height="250" contain src="@/assets/logo-light.png"></v-img>
     <v-row justify="center">
-      <v-col cols="10" md="4">
+      <v-col cols="10" sm="5" md="4">
         <v-card elevation="4">
           <v-card-text>
-            <v-form>
-              <v-row>
-                <v-col cols="12">
-                  <v-text-field v-model="formData.username" prepend-icon="mdi-account" label="Username" />
-                </v-col>
-              </v-row>
-              <v-row>
-                <v-col cols="12">
-                  <v-text-field
-                    v-model="formData.password"
-                    prepend-icon="mdi-lock"
-                    type="password"
-                    label="Password"
-                    @keyup.enter="submit"
-                  />
-                </v-col>
-              </v-row>
-            </v-form>
-            <v-row>
-              <v-col cols="12" class="py-0">
-                <v-alert v-if="error" class="mb-0" text type="error">{{ errorMsg }}</v-alert>
-              </v-col>
-            </v-row>
-          </v-card-text>
-          <v-card-actions>
-            <v-row justify="center">
-              <v-col cols="12" sm="6">
-                <v-btn block color="primary" elevation="2" :loading="loading" :disabled="loading" @click="submit"
-                  >Login</v-btn
+            <v-form v-model="valid">
+              <v-text-field
+                v-model="formData.username"
+                color="foa_button"
+                prepend-icon="mdi-account"
+                :rules="usernameRules"
+                label="Username"
+                required
+              />
+              <v-text-field
+                v-model="formData.password"
+                color="foa_button"
+                :rules="passwordRules"
+                prepend-icon="mdi-lock"
+                :append-icon="showPass ? 'mdi-eye' : 'mdi-eye-off'"
+                :type="showPass ? 'text' : 'password'"
+                label="Password"
+                required
+                @keyup.enter="submit"
+                @click:append="showPass = !showPass"
+              />
+              <div class="text-center">
+                <span style="cursor: pointer" class="foa_link--text text-decoration-underline" to="#" @click="sendReset"
+                  >Forgot your password?</span
                 >
-              </v-col>
-            </v-row>
+              </div>
+            </v-form>
+            <v-alert v-if="error" class="mb-0" text type="error">{{ errorMsg }}</v-alert>
+          </v-card-text>
+          <v-card-actions class="justify-center">
+            <v-btn
+              class="foa_button_text--text"
+              color="foa_button"
+              elevation="2"
+              width="50%"
+              :loading="loading"
+              :disabled="loading || !valid"
+              @click="submit"
+              >Login</v-btn
+            >
           </v-card-actions>
           <v-card-text>
-            <p class="ma-0 text-center">Don't have an account? <router-link to="/signup">Sign up now!</router-link></p>
+            <div class="text-center">
+              Don't have an account? <router-link to="/signup" class="foa_link--text">Sign up now!</router-link>
+            </div>
           </v-card-text>
         </v-card>
       </v-col>
@@ -49,11 +60,15 @@
 
 <script>
 import { mapActions } from 'vuex';
+import api from '../api';
 
 export default {
   name: 'Login',
   components: {},
   data: () => ({
+    valid: false,
+    usernameRules: [(v) => !!v || 'Username is required'],
+    passwordRules: [(v) => !!v || 'Password is required'],
     formData: {
       username: '',
       password: '',
@@ -61,26 +76,46 @@ export default {
     error: false,
     errorMsg: '',
     loading: false,
+    showPass: false,
   }),
   methods: {
-    ...mapActions(['login']),
+    ...mapActions(['loginUser', 'showSnackbar']),
     async submit() {
-      this.loading = true;
-      this.error = false;
-      this.errors = [];
-      if (this.formData.username === '' || this.formData.password === '') {
-        this.loading = false;
-        return;
-      }
       try {
-        const res = await this.login(this.formData);
+        this.loading = true;
+        this.error = false;
+        this.errorMsg = '';
+        await api.getCsrf();
+
+        const res = await this.loginUser(this.formData);
         if (res.status === 200) {
+          this.$vuetify.theme.dark = res.data.useDarkMode;
+          localStorage.setItem('darkMode', this.$vuetify.theme.dark.toString());
           this.$router.push('/');
         } else {
           this.error = true;
-          console.log('test');
-          this.errorMsg('Username or password is incorrect');
+          this.errorMsg = 'Your username or password was incorrect.';
         }
+      } catch (err) {
+        this.error = true;
+        this.errorMsg = 'Login failed, please try again.';
+      } finally {
+        this.loading = false;
+      }
+    },
+    async sendReset() {
+      this.loading = true;
+      this.error = false;
+      this.errorMsg = '';
+      if (this.formData.username === '') {
+        this.loading = false;
+        this.error = true;
+        this.errorMsg = 'Please supply a username to reset your password';
+        return;
+      }
+      try {
+        api.sendResetCode(this.formData);
+        this.showSnackbar({ type: 'info', message: 'An email has been sent to your email on file.', timeout: 3000 });
       } catch (err) {
         this.error = true;
         const error = { err };
@@ -90,11 +125,10 @@ export default {
           this.errorMsg = err;
         }
       }
-
       this.loading = false;
     },
   },
 };
 </script>
 
-<style scoped lang="less"></style>
+<style scoped></style>

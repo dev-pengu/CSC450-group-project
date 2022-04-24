@@ -21,8 +21,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import com.familyorg.familyorganizationapp.DTO.FamilyDto;
 import com.familyorg.familyorganizationapp.Exception.AuthorizationException;
-import com.familyorg.familyorganizationapp.Exception.FamilyNotFoundException;
-import com.familyorg.familyorganizationapp.Exception.InviteCodeNotFoundException;
+import com.familyorg.familyorganizationapp.Exception.ResourceNotFoundException;
 import com.familyorg.familyorganizationapp.domain.Family;
 import com.familyorg.familyorganizationapp.domain.FamilyMembers;
 import com.familyorg.familyorganizationapp.domain.InviteCode;
@@ -139,17 +138,17 @@ public class InviteServiceImplTest {
         .thenAnswer(invocation -> invocation.getArgument(0));
     doNothing().when(memberInviteRepository).delete(any(MemberInvite.class));;
 
-    inviteService = new InviteServiceImpl();
-    inviteService.setAuthService(authService);
-    inviteService.setFamilyService(familyService);
-    inviteService.setMemberInviteRepository(memberInviteRepository);
-    inviteService.setUserService(userService);
+    inviteService =
+        new InviteServiceImpl(memberInviteRepository, familyService, authService, userService);
   }
 
   @Test
   public void when_permitted_and_create_one_time_code_then_code_generated() {
     /* Given */
     when(userService.getRequestingUser()).thenReturn(TEST_USER_1);
+    when(familyService.verfiyMinimumRoleSecurity(any(Family.class), any(User.class),
+        any(Role.class)))
+            .thenReturn(Boolean.TRUE);
 
     /* When */
     MemberInvite generated =
@@ -158,7 +157,8 @@ public class InviteServiceImplTest {
     /* Then */
     assertNotNull(generated);
     assertNotNull(generated.getInviteCode());
-    assertTrue(generated.getInviteCodeObj().getInviteCodeString()
+    assertTrue(generated.getInviteCodeObj()
+        .getInviteCodeString()
         .contains(InviteCode.ONE_TIME_USE_PREFIX));
     assertEquals(Role.CHILD, generated.getRole());
   }
@@ -167,7 +167,9 @@ public class InviteServiceImplTest {
   public void when_permitted_and_create_one_time_with_role_then_code_generated() {
     /* Given */
     when(userService.getRequestingUser()).thenReturn(TEST_USER_1);
-
+    when(familyService.verfiyMinimumRoleSecurity(any(Family.class), any(User.class),
+        any(Role.class)))
+            .thenReturn(Boolean.TRUE);
     /* When */
     MemberInvite generated = inviteService.createUniqueMemberInviteWithRole(FAMILY_1.getId(),
         "testuser@test.com", Role.ADULT);
@@ -175,7 +177,8 @@ public class InviteServiceImplTest {
     /* Then */
     assertNotNull(generated);
     assertNotNull(generated.getInviteCode());
-    assertTrue(generated.getInviteCodeObj().getInviteCodeString()
+    assertTrue(generated.getInviteCodeObj()
+        .getInviteCodeString()
         .contains(InviteCode.ONE_TIME_USE_PREFIX));
     assertEquals(Role.ADULT, generated.getRole());
   }
@@ -208,7 +211,7 @@ public class InviteServiceImplTest {
     when(userService.getRequestingUser()).thenReturn(TEST_USER_1);
 
     /* When */
-    assertThrows(FamilyNotFoundException.class, () -> {
+    assertThrows(ResourceNotFoundException.class, () -> {
       inviteService.createUniqueMemberInvite(2l, "testuser@test.com");
     });
   }
@@ -217,6 +220,9 @@ public class InviteServiceImplTest {
   public void when_permitted_and_try_to_generate_permanent_code_then_code_generated() {
     /* Given */
     when(userService.getRequestingUser()).thenReturn(TEST_USER_1);
+    when(familyService.verfiyMinimumRoleSecurity(any(Family.class), any(User.class),
+        any(Role.class)))
+            .thenReturn(Boolean.TRUE);
 
     /* When */
     FamilyDto response = inviteService.generatePersistentMemberInvite(FAMILY_1.getId());
@@ -255,7 +261,7 @@ public class InviteServiceImplTest {
     when(userService.getRequestingUser()).thenReturn(TEST_USER_1);
 
     /* When */
-    assertThrows(FamilyNotFoundException.class, () -> {
+    assertThrows(ResourceNotFoundException.class, () -> {
       inviteService.generatePersistentMemberInvite(3l);
     });
   }
@@ -273,8 +279,10 @@ public class InviteServiceImplTest {
 
     /* Then */
     Family family = FAMILY_1;
-    assertTrue(family.getMembers().stream()
-        .filter(member -> member.getUser().getId().equals(TEST_USER_4.getId())).count() > 0);
+    assertTrue(family.getMembers()
+        .stream()
+        .filter(member -> member.getUser().getId().equals(TEST_USER_4.getId()))
+        .count() > 0);
   }
 
   @Test
@@ -302,7 +310,7 @@ public class InviteServiceImplTest {
     InviteCode finalCode = code;
 
     /* When */
-    assertThrows(InviteCodeNotFoundException.class, () -> {
+    assertThrows(ResourceNotFoundException.class, () -> {
       inviteService.verifyMemberInvite(finalCode, eventColor);
     });
   }
@@ -319,8 +327,10 @@ public class InviteServiceImplTest {
 
     /* Then */
     Family family = FAMILY_1;
-    assertTrue(family.getMembers().stream()
-        .filter(member -> member.getUser().getId().equals(TEST_USER_2.getId())).count() > 0);
+    assertTrue(family.getMembers()
+        .stream()
+        .filter(member -> member.getUser().getId().equals(TEST_USER_2.getId()))
+        .count() > 0);
   }
 
   @Test
@@ -336,7 +346,7 @@ public class InviteServiceImplTest {
 
     InviteCode finalCode = code;
     /* When */
-    assertThrows(InviteCodeNotFoundException.class, () -> {
+    assertThrows(ResourceNotFoundException.class, () -> {
       inviteService.verifyMemberInvite(finalCode, eventColor);
     });
   }
@@ -362,7 +372,7 @@ public class InviteServiceImplTest {
     when(userService.getRequestingUser()).thenReturn(TEST_USER_2);
 
     /* When */
-    assertThrows(FamilyNotFoundException.class, () -> {
+    assertThrows(ResourceNotFoundException.class, () -> {
       inviteService.verifyMemberInvite(code, eventColor);
     });
   }
