@@ -71,8 +71,8 @@ public class ToDoListController {
 	  }
 	
 	@DeleteMapping("/task")
-	public ResponseEntity<String> deleteTask(@RequestParam Long id, Boolean completed){
-		todolistService.deleteTask(id, completed);
+	public ResponseEntity<String> deleteTask(@RequestParam Long id){
+		todolistService.deleteTask(id);
 	    return new ResponseEntity<>("To do list deleted successfully.", HttpStatus.OK);
 	}
 }

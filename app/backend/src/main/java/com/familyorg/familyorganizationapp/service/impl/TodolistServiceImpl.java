@@ -150,7 +150,6 @@ public class TodolistServiceImpl implements TodolistService {
 	}
 	
 	@Override
-	@Transactional
 	public TodotaskDto getTask(Long id) 
 			throws UserNotFoundException, AuthorizationException, ResourceNotFoundException 
 	{
@@ -181,16 +180,16 @@ public class TodolistServiceImpl implements TodolistService {
 		throws UserNotFoundException, AuthorizationException, ResourceNotFoundException 
 	{
 		User requestingUser = userService.getRequestingUser();
-	    Optional<Family> family = familyService.getFamilyById(task.getFamilyId());
+	    Optional<Family> family = familyService.getFamilyById(task.getId());
 	    
 	    if (family.isEmpty()) //If family cannot be found
 	    {
 	    	throw new ResourceNotFoundException(
-			          "Family with id " + task.getFamilyId() + " not found.");
+			          "Family with id " + task.getId() + " not found.");
 	    }
 	    
 	    boolean hasAppropriatePermissions =
-	        familyService.verfiyMinimumRoleSecurity(family.get(), requestingUser, Role.ADULT);
+	        familyService.verfiyMinimumRoleSecurity(family.get(), requestingUser, Role.CHILD);
 	    
 	    if (!hasAppropriatePermissions) //If user does not have permissions to add task
 	    {
@@ -239,7 +238,7 @@ public class TodolistServiceImpl implements TodolistService {
 	
 	@Override
 	@Transactional
-	public void deleteTask(Long id, boolean completed) 
+	public void deleteTask(Long id) 
 		throws UserNotFoundException, AuthorizationException, ResourceNotFoundException 
 	{
 		User requestingUser = userService.getRequestingUser();

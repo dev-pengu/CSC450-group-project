@@ -21,6 +21,6 @@ public interface TodolistService {
 
   void updateTask(TodotaskDto task);
 
-  void deleteTask(Long id, boolean completed);
+  void deleteTask(Long id);
 
 }
