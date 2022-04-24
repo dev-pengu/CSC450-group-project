@@ -7,46 +7,62 @@
         <v-stepper v-model="currentStep" alt-labels>
           <v-stepper-header>
             <v-stepper-step color="foa_button" step="1" :complete="currentStep > 1">Personal Info</v-stepper-step>
-
             <v-divider></v-divider>
-
             <v-stepper-step color="foa_button" step="2" :complete="currentStep > 2">Credentials</v-stepper-step>
           </v-stepper-header>
           <v-stepper-items>
             <v-stepper-content step="1">
               <v-alert v-if="error" class="mb-2" text type="error">{{ errorMsg }}</v-alert>
-              <v-card color="#00000000">
+              <v-card>
                 <v-card-text>
                   <v-form ref="step1Form" v-model="step1Valid">
-                    <v-text-field
-                      v-model="formData.firstName"
-                      label="First Name"
-                      :counter="50"
-                      :rules="[rules.required, rules.max1]"
-                    />
-                    <v-text-field
-                      v-model="formData.lastName"
-                      label="Last Name"
-                      :counter="50"
-                      :rules="[rules.required, rules.max1]"
-                    />
-                    <v-text-field
-                      v-model="formData.email"
-                      type="email"
-                      label="Email"
-                      :counter="70"
-                      :rules="[rules.required, rules.email, rules.max2]"
-                    />
-                    <v-select
-                      v-model="formData.timezone"
-                      :items="timezones"
-                      label="Timezone"
-                      :rules="[rules.required]"
-                    ></v-select>
+                    <v-row>
+                      <v-col cols="12" md="6">
+                        <v-text-field
+                          v-model="formData.firstName"
+                          label="First Name"
+                          color="foa_button"
+                          :counter="50"
+                          :rules="[rules.required, rules.max1]"
+                        />
+                      </v-col>
+                      <v-col cols="12" md="6">
+                        <v-text-field
+                          v-model="formData.lastName"
+                          label="Last Name"
+                          color="foa_button"
+                          :counter="50"
+                          :rules="[rules.required, rules.max1]"
+                        />
+                      </v-col>
+                      <v-col cols="12" md="6">
+                        <v-text-field
+                          v-model="formData.email"
+                          type="email"
+                          label="Email"
+                          color="foa_button"
+                          :counter="70"
+                          :rules="[rules.required, rules.email, rules.max2]"
+                        />
+                      </v-col>
+                      <v-col cols="12" md="6">
+                        <v-select
+                          v-model="formData.timezone"
+                          :items="timezones"
+                          label="Timezone"
+                          color="foa_button"
+                          item-color="foa_button"
+                          :rules="[rules.required]"
+                        ></v-select>
+                      </v-col>
+                    </v-row>
                   </v-form>
                 </v-card-text>
                 <v-card-actions>
                   <v-spacer></v-spacer>
+                  <v-btn class="foa_button_text--text px-5" color="foa_button" elevation="2" to="/login">
+                    Back to Login
+                  </v-btn>
                   <v-btn
                     class="foa_button_text--text px-5"
                     color="foa_button"
@@ -61,58 +77,66 @@
             </v-stepper-content>
             <v-stepper-content step="2">
               <v-alert v-if="error" class="mb-2" text type="error">{{ errorMsg }}</v-alert>
-              <v-card color="#00000000">
+              <v-card>
                 <v-card-text>
                   <v-form ref="step2Form" v-model="step2Valid">
-                    <v-text-field
-                      v-model="formData.username"
-                      label="Username"
-                      :counter="50"
-                      :rules="[rules.max1]"
-                      required
-                    />
-                    <v-text-field
-                      ref="password"
-                      v-model="formData.password"
-                      color="foa_button"
-                      :append-icon="show1 ? 'mdi-eye' : 'mdi-eye-off'"
-                      :type="show1 ? 'text' : 'password'"
-                      label="Password"
-                      counter="32"
-                      max-length="32"
-                      required
-                      :rules="[checkPassword]"
-                      @click:append="show1 = !show1"
-                    />
-                    <PasswordRequirement
-                      v-if="Object.values(passwordReqs).some((req) => !req)"
-                      class="mt-2"
-                      :pw-length="passwordReqs.length"
-                      :contains-lower-case="passwordReqs.lowerCase"
-                      :contains-upper-case="passwordReqs.upperCase"
-                      :contains-number="passwordReqs.number"
-                      :contains-special="passwordReqs.special"
-                    />
-                    <v-text-field
-                      v-model="formData.confirmPassword"
-                      color="foa_button"
-                      :append-icon="show2 ? 'mdi-eye' : 'mdi-eye-off'"
-                      :type="show2 ? 'text' : 'password'"
-                      label="Confirm Password"
-                      :counter="32"
-                      :rules="[comparePasswords, rules.max3]"
-                      @click:append="show2 = !show2"
-                    />
-                    <v-alert v-if="confirmPwdError" class="mb-2" text type="error">{{ confirmPwdErrorMsg }}</v-alert>
+                    <v-row>
+                      <v-col cols="12" md="6">
+                        <v-text-field
+                          v-model="formData.username"
+                          label="Username"
+                          color="foa_button"
+                          :counter="50"
+                          :rules="[rules.required, rules.max1]"
+                          required
+                        />
+                        <v-text-field
+                          ref="password"
+                          v-model="formData.password"
+                          color="foa_button"
+                          :append-icon="show1 ? 'mdi-eye' : 'mdi-eye-off'"
+                          :type="show1 ? 'text' : 'password'"
+                          label="Password"
+                          counter="32"
+                          max-length="32"
+                          required
+                          :rules="[rules.required, checkPassword]"
+                          @click:append="show1 = !show1"
+                        />
+                        <v-text-field
+                          v-model="formData.confirmPassword"
+                          color="foa_button"
+                          :append-icon="show2 ? 'mdi-eye' : 'mdi-eye-off'"
+                          :type="show2 ? 'text' : 'password'"
+                          label="Confirm Password"
+                          :counter="32"
+                          :rules="[rules.required, checkPassword, comparePasswords, rules.max3]"
+                          @click:append="show2 = !show2"
+                        />
+                      </v-col>
+                      <v-col cols="12" md="6" align-self="center">
+                        <PasswordRequirement
+                          v-if="Object.values(passwordReqs).some((req) => !req)"
+                          :pw-length="passwordReqs.length"
+                          :contains-lower-case="passwordReqs.lowerCase"
+                          :contains-upper-case="passwordReqs.upperCase"
+                          :contains-number="passwordReqs.number"
+                          :contains-special="passwordReqs.special"
+                        />
+                      </v-col>
+                    </v-row>
                   </v-form>
                 </v-card-text>
                 <v-card-actions>
-                  <v-btn class="foa_button_text--text px-5" color="foa_button" elevation="2" @click="currentStep -= 1">
-                    Back
+                  <v-btn icon @click="currentStep -= 1">
+                    <v-icon>mdi-arrow-left</v-icon>
                   </v-btn>
                   <v-spacer></v-spacer>
+                  <v-btn class="foa_button_text--text px-3" color="foa_button" elevation="2" to="/login">
+                    Back to Login
+                  </v-btn>
                   <v-btn
-                    class="foa_button_text--text px-5"
+                    class="foa_button_text--text px-3"
                     color="foa_button"
                     elevation="2"
                     :loading="loading"
@@ -142,7 +166,6 @@ export default {
   components: {
     PasswordRequirement,
   },
-
   data: () => ({
     formData: {
       username: '',
@@ -156,17 +179,15 @@ export default {
     timezones: [],
     error: false,
     errorMsg: '',
-    confirmPwdError: false,
-    confirmPwdErrorMsg: '',
     loading: false,
     show1: false,
     show2: false,
     rules: {
-      max1: (v) => (v && v.length <= 50) || 'Max 50 characters',
-      max2: (v) => (v && v.length <= 70) || 'Max 70 characters',
-      max3: (v) => (v && v.length <= 32) || 'Max 32 characters',
+      max1: (v) => v.length <= 50 || 'Max 50 characters',
+      max2: (v) => v.length <= 70 || 'Max 70 characters',
+      max3: (v) => v.length <= 32 || 'Max 32 characters',
       required: (v) => !!v || 'This field is required for registration',
-      email: (v) => /.+@.+\..+/.test(v) || 'E-mail must be a valid email',
+      email: (v) => /.+@.+\..+/.test(v) || 'Email must be valid',
     },
     passwordReqs: {
       length: false,
@@ -229,17 +250,10 @@ export default {
       }
     },
     comparePasswords() {
-      this.confirmPwdErrorMsg = '';
-      this.confirmPwdError = false;
-      if (this.formData.confirmPassword.length === 0) {
-        return true;
-      }
       if (this.formData.password === this.formData.confirmPassword) {
         return true;
       }
-      this.confirmPwdErrorMsg = 'Passwords must match!';
-      this.confirmPwdError = true;
-      return false;
+      return 'Passwords must match';
     },
     checkPassword() {
       this.passwordReqs = passwordChecker(this.formData.password);
@@ -256,7 +270,7 @@ export default {
       }
       const res = await api.emailFree(this.formData.email);
       if (res.status === 200 && !res.data) {
-        this.errorMsg = 'E-mail is already in use.';
+        this.errorMsg = 'This email is already in use.';
         this.error = true;
         return;
       }
