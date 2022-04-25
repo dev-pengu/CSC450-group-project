@@ -1,34 +1,41 @@
 <template>
-  <v-sheet width="100%" :color="$vuetify.theme.dark ? '#6D6968' : 'white'" rounded class="pl-2" elevation="2" outlined>
-    <h6 class="text-subtitle-2 foa_text--text">Password Requirements:</h6>
+  <v-sheet
+    width="100%"
+    :color="$vuetify.theme.dark ? '#6D6968' : 'white'"
+    rounded
+    class="pl-2 py-2"
+    elevation="2"
+    outlined
+  >
+    <h6 class="text-subtitle-2 foa_text--text">Password Requirements</h6>
     <div class="text-caption foa_text--text">
       <v-icon v-if="pwLength" color="green" class="mr-1" small>mdi-checkbox-marked-circle</v-icon>
       <v-icon v-else color="red" class="mr-1" small>mdi-cancel</v-icon>
       At least 12 characters
     </div>
     <div class="text-caption foa_text--text">
-      <v-icon v-if="containsLowerCase || containsUpperCase" color="green" class="mr-1" small
-        >mdi-checkbox-marked-circle</v-icon
-      >
+      <v-icon v-if="containsLowerCase || containsUpperCase" color="green" class="mr-1" small>
+        mdi-checkbox-marked-circle
+      </v-icon>
       <v-icon v-else color="red" class="mr-1" small>mdi-cancel</v-icon>
-      At least 1 letter (a, A, b, B, c, C...)
+      At least 1 letter
     </div>
     <div class="text-caption foa_text--text">
-      <v-icon v-if="containsLowerCase && containsUpperCase" color="green" class="mr-1" small
-        >mdi-checkbox-marked-circle</v-icon
-      >
+      <v-icon v-if="containsLowerCase && containsUpperCase" color="green" class="mr-1" small>
+        mdi-checkbox-marked-circle
+      </v-icon>
       <v-icon v-else color="red" class="mr-1" small>mdi-cancel</v-icon>
-      A mix of uppercase and lowercase letters
+      At least 1 uppercase and lowercase letter
     </div>
     <div class="text-caption foa_text--text">
       <v-icon v-if="containsNumber" color="green" class="mr-1" small>mdi-checkbox-marked-circle</v-icon>
       <v-icon v-else color="red" class="mr-1" small>mdi-cancel</v-icon>
-      At least 1 number (1, 2, 3...)
+      At least 1 number
     </div>
     <div class="text-caption foa_text--text">
       <v-icon v-if="containsSpecial" color="green" class="mr-1" small>mdi-checkbox-marked-circle</v-icon>
       <v-icon v-else color="red" class="mr-1" small>mdi-cancel</v-icon>
-      At least 1 special character (!, @, #, $...)
+      At least 1 special character !@#$%^&amp;*()-+?
     </div>
   </v-sheet>
 </template>
