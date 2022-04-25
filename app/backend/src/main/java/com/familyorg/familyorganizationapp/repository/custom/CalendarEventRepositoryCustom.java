@@ -8,5 +8,5 @@ import com.familyorg.familyorganizationapp.domain.CalendarEvent;
 
 public interface CalendarEventRepositoryCustom {
   Map<Long, List<CalendarEvent>> getEventsByCalendarIdsInDateRange(Set<Long> calendarIds,
-      Timestamp start, Timestamp end, Set<Long> userIds);
+      Timestamp start, Timestamp end, List<Long> userIds);
 }

@@ -1,8 +1,10 @@
 package com.familyorg.familyorganizationapp.service.impl;
 
+import com.familyorg.familyorganizationapp.domain.FamilyMembers;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -66,9 +68,12 @@ public class CalendarServiceImpl implements CalendarService {
   FamilyService familyService;
 
   @Autowired
-  public CalendarServiceImpl(CalendarRepository calendarRepository,
-      CalendarEventRepository eventRepository, EventRepetitionRepository scheduleRepository,
-      RecurringCalendarEventRepository recurringEventRepository, UserService userService,
+  public CalendarServiceImpl(
+      CalendarRepository calendarRepository,
+      CalendarEventRepository eventRepository,
+      EventRepetitionRepository scheduleRepository,
+      RecurringCalendarEventRepository recurringEventRepository,
+      UserService userService,
       FamilyService familyService) {
     this.calendarRepository = calendarRepository;
     this.eventRepository = eventRepository;
@@ -85,13 +90,14 @@ public class CalendarServiceImpl implements CalendarService {
     User requestingUser = userService.getRequestingUser();
     Optional<Family> family = familyService.getFamilyById(request.getFamilyId());
     if (family.isEmpty())
-      throw new ResourceNotFoundException(ApiExceptionCode.FAMILY_DOESNT_EXIST,
+      throw new ResourceNotFoundException(
+          ApiExceptionCode.FAMILY_DOESNT_EXIST,
           "Family with id " + request.getFamilyId() + " not found.");
     boolean hasAppropriatePermissions =
         familyService.verfiyMinimumRoleSecurity(family.get(), requestingUser, Role.ADULT);
     if (!hasAppropriatePermissions)
-      throw new AuthorizationException(ApiExceptionCode.USER_PRIVILEGES_TOO_LOW,
-          "User not authorized to complete this action.");
+      throw new AuthorizationException(
+          ApiExceptionCode.USER_PRIVILEGES_TOO_LOW, "User not authorized to complete this action.");
 
     Calendar calendar = new Calendar();
     calendar.setDefault(false);
@@ -106,12 +112,15 @@ public class CalendarServiceImpl implements CalendarService {
     User requestingUser = userService.getRequestingUser();
     Optional<Calendar> calendarOpt = calendarRepository.findById(request.getId());
     if (calendarOpt.isEmpty())
-      throw new ResourceNotFoundException(ApiExceptionCode.CALENDAR_DOESNT_EXIST,
+      throw new ResourceNotFoundException(
+          ApiExceptionCode.CALENDAR_DOESNT_EXIST,
           "Calendar with id " + request.getId() + " not found.");
-    boolean hasAppropriatePermissions = familyService
-        .verfiyMinimumRoleSecurity(calendarOpt.get().getFamily(), requestingUser, Role.ADMIN);
+    boolean hasAppropriatePermissions =
+        familyService.verfiyMinimumRoleSecurity(
+            calendarOpt.get().getFamily(), requestingUser, Role.ADMIN);
     if (!hasAppropriatePermissions)
-      throw new AuthorizationException(ApiExceptionCode.USER_PRIVILEGES_TOO_LOW,
+      throw new AuthorizationException(
+          ApiExceptionCode.USER_PRIVILEGES_TOO_LOW,
           "User not authorized to complete this actions.");
     Calendar calendar = calendarOpt.get();
     if (calendar.getDescription() != request.getDescription())
@@ -123,31 +132,36 @@ public class CalendarServiceImpl implements CalendarService {
   @Transactional
   public void addEvent(CalendarEventDto request) {
     User requestingUser = userService.getRequestingUser();
-    if (request.getStartDate() == null || request.getEndDate() == null
-        || request.getCalendarId() == null || request.getDescription() == null
+    if (request.getStartDate() == null
+        || request.getEndDate() == null
+        || request.getCalendarId() == null
+        || request.getDescription() == null
         || request.getDescription().isBlank()) {
-      throw new BadRequestException(ApiExceptionCode.REQUIRED_PARAM_MISSING,
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING,
           "Request is missing one or more required fields.");
     }
     if (DateUtil.parseDateTime(request.getStartDate()).compareTo(Date.from(Instant.now())) < 0) {
-      throw new BadRequestException(ApiExceptionCode.BAD_PARAM_VALUE,
-          "Start date occurs in the past.");
+      throw new BadRequestException(
+          ApiExceptionCode.BAD_PARAM_VALUE, "Start date occurs in the past.");
     }
     if (DateUtil.parseDateTime(request.getEndDate())
-        .compareTo(DateUtil.parseDateTime(request.getStartDate())) < 0) {
-      throw new BadRequestException(ApiExceptionCode.BAD_PARAM_VALUE,
-          "End date occurs before start date.");
+            .compareTo(DateUtil.parseDateTime(request.getStartDate()))
+        < 0) {
+      throw new BadRequestException(
+          ApiExceptionCode.BAD_PARAM_VALUE, "End date occurs before start date.");
     }
     Optional<Calendar> calendar = calendarRepository.findById(request.getCalendarId());
     if (calendar.isEmpty())
-      throw new ResourceNotFoundException(ApiExceptionCode.CALENDAR_DOESNT_EXIST,
+      throw new ResourceNotFoundException(
+          ApiExceptionCode.CALENDAR_DOESNT_EXIST,
           "Calendar with id " + request.getCalendarId() + " not found.");
     Family family = calendar.get().getFamily();
     boolean hasAppropriatePermissions =
         familyService.verfiyMinimumRoleSecurity(family, requestingUser, Role.CHILD);
     if (!hasAppropriatePermissions)
-      throw new AuthorizationException(ApiExceptionCode.USER_PRIVILEGES_TOO_LOW,
-          "User not authorized to complete this action.");
+      throw new AuthorizationException(
+          ApiExceptionCode.USER_PRIVILEGES_TOO_LOW, "User not authorized to complete this action.");
 
     CalendarEvent event = new CalendarEvent();
     event.setCalendar(calendar.get());
@@ -160,10 +174,10 @@ public class CalendarServiceImpl implements CalendarService {
 
     if (!request.isFamilyEvent()) {
       if (request.getAssignees() != null && !request.getAssignees().isEmpty()) {
-        Set<User> assignees = request.getAssignees()
-            .stream()
-            .map(assignee -> userService.getUserById(assignee.getUserId()))
-            .collect(Collectors.toSet());
+        Set<User> assignees =
+            request.getAssignees().stream()
+                .map(assignee -> userService.getUserById(assignee.getUserId()))
+                .collect(Collectors.toSet());
         event.setAssignees(assignees);
       }
       event.getAssignees().add(requestingUser);
@@ -190,14 +204,16 @@ public class CalendarServiceImpl implements CalendarService {
     User requestingUser = userService.getRequestingUser();
     if ((request.getId() == null && !request.isRecurringEvent())
         && (request.isRecurringEvent() && request.getRecurringId() == null))
-      throw new BadRequestException(ApiExceptionCode.REQUIRED_PARAM_MISSING,
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING,
           "Event identifier may not be null. Please provide either an id or if the event is recurring, specify as such and includ a recurring id.");
 
     // The request is to update a non recurring event
     if (!request.isRecurringEvent()) {
       Optional<CalendarEvent> eventOpt = eventRepository.findById(request.getId());
       if (eventOpt.isEmpty())
-        throw new ResourceNotFoundException(ApiExceptionCode.CALENDAR_DOESNT_EXIST,
+        throw new ResourceNotFoundException(
+            ApiExceptionCode.CALENDAR_DOESNT_EXIST,
             "Calendar event with id " + request.getId() + " not found.");
       CalendarEvent event = eventOpt.get();
       Family family = event.getCalendar().getFamily();
@@ -207,10 +223,12 @@ public class CalendarServiceImpl implements CalendarService {
         hasAppropriatePermissions =
             event.getCreatedBy().getUsername().equals(requestingUser.getUsername());
       if (!hasAppropriatePermissions)
-        throw new AuthorizationException(ApiExceptionCode.USER_PRIVILEGES_TOO_LOW,
+        throw new AuthorizationException(
+            ApiExceptionCode.USER_PRIVILEGES_TOO_LOW,
             "User not authorized to complete this action.");
       TimeZone timezone =
-          requestingUser.getTimezone() != null ? TimeZone.getTimeZone(requestingUser.getTimezone())
+          requestingUser.getTimezone() != null
+              ? TimeZone.getTimeZone(requestingUser.getTimezone())
               : TimeZone.getTimeZone(family.getTimezone());
 
       // If there is a repetition schedule, we may need to update the recurring events
@@ -244,12 +262,11 @@ public class CalendarServiceImpl implements CalendarService {
         event.setDescription(request.getDescription());
       }
 
-      if (event.getEndDatetime()
-          .compareTo(DateUtil.parseTimestamp(request.getEndDate())) != 0) {
+      if (event.getEndDatetime().compareTo(DateUtil.parseTimestamp(request.getEndDate())) != 0) {
         event.setEndDatetime(DateUtil.parseTimestamp(request.getEndDate()));
       }
-      if (event.getStartDatetime()
-          .compareTo(DateUtil.parseTimestamp(request.getStartDate())) != 0) {
+      if (event.getStartDatetime().compareTo(DateUtil.parseTimestamp(request.getStartDate()))
+          != 0) {
         event.setStartDatetime(DateUtil.parseTimestamp(request.getStartDate()));
       }
 
@@ -267,7 +284,8 @@ public class CalendarServiceImpl implements CalendarService {
       Optional<RecurringCalendarEvent> recurringEventOpt =
           recurringEventRepository.findById(request.getRecurringId());
       if (recurringEventOpt.isEmpty())
-        throw new ResourceNotFoundException(ApiExceptionCode.EVENT_DOESNT_EXIST,
+        throw new ResourceNotFoundException(
+            ApiExceptionCode.EVENT_DOESNT_EXIST,
             "Recurring event with id " + request.getRecurringId() + " not found.");
       RecurringCalendarEvent recurringEvent = recurringEventOpt.get();
       CalendarEvent event = recurringEvent.getOriginatingEvent();
@@ -278,7 +296,8 @@ public class CalendarServiceImpl implements CalendarService {
         hasAppropriatePermissions =
             event.getCreatedBy().getUsername().equals(requestingUser.getUsername());
       if (!hasAppropriatePermissions)
-        throw new AuthorizationException(ApiExceptionCode.USER_PRIVILEGES_TOO_LOW,
+        throw new AuthorizationException(
+            ApiExceptionCode.USER_PRIVILEGES_TOO_LOW,
             "User not authorized to complete this action.");
 
       breakRecurringEvent(recurringEvent, request);
@@ -291,16 +310,17 @@ public class CalendarServiceImpl implements CalendarService {
     User requestingUser = userService.getRequestingUser();
     Optional<Calendar> calendar = calendarRepository.findById(id);
     if (calendar.isEmpty())
-      throw new ResourceNotFoundException(ApiExceptionCode.CALENDAR_DOESNT_EXIST,
-          "Calendar with id " + id + " not found.");
+      throw new ResourceNotFoundException(
+          ApiExceptionCode.CALENDAR_DOESNT_EXIST, "Calendar with id " + id + " not found.");
     if (calendar.get().isDefault())
-      throw new AuthorizationException(ApiExceptionCode.ILLEGAL_ACTION_REQUESTED,
-          "The default calendar may not be deleted.");
-    boolean hasAppropriatePermissions = familyService
-        .verfiyMinimumRoleSecurity(calendar.get().getFamily(), requestingUser, Role.ADMIN);
+      throw new AuthorizationException(
+          ApiExceptionCode.ILLEGAL_ACTION_REQUESTED, "The default calendar may not be deleted.");
+    boolean hasAppropriatePermissions =
+        familyService.verfiyMinimumRoleSecurity(
+            calendar.get().getFamily(), requestingUser, Role.ADMIN);
     if (!hasAppropriatePermissions)
-      throw new AuthorizationException(ApiExceptionCode.USER_PRIVILEGES_TOO_LOW,
-          "User not authorized to complete this action.");
+      throw new AuthorizationException(
+          ApiExceptionCode.USER_PRIVILEGES_TOO_LOW, "User not authorized to complete this action.");
     calendarRepository.deleteById(id);
   }
 
@@ -310,16 +330,17 @@ public class CalendarServiceImpl implements CalendarService {
     User requestingUser = userService.getRequestingUser();
     Optional<CalendarEvent> event = eventRepository.findById(id);
     if (event.isEmpty())
-      throw new ResourceNotFoundException(ApiExceptionCode.CALENDAR_DOESNT_EXIST,
-          "Calendar event with id " + id + " not found.");
-    boolean hasAppropriatePermissions = familyService.verfiyMinimumRoleSecurity(
-        event.get().getCalendar().getFamily(), requestingUser, Role.ADULT);
+      throw new ResourceNotFoundException(
+          ApiExceptionCode.CALENDAR_DOESNT_EXIST, "Calendar event with id " + id + " not found.");
+    boolean hasAppropriatePermissions =
+        familyService.verfiyMinimumRoleSecurity(
+            event.get().getCalendar().getFamily(), requestingUser, Role.ADULT);
     if (!hasAppropriatePermissions)
       hasAppropriatePermissions =
           event.get().getCreatedBy().getUsername().equals(requestingUser.getUsername());
     if (!hasAppropriatePermissions)
-      throw new AuthorizationException(ApiExceptionCode.USER_PRIVILEGES_TOO_LOW,
-          "User not authorized to complete this action.");
+      throw new AuthorizationException(
+          ApiExceptionCode.USER_PRIVILEGES_TOO_LOW, "User not authorized to complete this action.");
     if (removeRecurring) {
       recurringEventRepository.removeRecurringByOriginatingId(id);
       eventRepository.deleteById(id);
@@ -338,24 +359,65 @@ public class CalendarServiceImpl implements CalendarService {
   }
 
   @Override
+  public List<CalendarDto> getCalendars() {
+    User requestingUser = userService.getRequestingUser();
+    List<Long> permittedFamilyIds = familyService.getFamilyIdsByUser(requestingUser.getUsername());
+    List<Calendar> calendars = calendarRepository.search(permittedFamilyIds, null);
+    return calendars.stream()
+        .map(
+            calendar ->
+                new CalendarDtoBuilder()
+                    .withId(calendar.getId())
+                    .withDescription(calendar.getDescription())
+                    .withFamily(calendar.getFamily().getId())
+                  .setDefault(calendar.isDefault())
+                    .build())
+        .collect(Collectors.toList());
+  }
+
+  @Override
+  public List<SearchFilter> getPotentialAssignees(Long id) {
+    User requestingUser = userService.getRequestingUser();
+    Optional<Calendar> calendar = calendarRepository.findById(id);
+    if (calendar.isEmpty()) {
+      throw new ResourceNotFoundException(
+          ApiExceptionCode.CALENDAR_DOESNT_EXIST, "Calendar with id " + id + " not found.");
+    }
+    Family family = calendar.get().getFamily();
+    if (!family.isMember(requestingUser)) {
+      throw new AuthorizationException(
+          ApiExceptionCode.USER_NOT_IN_FAMILY,
+          "User is not a member of family associated with calendar.");
+    }
+    return family.getMembers().stream()
+        .map(member -> new SearchFilter(member.getUser().getId(), member.getUser().getFullname()))
+        .collect(Collectors.toList());
+  }
+
+  @Override
   @Transactional
   public void deleteRecurringEvent(Long id) {
     User requestingUser = userService.getRequestingUser();
     Optional<RecurringCalendarEvent> event = recurringEventRepository.findById(id);
     if (event.isEmpty())
-      throw new ResourceNotFoundException(ApiExceptionCode.EVENT_DOESNT_EXIST,
-          "Recurring event with id " + id + " not found");
-    boolean hasAppropriatePermissions = familyService.verfiyMinimumRoleSecurity(
-        event.get().getOriginatingEvent().getCalendar().getFamily(), requestingUser, Role.ADULT);
+      throw new ResourceNotFoundException(
+          ApiExceptionCode.EVENT_DOESNT_EXIST, "Recurring event with id " + id + " not found");
+    boolean hasAppropriatePermissions =
+        familyService.verfiyMinimumRoleSecurity(
+            event.get().getOriginatingEvent().getCalendar().getFamily(),
+            requestingUser,
+            Role.ADULT);
     if (!hasAppropriatePermissions)
-      hasAppropriatePermissions = event.get()
-          .getOriginatingEvent()
-          .getCreatedBy()
-          .getUsername()
-          .equals(requestingUser.getUsername());
+      hasAppropriatePermissions =
+          event
+              .get()
+              .getOriginatingEvent()
+              .getCreatedBy()
+              .getUsername()
+              .equals(requestingUser.getUsername());
     if (!hasAppropriatePermissions)
-      throw new AuthorizationException(ApiExceptionCode.USER_PRIVILEGES_TOO_LOW,
-          "User not authorized to complete this action.");
+      throw new AuthorizationException(
+          ApiExceptionCode.USER_PRIVILEGES_TOO_LOW, "User not authorized to complete this action.");
     recurringEventRepository.removeById(id);
   }
 
@@ -368,19 +430,22 @@ public class CalendarServiceImpl implements CalendarService {
     response.setStart(request.getStart());
     response.setEnd(request.getEnd());
     response.setActiveSearchFilters(request.getFilters());
-    response.setSearchFilters(
-        getSearchFilters(requestingUser, request.getIdsByField(CalendarField.FAMILY),
-            request.getIdsByField(CalendarField.CALENDAR)));
 
-    Set<Long> userIdParams =
-        request.getIdsByField(CalendarField.USER).stream().collect(Collectors.toSet());
-    if (userIdParams.isEmpty()) {
-      userIdParams.add(requestingUser.getId());
-    }
+    List<Long> permittedFamilyIds = familyService.getFamilyIdsByUser(requestingUser.getUsername());
+    List<Long> requestFamilyIds = request.getIdsByField(CalendarField.FAMILY);
 
-    List<Calendar> calendars = calendarRepository.search(
-        request.getIdsByField(CalendarField.FAMILY), request.getIdsByField(CalendarField.CALENDAR),
-        userIdParams);
+    List<Long> userIds =
+        request.getIdsByField(CalendarField.USER).stream().collect(Collectors.toList());
+    List<Long> calendarIds = request.getIdsByField(CalendarField.CALENDAR);
+
+    List<Calendar> calendars =
+        calendarRepository.search(
+            requestFamilyIds.isEmpty()
+                ? permittedFamilyIds
+                : permittedFamilyIds.stream()
+                    .filter(requestFamilyIds::contains)
+                    .collect(Collectors.toList()),
+            calendarIds.isEmpty() ? null : calendarIds);
 
     Set<Long> calendarIdsParam =
         calendars.stream().map(Calendar::getId).collect(Collectors.toSet());
@@ -388,15 +453,17 @@ public class CalendarServiceImpl implements CalendarService {
     Timestamp startParam = new Timestamp(request.getStart().getTime());
     Timestamp endParam = new Timestamp(request.getEnd().getTime());
     Map<Long, List<CalendarEvent>> eventsByCalendar =
-        eventRepository.getEventsByCalendarIdsInDateRange(calendarIdsParam, startParam, endParam,
-            userIdParams);
+        eventRepository.getEventsByCalendarIdsInDateRange(
+            calendarIdsParam, startParam, endParam, userIds);
 
     Map<Long, List<RecurringCalendarEvent>> recurringEventsByCalendar =
-        recurringEventRepository.getEventsByCalendarIdsInDateRange(calendarIdsParam, startParam,
-            endParam, userIdParams);
+        recurringEventRepository.getEventsByCalendarIdsInDateRange(
+            calendarIdsParam, startParam, endParam, userIds);
 
-    response.setCalendars(buildResponseCalendars(calendars, eventsByCalendar,
-        recurringEventsByCalendar, requestingUser));
+    response.setCalendars(
+        buildResponseCalendars(
+            calendars, eventsByCalendar, recurringEventsByCalendar, requestingUser, userIds));
+    response.setSearchFilters(getSearchFilters(calendars));
     return response;
   }
 
@@ -405,18 +472,19 @@ public class CalendarServiceImpl implements CalendarService {
     User requestingUser = userService.getRequestingUser();
     Optional<CalendarEvent> eventOpt = eventRepository.findById(id);
     if (eventOpt.isEmpty())
-      throw new ResourceNotFoundException(ApiExceptionCode.CALENDAR_DOESNT_EXIST,
-          "Calendar event with id " + id + " not found.");
-    boolean hasAppropriatePermissions = familyService.verfiyMinimumRoleSecurity(
-        eventOpt.get().getCalendar().getFamily(), requestingUser, Role.CHILD);
+      throw new ResourceNotFoundException(
+          ApiExceptionCode.CALENDAR_DOESNT_EXIST, "Calendar event with id " + id + " not found.");
+    boolean hasAppropriatePermissions =
+        familyService.verfiyMinimumRoleSecurity(
+            eventOpt.get().getCalendar().getFamily(), requestingUser, Role.CHILD);
     if (!hasAppropriatePermissions)
-      throw new AuthorizationException(ApiExceptionCode.USER_PRIVILEGES_TOO_LOW,
-          "User not authorized to complete this action.");
+      throw new AuthorizationException(
+          ApiExceptionCode.USER_PRIVILEGES_TOO_LOW, "User not authorized to complete this action.");
     CalendarEvent event = eventOpt.get();
     TimeZone timezone =
         familyService.getUserTimeZoneOrDefault(requestingUser, event.getCalendar().getFamily());
 
-    return buildEventDtoFromCalendarEvent(event, timezone, requestingUser);
+    return buildEventDtoFromCalendarEvent(event, timezone, requestingUser, Collections.emptyList());
   }
 
   @Override
@@ -425,90 +493,180 @@ public class CalendarServiceImpl implements CalendarService {
 
     Optional<RecurringCalendarEvent> recurringEvent = recurringEventRepository.findById(id);
     if (recurringEvent.isEmpty())
-      throw new ResourceNotFoundException(ApiExceptionCode.EVENT_DOESNT_EXIST,
-          "Event with id " + id + " was not found.");
+      throw new ResourceNotFoundException(
+          ApiExceptionCode.EVENT_DOESNT_EXIST, "Event with id " + id + " was not found.");
     CalendarEvent event = recurringEvent.get().getOriginatingEvent();
-    boolean hasAppropriatePermissions = familyService
-        .verfiyMinimumRoleSecurity(event.getCalendar().getFamily(), requestingUser, Role.CHILD);
+    boolean hasAppropriatePermissions =
+        familyService.verfiyMinimumRoleSecurity(
+            event.getCalendar().getFamily(), requestingUser, Role.CHILD);
     if (!hasAppropriatePermissions)
-      throw new AuthorizationException(ApiExceptionCode.USER_PRIVILEGES_TOO_LOW,
-          "User not authorized to complete this action.");
+      throw new AuthorizationException(
+          ApiExceptionCode.USER_PRIVILEGES_TOO_LOW, "User not authorized to complete this action.");
 
     TimeZone timezone =
         familyService.getUserTimeZoneOrDefault(requestingUser, event.getCalendar().getFamily());
 
     CalendarEventDto response =
-        buildEventDtoFromRecurringEvent(recurringEvent.get(), timezone, requestingUser);
+        buildEventDtoFromRecurringEvent(
+            recurringEvent.get(), timezone, requestingUser, Collections.emptyList());
     return response;
   }
 
-  private List<CalendarDto> buildResponseCalendars(List<Calendar> calendars,
+  private List<CalendarDto> buildResponseCalendars(
+      List<Calendar> calendars,
       Map<Long, List<CalendarEvent>> eventsByCalendar,
-      Map<Long, List<RecurringCalendarEvent>> recurringEventsByCalendar, User requestingUser) {
-    calendars.stream().forEach(calendar -> {
-      calendar.setEvents(eventsByCalendar.getOrDefault(calendar.getId(), Collections.emptyList()));
-    });
-    return calendars.stream().map(calendar -> {
-      TimeZone timezone =
-          familyService.getUserTimeZoneOrDefault(requestingUser, calendar.getFamily());
-      List<CalendarEventDto> events = calendar.getEvents()
-          .stream()
-          .map(event -> buildEventDtoFromCalendarEvent(event, timezone, requestingUser))
-          .collect(Collectors.toList());
-      List<CalendarEventDto> recurringEvents =
-          buildRecurringEventsForResponse(calendar, recurringEventsByCalendar, timezone,
-              requestingUser);
+      Map<Long, List<RecurringCalendarEvent>> recurringEventsByCalendar,
+      User requestingUser,
+      List<Long> userIds) {
+    calendars.stream()
+        .forEach(
+            calendar -> {
+              calendar.setEvents(
+                  eventsByCalendar.getOrDefault(calendar.getId(), Collections.emptyList()));
+            });
+    return calendars.stream()
+        .map(
+            calendar -> {
+              TimeZone timezone =
+                  familyService.getUserTimeZoneOrDefault(requestingUser, calendar.getFamily());
+              List<CalendarEventDto> events =
+                  calendar.getEvents().stream()
+                      .map(
+                          event ->
+                              buildEventDtoFromCalendarEvent(
+                                  event, timezone, requestingUser, userIds))
+                      .collect(Collectors.toList());
+              List<CalendarEventDto> recurringEvents =
+                  buildRecurringEventsForResponse(
+                      calendar, recurringEventsByCalendar, timezone, requestingUser, userIds);
 
-      events.addAll(recurringEvents);
-      Collections.sort(events, new EventDateComparator());
+              events.addAll(recurringEvents);
+              Collections.sort(events, new EventDateComparator());
 
-      return new CalendarDtoBuilder().withDescription(calendar.getDescription())
-          .withId(calendar.getId())
-          .withFamily(calendar.getFamily())
-          .withEvents(events)
-          .setDefault(calendar.isDefault())
-          .withColor(calendar.getFamily().getEventColor())
-          .build();
-    }).collect(Collectors.toList());
+              return new CalendarDtoBuilder()
+                  .withDescription(calendar.getDescription())
+                  .withId(calendar.getId())
+                  .withFamily(calendar.getFamily())
+                  .withEvents(events)
+                  .setDefault(calendar.isDefault())
+                  .withColor(calendar.getFamily().getEventColor())
+                  .build();
+            })
+        .collect(Collectors.toList());
   }
 
-  private List<CalendarEventDto> buildRecurringEventsForResponse(Calendar calendar,
-      Map<Long, List<RecurringCalendarEvent>> recurringEventsByCalendar, TimeZone timezone,
-      User requestingUser) {
+  private List<CalendarEventDto> buildRecurringEventsForResponse(
+      Calendar calendar,
+      Map<Long, List<RecurringCalendarEvent>> recurringEventsByCalendar,
+      TimeZone timezone,
+      User requestingUser,
+      List<Long> userIds) {
     List<CalendarEventDto> recurringEvents = new LinkedList<>();
     List<RecurringCalendarEvent> re = recurringEventsByCalendar.get(calendar.getId());
     if (re != null && re.size() > 0) {
-      re.forEach(recurringEvent -> {
-        recurringEvents
-            .add(buildEventDtoFromRecurringEvent(recurringEvent, timezone, requestingUser));
-      });
+      re.forEach(
+          recurringEvent -> {
+            recurringEvents.add(
+                buildEventDtoFromRecurringEvent(recurringEvent, timezone, requestingUser, userIds));
+          });
     }
     return recurringEvents;
   }
 
-  private CalendarEventDto buildEventDtoFromCalendarEvent(CalendarEvent event, TimeZone timezone,
-      User requestingUser) {
-    Map<Long, String> colors = event.getCalendar()
-        .getFamily()
-        .getMembers()
-        .stream()
-        .collect(Collectors.toMap(m -> m.getUser().getId(),
-            m -> m.getEventColor() != null ? m.getEventColor() : m.getFamily().getEventColor()));
-    return new CalendarEventDtoBuilder().withId(event.getId())
+  private CalendarEventDto buildEventDtoFromCalendarEvent(
+      CalendarEvent event, TimeZone timezone, User requestingUser, List<Long> userIds) {
+    Map<Long, String> colors =
+        event.getCalendar().getFamily().getMembers().stream()
+            .collect(
+                Collectors.toMap(
+                    m -> m.getUser().getId(),
+                    m ->
+                        m.getEventColor() != null
+                            ? m.getEventColor()
+                            : m.getFamily().getEventColor()));
+    return new CalendarEventDtoBuilder()
+        .withId(event.getId())
         .withCalendarId(event.getCalendar().getId())
         .setIsAllDay(event.isAllDay())
         .setIsFamilyEvent(event.isFamilyEvent())
         .withColor(event.isFamilyEvent() ? event.getCalendar().getFamily().getEventColor() : null)
         .withCreatedDate(event.getCreatedDatetime())
         .withCreator(UserDto.fromUserObj(event.getCreatedBy()))
-        .withEndDate(DateUtil.toTimezone(event.getEndDatetime(),
-            TimeZone.getTimeZone(event.getTimezone()), timezone))
-        .withStartDate(DateUtil.toTimezone(event.getStartDatetime(),
-            TimeZone.getTimeZone(event.getTimezone()), timezone))
+        .withEndDate(
+            DateUtil.toTimezone(
+                event.getEndDatetime(), TimeZone.getTimeZone(event.getTimezone()), timezone))
+        .withStartDate(
+            DateUtil.toTimezone(
+                event.getStartDatetime(), TimeZone.getTimeZone(event.getTimezone()), timezone))
         .withNotes(event.getNotes())
         .withDescription(event.getDescription())
-        .withRepetitionSchedule(event.getEventRepetitionSchedule() == null ? null
-            : new EventRepetitionDtoBuilder()
+        .withRepetitionSchedule(
+            event.getEventRepetitionSchedule() == null
+                ? null
+                : new EventRepetitionDtoBuilder()
+                    .withCount(event.getEventRepetitionSchedule().getCount())
+                    .withFrequency(event.getEventRepetitionSchedule().getFrequency())
+                    .withId(event.getEventRepetitionSchedule().getId())
+                    .withInterval(event.getEventRepetitionSchedule().getInterval())
+                    .withOwningEventId(event.getEventRepetitionSchedule().getOwningEvent().getId())
+                    .withStartDate(event.getEventRepetitionSchedule().getStartDate())
+                    .build())
+        .setCanEdit(
+            event.getCreatedBy().getUsername().equals(requestingUser.getUsername())
+                || familyService.verfiyMinimumRoleSecurity(
+                    event.getCalendar().getFamily(), requestingUser, Role.ADULT))
+        .withAssignees(
+            event.getAssignees().stream()
+                .filter(assignee -> userIds.isEmpty() || userIds.contains(assignee.getId()))
+                .map(
+                    assignee ->
+                        new ColorDtoBuilder()
+                            .withUserId(assignee.getId())
+                            .withUser(assignee.getFullname())
+                            .withColor(colors.get(assignee.getId()))
+                            .build())
+                .collect(Collectors.toSet()))
+        .build();
+  }
+
+  private CalendarEventDto buildEventDtoFromRecurringEvent(
+      RecurringCalendarEvent recurringEvent,
+      TimeZone timezone,
+      User requestingUser,
+      List<Long> userIds) {
+    CalendarEvent event = recurringEvent.getOriginatingEvent();
+    Map<Long, String> colors =
+        event.getCalendar().getFamily().getMembers().stream()
+            .collect(
+                Collectors.toMap(
+                    m -> m.getUser().getId(),
+                    m ->
+                        m.getEventColor() != null
+                            ? m.getEventColor()
+                            : m.getFamily().getEventColor()));
+    return new CalendarEventDtoBuilder()
+        .withCalendarId(event.getCalendar().getId())
+        .setIsAllDay(event.isAllDay())
+        .setIsFamilyEvent(event.isFamilyEvent())
+        .withColor(event.isFamilyEvent() ? event.getCalendar().getFamily().getEventColor() : null)
+        .withCreatedDate(event.getCreatedDatetime())
+        .withCreator(UserDto.fromUserObj(event.getCreatedBy()))
+        .withEndDate(
+            DateUtil.toTimezone(
+                recurringEvent.getEndDatetime(),
+                TimeZone.getTimeZone(event.getTimezone()),
+                timezone))
+        .withStartDate(
+            DateUtil.toTimezone(
+                recurringEvent.getStartDatetime(),
+                TimeZone.getTimeZone(event.getTimezone()),
+                timezone))
+        .withNotes(event.getNotes())
+        .withDescription(event.getDescription())
+        .setRecurringEvent(true)
+        .withRecurringId(recurringEvent.getId())
+        .withRepetitionSchedule(
+            new EventRepetitionDtoBuilder()
                 .withCount(event.getEventRepetitionSchedule().getCount())
                 .withFrequency(event.getEventRepetitionSchedule().getFrequency())
                 .withId(event.getEventRepetitionSchedule().getId())
@@ -516,71 +674,32 @@ public class CalendarServiceImpl implements CalendarService {
                 .withOwningEventId(event.getEventRepetitionSchedule().getOwningEvent().getId())
                 .withStartDate(event.getEventRepetitionSchedule().getStartDate())
                 .build())
-        .setCanEdit(event.getCreatedBy().getUsername().equals(requestingUser.getUsername())
-            || familyService.verfiyMinimumRoleSecurity(event.getCalendar().getFamily(),
-                requestingUser, Role.ADULT))
-        .withAssignees(event.getAssignees()
-            .stream()
-            .map(assignee -> new ColorDtoBuilder().withUserId(assignee.getId())
-                .withUser(assignee.getFullname())
-                .withColor(colors.get(assignee.getId()))
-                .build())
-            .collect(Collectors.toSet()))
+        .setCanEdit(
+            event.getCreatedBy().getUsername().equals(requestingUser.getUsername())
+                || familyService.verfiyMinimumRoleSecurity(
+                    event.getCalendar().getFamily(), requestingUser, Role.ADULT))
+        .withAssignees(
+            event.getAssignees().stream()
+                .filter(assignee -> userIds.isEmpty() || userIds.contains(assignee.getId()))
+                .map(
+                    assignee ->
+                        new ColorDtoBuilder()
+                            .withUserId(assignee.getId())
+                            .withUser(assignee.getFullname())
+                            .withColor(colors.get(assignee.getId()))
+                            .build())
+                .collect(Collectors.toSet()))
         .build();
   }
 
-  private CalendarEventDto buildEventDtoFromRecurringEvent(RecurringCalendarEvent recurringEvent,
-      TimeZone timezone, User requestingUser) {
-    CalendarEvent event = recurringEvent.getOriginatingEvent();
-    Map<Long, String> colors = event.getCalendar()
-        .getFamily()
-        .getMembers()
-        .stream()
-        .collect(Collectors.toMap(m -> m.getUser().getId(),
-            m -> m.getEventColor() != null ? m.getEventColor() : m.getFamily().getEventColor()));
-    return new CalendarEventDtoBuilder().withCalendarId(event.getCalendar().getId())
-        .setIsAllDay(event.isAllDay())
-        .setIsFamilyEvent(event.isFamilyEvent())
-        .withColor(event.isFamilyEvent() ? event.getCalendar().getFamily().getEventColor() : null)
-        .withCreatedDate(event.getCreatedDatetime())
-        .withCreator(UserDto.fromUserObj(event.getCreatedBy()))
-        .withEndDate(DateUtil.toTimezone(recurringEvent.getEndDatetime(),
-            TimeZone.getTimeZone(event.getTimezone()), timezone))
-        .withStartDate(DateUtil.toTimezone(recurringEvent.getStartDatetime(),
-            TimeZone.getTimeZone(event.getTimezone()), timezone))
-        .withNotes(event.getNotes())
-        .withDescription(event.getDescription())
-        .setRecurringEvent(true)
-        .withRecurringId(recurringEvent.getId())
-        .withRepetitionSchedule(new EventRepetitionDtoBuilder()
-            .withCount(event.getEventRepetitionSchedule().getCount())
-            .withFrequency(event.getEventRepetitionSchedule().getFrequency())
-            .withId(event.getEventRepetitionSchedule().getId())
-            .withInterval(event.getEventRepetitionSchedule().getInterval())
-            .withOwningEventId(event.getEventRepetitionSchedule().getOwningEvent().getId())
-            .withStartDate(event.getEventRepetitionSchedule().getStartDate())
-            .build())
-        .setCanEdit(event.getCreatedBy().getUsername().equals(requestingUser.getUsername())
-            || familyService.verfiyMinimumRoleSecurity(event.getCalendar().getFamily(),
-                requestingUser, Role.ADULT))
-        .withAssignees(event.getAssignees()
-            .stream()
-            .map(assignee -> new ColorDtoBuilder().withUserId(assignee.getId())
-                .withUser(assignee.getFullname())
-                .withColor(colors.get(assignee.getId()))
-                .build())
-            .collect(Collectors.toSet()))
-        .build();
-  }
-
-
-  private List<RecurringCalendarEvent> addRepeatingEvents(EventRepetitionSchedule schedule,
-      CalendarEvent parentEvent) {
+  private List<RecurringCalendarEvent> addRepeatingEvents(
+      EventRepetitionSchedule schedule, CalendarEvent parentEvent) {
     List<RecurringCalendarEvent> recurringEvents = new ArrayList<>();
     Date runningStartDate = java.sql.Date.from(parentEvent.getStartDatetime().toInstant());
-    Date runningEndDate = parentEvent.getEndDatetime() != null
-        ? java.sql.Date.from(parentEvent.getEndDatetime().toInstant())
-        : null;
+    Date runningEndDate =
+        parentEvent.getEndDatetime() != null
+            ? java.sql.Date.from(parentEvent.getEndDatetime().toInstant())
+            : null;
     java.util.Calendar cal = java.util.Calendar.getInstance();
     int field = java.util.Calendar.DAY_OF_YEAR;
     switch (schedule.getFrequency()) {
@@ -626,15 +745,16 @@ public class CalendarServiceImpl implements CalendarService {
     return recurringEvents;
   }
 
-  private List<RecurringCalendarEvent> updateFutureEvents(EventRepetitionSchedule schedule,
-      CalendarEvent parentEvent) {
+  private List<RecurringCalendarEvent> updateFutureEvents(
+      EventRepetitionSchedule schedule, CalendarEvent parentEvent) {
     List<RecurringCalendarEvent> returnEvents = new ArrayList<>();
     List<RecurringCalendarEvent> events =
         recurringEventRepository.getOrderedEventsByOriginatingId(parentEvent.getId());
     Date runningStartDate = java.sql.Date.from(parentEvent.getStartDatetime().toInstant());
-    Date runningEndDate = parentEvent.getEndDatetime() != null
-        ? java.sql.Date.from(parentEvent.getEndDatetime().toInstant())
-        : null;
+    Date runningEndDate =
+        parentEvent.getEndDatetime() != null
+            ? java.sql.Date.from(parentEvent.getEndDatetime().toInstant())
+            : null;
     java.util.Calendar cal = java.util.Calendar.getInstance();
     int field = java.util.Calendar.DAY_OF_YEAR;
     switch (schedule.getFrequency()) {
@@ -689,11 +809,13 @@ public class CalendarServiceImpl implements CalendarService {
     return returnEvents;
   }
 
-  private CalendarEvent breakRecurringEvent(RecurringCalendarEvent recurringEvent,
-      CalendarEventDto request) {
+  private CalendarEvent breakRecurringEvent(
+      RecurringCalendarEvent recurringEvent, CalendarEventDto request) {
     recurringEventRepository.deleteById(recurringEvent.getId());
-    TimeZone timezone = familyService.getUserTimeZoneOrDefault(userService.getRequestingUser(),
-        recurringEvent.getOriginatingEvent().getCalendar().getFamily());
+    TimeZone timezone =
+        familyService.getUserTimeZoneOrDefault(
+            userService.getRequestingUser(),
+            recurringEvent.getOriginatingEvent().getCalendar().getFamily());
     CalendarEvent event = new CalendarEvent();
     event.setCalendar(recurringEvent.getOriginatingEvent().getCalendar());
     event.setAllDay(request.isAllDay());
@@ -705,75 +827,58 @@ public class CalendarServiceImpl implements CalendarService {
     event.setTimezone(timezone.getID());
     event.setFamilyEvent(request.isFamilyEvent());
     event.setNotes(request.getNotes());
-    event.setAssignees(recurringEvent.getOriginatingEvent().getAssignees());
+    event.setAssignees(new HashSet<>(recurringEvent.getOriginatingEvent().getAssignees()));
     return eventRepository.save(event);
   }
 
   private String getEventColor(CalendarEvent event, Family family, User user) {
-    String color = event.isFamilyEvent() ? family.getEventColor()
-        : family.getMembers()
-            .stream()
-            .filter(member -> member.getUser().getUsername().equals(user.getUsername()))
-            .findFirst()
-            .get()
-            .getEventColor();
+    String color =
+        event.isFamilyEvent()
+            ? family.getEventColor()
+            : family.getMembers().stream()
+                .filter(member -> member.getUser().getUsername().equals(user.getUsername()))
+                .findFirst()
+                .get()
+                .getEventColor();
     return color;
   }
 
-  private Map<CalendarField, List<SearchFilter>> getSearchFilters(User user, List<Long> familyIds,
-      List<Long> calendarIds) {
-
-    List<Family> families = familyService.getFamiliesByUser(user.getUsername());
-    List<Calendar> calendars = calendarRepository
-        .calendarDataByFamilyIds(families.stream()
-            .filter(family -> familyIds.isEmpty() || familyIds.contains(family.getId()))
-            .map(Family::getId)
-            .collect(Collectors.toList()))
-        .stream()
-        .filter(calendar -> calendarIds.isEmpty() || calendarIds.contains(calendar.getId()))
-        .collect(Collectors.toList());
-
+  private Map<CalendarField, List<SearchFilter>> getSearchFilters(List<Calendar> calendars) {
     Map<CalendarField, List<SearchFilter>> filters = new HashMap<>();
-    filters.put(CalendarField.FAMILY, families.stream().map(family -> {
-      SearchFilter filter = new SearchFilter();
-      filter.setId(family.getId());
-      filter.setDisplay(family.getName());
-      return filter;
-    }).collect(Collectors.toList()));
-    filters.put(CalendarField.CALENDAR, calendars.stream().map(calendar -> {
-      SearchFilter filter = new SearchFilter();
-      filter.setId(calendar.getId());
-      filter.setDisplay(calendar.getDescription());
-      return filter;
-    }).collect(Collectors.toList()));
+    Set<SearchFilter> calendarFilters = new HashSet<>();
+    Set<SearchFilter> familyFilters = new HashSet<>();
     Set<SearchFilter> userFilters = new HashSet<>();
 
+    for (Calendar calendar : calendars) {
+      familyFilters.add(
+          new SearchFilter(calendar.getFamily().getId(), calendar.getFamily().getName()));
+      calendarFilters.add(
+          new SearchFilter(
+              calendar.getId(),
+              calendar.getFamily().getName() + " - " + calendar.getDescription()));
+      for (FamilyMembers member : calendar.getFamily().getMembers()) {
+        userFilters.add(new SearchFilter(member.getUser().getId(), member.getUser().getFullname()));
+      }
+    }
 
-    calendars.forEach(calendar -> {
-      calendar.getFamily().getMembers().forEach(member -> {
-        SearchFilter filter = new SearchFilter();
-        filter.setId(member.getUser().getId());
-        filter.setDisplay(member.getUser().getFullname());
-        userFilters.add(filter);
-      });
-    });
-
+    filters.put(CalendarField.CALENDAR, new ArrayList<>(calendarFilters));
+    filters.put(CalendarField.FAMILY, new ArrayList<>(familyFilters));
     filters.put(CalendarField.USER, new ArrayList<>(userFilters));
     return filters;
   }
 
   private void verifyCalendarSearchRequest(CalendarSearchRequestDto request) {
     if (request.getStart() == null) {
-      throw new BadRequestException(ApiExceptionCode.REQUIRED_PARAM_MISSING,
-          "Must specify a start date.");
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING, "Must specify a start date.");
     }
     if (request.getEnd() == null) {
-      throw new BadRequestException(ApiExceptionCode.REQUIRED_PARAM_MISSING,
-          "Must specify an end date.");
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING, "Must specify an end date.");
     }
     if (request.getEnd().compareTo(request.getStart()) < 0) {
-      throw new BadRequestException(ApiExceptionCode.BAD_PARAM_VALUE,
-          "End date occurs before start date.");
+      throw new BadRequestException(
+          ApiExceptionCode.BAD_PARAM_VALUE, "End date occurs before start date.");
     }
   }
 
@@ -784,28 +889,37 @@ public class CalendarServiceImpl implements CalendarService {
     if (request.getId() != null) {
       Optional<CalendarEvent> event = eventRepository.findById(request.getId());
       if (event.isEmpty()) {
-        throw new ResourceNotFoundException(ApiExceptionCode.EVENT_DOESNT_EXIST, "Event with id " + request.getId() + " not found.");
+        throw new ResourceNotFoundException(
+            ApiExceptionCode.EVENT_DOESNT_EXIST,
+            "Event with id " + request.getId() + " not found.");
       }
-      if (!familyService.verfiyMinimumRoleSecurity(event.get().getCalendar().getFamily(),
-          requestingUser, Role.CHILD)) {
-        throw new AuthorizationException(ApiExceptionCode.USER_PRIVILEGES_TOO_LOW, "User not authorized to complete this action.");
+      if (!familyService.verfiyMinimumRoleSecurity(
+          event.get().getCalendar().getFamily(), requestingUser, Role.CHILD)) {
+        throw new AuthorizationException(
+            ApiExceptionCode.USER_PRIVILEGES_TOO_LOW,
+            "User not authorized to complete this action.");
       }
       if (!canAddAssignee(event.get(), requestingUser)) {
-        throw new AuthorizationException(ApiExceptionCode.USER_PRIVILEGES_TOO_LOW, "User not authorized to complete this action.");
+        throw new AuthorizationException(
+            ApiExceptionCode.USER_PRIVILEGES_TOO_LOW,
+            "User not authorized to complete this action.");
       }
 
-      request.getAssignees().forEach(assigneeDto -> {
-        User assignee = userService.getUserById(assigneeDto.getUserId());
-        event.get().getAssignees().add(assignee);
-
-      });
+      request
+          .getAssignees()
+          .forEach(
+              assigneeDto -> {
+                User assignee = userService.getUserById(assigneeDto.getUserId());
+                event.get().getAssignees().add(assignee);
+              });
 
       eventRepository.save(event.get());
     } else if (request.getRecurringId() != null) {
       Optional<RecurringCalendarEvent> recurringEvent =
           recurringEventRepository.findById(request.getRecurringId());
       if (recurringEvent.isEmpty()) {
-        throw new ResourceNotFoundException(ApiExceptionCode.EVENT_DOESNT_EXIST,
+        throw new ResourceNotFoundException(
+            ApiExceptionCode.EVENT_DOESNT_EXIST,
             "Recurring event with id " + request.getRecurringId() + " not found.");
       }
       CalendarEvent event;
@@ -816,22 +930,31 @@ public class CalendarServiceImpl implements CalendarService {
         event = recurringEvent.get().getOriginatingEvent();
       }
 
-      if (!familyService.verfiyMinimumRoleSecurity(event.getCalendar().getFamily(),
-          requestingUser, Role.CHILD)) {
-        throw new AuthorizationException(ApiExceptionCode.USER_PRIVILEGES_TOO_LOW,"User not authorized to complete this action.");
+      if (!familyService.verfiyMinimumRoleSecurity(
+          event.getCalendar().getFamily(), requestingUser, Role.CHILD)) {
+        throw new AuthorizationException(
+            ApiExceptionCode.USER_PRIVILEGES_TOO_LOW,
+            "User not authorized to complete this action.");
       }
       if (!canAddAssignee(event, requestingUser)) {
-        throw new AuthorizationException(ApiExceptionCode.USER_PRIVILEGES_TOO_LOW,"User not authorized to complete this action.");
+        throw new AuthorizationException(
+            ApiExceptionCode.USER_PRIVILEGES_TOO_LOW,
+            "User not authorized to complete this action.");
       }
 
-      request.getAssignees().forEach(assigneeDto -> {
-        User assignee = userService.getUserById(assigneeDto.getUserId());
-        event.getAssignees().add(assignee);
-      });
+      request
+          .getAssignees()
+          .forEach(
+              assigneeDto -> {
+                User assignee = userService.getUserById(assigneeDto.getUserId());
+                event.getAssignees().add(assignee);
+              });
 
       eventRepository.save(event);
     } else {
-      throw new BadRequestException(ApiExceptionCode.REQUIRED_PARAM_MISSING, "Either an event id or a recurring id must be supplied.");
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING,
+          "Either an event id or a recurring id must be supplied.");
     }
   }
 
@@ -842,29 +965,39 @@ public class CalendarServiceImpl implements CalendarService {
     if (request.getId() != null) {
       Optional<CalendarEvent> event = eventRepository.findById(request.getId());
       if (event.isEmpty()) {
-        throw new ResourceNotFoundException(ApiExceptionCode.EVENT_DOESNT_EXIST, "Event with id " + request.getId() + " not found.");
+        throw new ResourceNotFoundException(
+            ApiExceptionCode.EVENT_DOESNT_EXIST,
+            "Event with id " + request.getId() + " not found.");
       }
 
-      if (!familyService.verfiyMinimumRoleSecurity(event.get().getCalendar().getFamily(),
-          requestingUser, Role.CHILD)) {
-        throw new AuthorizationException(ApiExceptionCode.USER_PRIVILEGES_TOO_LOW,"User not authorized to complete this action.");
+      if (!familyService.verfiyMinimumRoleSecurity(
+          event.get().getCalendar().getFamily(), requestingUser, Role.CHILD)) {
+        throw new AuthorizationException(
+            ApiExceptionCode.USER_PRIVILEGES_TOO_LOW,
+            "User not authorized to complete this action.");
       }
       if (!canAddAssignee(event.get(), requestingUser)) {
-        throw new AuthorizationException(ApiExceptionCode.USER_PRIVILEGES_TOO_LOW,"User not authorized to complete this action.");
+        throw new AuthorizationException(
+            ApiExceptionCode.USER_PRIVILEGES_TOO_LOW,
+            "User not authorized to complete this action.");
       }
 
-      request.getAssignees().forEach(assigneeDto -> {
-        User assignee = userService.getUserById(assigneeDto.getUserId());
+      request
+          .getAssignees()
+          .forEach(
+              assigneeDto -> {
+                User assignee = userService.getUserById(assigneeDto.getUserId());
 
-        event.get().getAssignees().remove(assignee);
-      });
+                event.get().getAssignees().remove(assignee);
+              });
 
       eventRepository.save(event.get());
     } else if (request.getRecurringId() != null) {
       Optional<RecurringCalendarEvent> recurringEvent =
           recurringEventRepository.findById(request.getRecurringId());
       if (recurringEvent.isEmpty()) {
-        throw new ResourceNotFoundException(ApiExceptionCode.EVENT_DOESNT_EXIST,
+        throw new ResourceNotFoundException(
+            ApiExceptionCode.EVENT_DOESNT_EXIST,
             "Recurring event with id " + request.getRecurringId() + " not found.");
       }
       CalendarEvent event;
@@ -875,35 +1008,43 @@ public class CalendarServiceImpl implements CalendarService {
         event = recurringEvent.get().getOriginatingEvent();
       }
 
-      if (!familyService.verfiyMinimumRoleSecurity(event.getCalendar().getFamily(),
-          requestingUser, Role.CHILD)) {
-        throw new AuthorizationException(ApiExceptionCode.USER_PRIVILEGES_TOO_LOW,"User not authorized to complete this action.");
+      if (!familyService.verfiyMinimumRoleSecurity(
+          event.getCalendar().getFamily(), requestingUser, Role.CHILD)) {
+        throw new AuthorizationException(
+            ApiExceptionCode.USER_PRIVILEGES_TOO_LOW,
+            "User not authorized to complete this action.");
       }
       if (!canAddAssignee(event, requestingUser)) {
-        throw new AuthorizationException(ApiExceptionCode.USER_PRIVILEGES_TOO_LOW,"User not authorized to complete this action.");
+        throw new AuthorizationException(
+            ApiExceptionCode.USER_PRIVILEGES_TOO_LOW,
+            "User not authorized to complete this action.");
       }
 
-      request.getAssignees().forEach(assigneeDto -> {
-        User assignee = userService.getUserById(assigneeDto.getUserId());
-        event.getAssignees().remove(assignee);
-      });
+      request
+          .getAssignees()
+          .forEach(
+              assigneeDto -> {
+                User assignee = userService.getUserById(assigneeDto.getUserId());
+                event.getAssignees().remove(assignee);
+              });
 
       eventRepository.save(event);
     } else {
-      throw new BadRequestException(ApiExceptionCode.REQUIRED_PARAM_MISSING, "Either an event id or a recurring id must be supplied.");
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING,
+          "Either an event id or a recurring id must be supplied.");
     }
   }
 
   /**
-   * <p>
    * Checks to see if a user can be added to an event by the requesting user. The user may be added
    * as long as the event is not a family event. (no users can be added if it is a family event) and
    * they meet one of the following criteria
-   * </p>
+   *
    * <ul>
-   * <li>1. the requesting user is at least an admin</li>
-   * <li>2. the requesting user created the event</li>
-   * <li>3. the requesting user is already assigned to the event</li>
+   *   <li>1. the requesting user is at least an admin
+   *   <li>2. the requesting user created the event
+   *   <li>3. the requesting user is already assigned to the event
    * </ul>
    *
    * @param event
@@ -915,8 +1056,8 @@ public class CalendarServiceImpl implements CalendarService {
       return false;
     }
 
-    if (familyService.verfiyMinimumRoleSecurity(event.getCalendar().getFamily(), requestUser,
-        Role.ADMIN)) {
+    if (familyService.verfiyMinimumRoleSecurity(
+        event.getCalendar().getFamily(), requestUser, Role.ADMIN)) {
       return true;
     }
     if (event.getCreatedBy().getId() == requestUser.getId()) {
@@ -928,5 +1069,4 @@ public class CalendarServiceImpl implements CalendarService {
 
     return false;
   }
-
 }
