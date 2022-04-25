@@ -24,12 +24,13 @@ export default {
   getCsrf() {
     return authHttp.get('/csrf');
   },
-  login(formData) {
+  login(userCredentials) {
     return authHttp.post(
       '/login',
       {
-        username: formData.username,
-        password: formData.password,
+        username: userCredentials.username,
+        email: userCredentials.email,
+        password: userCredentials.password,
       },
       {
         validateStatus(status) {
@@ -50,9 +51,9 @@ export default {
       password: formData.password,
     });
   },
-  sendResetCode(formData) {
+  sendResetCode(username) {
     return authHttp.post('/passwordReset', {
-      username: formData.username,
+      username,
     });
   },
   changePassword(formData) {

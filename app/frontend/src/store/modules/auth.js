@@ -21,9 +21,9 @@ export default {
     },
   },
   actions: {
-    async loginUser({ commit }, formData) {
+    async loginUser({ commit }, userCredentials) {
       try {
-        const res = await api.login(formData);
+        const res = await api.login(userCredentials);
         if (res.status === 200) {
           commit('LOGIN_SUCCESS', { user: res.data });
         } else {
