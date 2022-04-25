@@ -179,6 +179,6 @@ public class CalendarEventDto {
         + ", repetitionSchedule=" + repetitionSchedule + ", description=" + description + ", notes="
         + notes + ", createdBy=" + createdBy + ", created=" + created + ", calendarId=" + calendarId
         + ", isRecurringEvent=" + recurringEvent + ", recurringId=" + recurringId + ", userCanEdit="
-        + userCanEdit + ", detachEvent=" + detachEvent + "]";
+        + userCanEdit + ", detachEvent=" + detachEvent + ", assignees" + assignees + "]";
   }
 }

@@ -1,5 +1,7 @@
 package com.familyorg.familyorganizationapp.DTO;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import java.util.List;
 import java.util.Objects;
 
@@ -8,7 +10,9 @@ public class CalendarDto {
   private String description;
   private Boolean defaultCal;
   private Long familyId;
+  @JsonInclude(Include.NON_EMPTY)
   private List<CalendarEventDto> events;
+  @JsonInclude(Include.NON_NULL)
   private String color;
 
   public CalendarDto(Long id, String description, Boolean isDefault, Long familyId,
