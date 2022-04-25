@@ -116,7 +116,6 @@
                       </v-col>
                       <v-col cols="12" md="6" align-self="center">
                         <PasswordRequirement
-                          v-if="Object.values(passwordReqs).some((req) => !req)"
                           :pw-length="passwordReqs.length"
                           :contains-lower-case="passwordReqs.lowerCase"
                           :contains-upper-case="passwordReqs.upperCase"
