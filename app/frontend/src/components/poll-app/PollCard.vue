@@ -20,7 +20,9 @@
       <div v-if="!poll.respondents.some((r) => r.username === user.username)">You were not added as a respondent.</div>
       <div v-else-if="!poll.closed">
         <div class="text-caption mb-2">Poll closes: {{ poll.closedDateTime }}</div>
-        <v-btn @click="vote"><v-icon>mdi-vote-outline</v-icon>Vote</v-btn>
+        <v-btn :loading="loading" :disabled="loading || voteOption === null" @click="vote"
+          ><v-icon>mdi-vote-outline</v-icon>Vote</v-btn
+        >
       </div>
       <div v-else>This poll is closed</div>
     </v-card-actions>
@@ -38,27 +40,45 @@ export default {
       default: null,
       type: Object,
     },
+    successCallback: {
+      default: () => {},
+      type: Function,
+    },
+    failureCallback: {
+      default: () => {},
+      type: Function,
+    },
   },
   data: (instance) => ({
     voteOption: instance.poll.vote,
+    loading: false,
   }),
   computed: {
     ...mapGetters({ user: 'getUser' }),
   },
   methods: {
     async vote() {
-      const formData = {
-        pollId: this.poll.id,
-        choice: {
-          id: this.voteOption,
-        },
-      };
+      try {
+        this.loading = true;
+        const formData = {
+          pollId: this.poll.id,
+          choice: {
+            id: this.voteOption,
+          },
+        };
 
-      const res = await api.votePoll(formData);
-      if (res.status === 200) {
-        // TODO: display message saying vote was received
-      } else {
-        // TODO: handle errors and display message
+        const res = await api.votePoll(formData);
+        if (res.status === 200) {
+          this.successCallback();
+          // TODO: display message saying vote was received
+        } else {
+          this.failureCallback();
+          // TODO: handle errors and display message
+        }
+      } catch (err) {
+        this.failureCallback();
+      } finally {
+        this.loading = false;
       }
     },
   },
