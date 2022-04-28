@@ -27,10 +27,13 @@ public class Todotask implements Serializable {
 	private Long id;
 	
 	@JsonIgnore
-	  @ManyToOne(fetch = FetchType.LAZY)
-	  @JoinColumn(name = "family_id", referencedColumnName = "family_id",
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "family_id", referencedColumnName = "family_id",
 	      columnDefinition = "BIGINT")
-	  private Family family;
+	private Family family;
+	
+	@Column(name= "description", columnDefinition = "STRING")
+	private String description;
 	
 	@Column(name= "is_default", columnDefinition = "BOOLEAN")
 	private Boolean isDefault;
@@ -55,6 +58,14 @@ public class Todotask implements Serializable {
 		this.family = family;
 	}
 
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
+	}
+	
 	public Boolean getIsDefault() {
 		return isDefault;
 	}

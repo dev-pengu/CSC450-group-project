@@ -21,13 +21,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.familyorg.familyorganizationapp.DTO.TodolistDto;
 import com.familyorg.familyorganizationapp.DTO.TodotaskDto;
+import com.familyorg.familyorganizationapp.DTO.builder.ToDoListDtoBuilder;
+import com.familyorg.familyorganizationapp.DTO.builder.ToDoTaskDtoBuilder;
 import com.familyorg.familyorganizationapp.Exception.AuthorizationException;
 import com.familyorg.familyorganizationapp.Exception.BadRequestException;
 import com.familyorg.familyorganizationapp.Exception.ResourceNotFoundException;
 import com.familyorg.familyorganizationapp.Exception.UserNotFoundException;
-import com.familyorg.familyorganizationapp.domain.Calendar;
-import com.familyorg.familyorganizationapp.domain.CalendarEvent;
-import com.familyorg.familyorganizationapp.domain.EventRepetitionSchedule;
+import com.familyorg.familyorganizationapp.Exception.ApiExceptionCode;
 import com.familyorg.familyorganizationapp.domain.Family;
 import com.familyorg.familyorganizationapp.domain.Role;
 import com.familyorg.familyorganizationapp.domain.Todolist;
@@ -36,7 +36,6 @@ import com.familyorg.familyorganizationapp.domain.User;
 import com.familyorg.familyorganizationapp.domain.search.SearchFilter;
 import com.familyorg.familyorganizationapp.repository.TodolistRepository;
 import com.familyorg.familyorganizationapp.repository.TodotaskRepository;
-import com.familyorg.familyorganizationapp.service.CalendarService;
 import com.familyorg.familyorganizationapp.service.FamilyService;
 import com.familyorg.familyorganizationapp.service.TodolistService;
 import com.familyorg.familyorganizationapp.service.UserService;
@@ -71,11 +70,20 @@ public class TodolistServiceImpl implements TodolistService {
 		{
 		    User requestingUser = userService.getRequestingUser();
 		    Optional<Family> family = familyService.getFamilyById(request.getFamilyId());
-		    
+		    if (request.getDescription() == null) {
+			throw new BadRequestException(
+				ApiExceptionCode.REQUIRED_PARAM_MISSING, "List description must not be null.");
+			}
+			if (request.getFamilyId() == null) {
+			throw new BadRequestException(
+				ApiExceptionCode.REQUIRED_PARAM_MISSING,
+				"List must have a family id to associate the list with.");
+			}
 		    if (family.isEmpty()) //If family cannot be found
 		    {
 		    	throw new ResourceNotFoundException(
-				          "Family with id " + request.getFamilyId() + " not found.");
+						ApiExceptionCode.FAMILY_DOESNT_EXIST,
+				        "Family with id " + request.getFamilyId() + " not found.");
 		    }
 		    
 		    boolean hasAppropriatePermissions =
@@ -83,11 +91,13 @@ public class TodolistServiceImpl implements TodolistService {
 		    
 		    if (!hasAppropriatePermissions) //If user does not have permissions to create list
 		    {
-		    	throw new AuthorizationException("User not authorized to complete this action.");
+		    	throw new AuthorizationException(
+		    			ApiExceptionCode.USER_PRIVILEGES_TOO_LOW, "User not authorized to complete this action.");
 		    }
 		      
 		    Todolist todolist = new Todolist();
 		    todolist.setId(request.getId());
+			todolist.setDescription(request.getDescription());
 		    todolist.setFamily(family.get());
 		    todolist.setIsDefault(false);
 		    todolistRepository.save(todolist);
@@ -104,16 +114,17 @@ public class TodolistServiceImpl implements TodolistService {
 	    
 	    if (todolistOpt.isEmpty())
 	    {
-	    	throw new ResourceNotFoundException("To do list with id " + request.getId() + " not found.");
+	    	throw new ResourceNotFoundException(
+				ApiExceptionCode.LIST_DOESNT_EXIST, "To do list with id " + request.getId() + " not found.");
 	    }
 	      
 	    boolean hasAppropriatePermissions = familyService
-	        .verfiyMinimumRoleSecurity(todolistOpt.get().getFamily(), requestingUser, Role.ADMIN);
+	        .verfiyMinimumRoleSecurity(todolistOpt.get().getFamily(), requestingUser, Role.ADULT);
 	    
-	    if (!hasAppropriatePermissions)
-	    {
-	    	throw new AuthorizationException("User not authorized to complete this actions.");
-	    }
+	    if (!hasAppropriatePermissions) {
+		throw new AuthorizationException(
+			ApiExceptionCode.USER_PRIVILEGES_TOO_LOW, "User not authorized to complete this action.");
+		}
 	    
 	    Todolist todolist = todolistOpt.get();
 	    
@@ -136,7 +147,8 @@ public class TodolistServiceImpl implements TodolistService {
 	    
 	    if (todolist.isEmpty())
 	    {
-	    	throw new ResourceNotFoundException("To do list with id " + id + " not found.");
+	    	throw new ResourceNotFoundException(
+	    			ApiExceptionCode.LIST_DOESNT_EXIST, "To do list with id " + id + " not found.");
 	    }
 	    
 	    boolean hasAppropriatePermissions = familyService
@@ -144,33 +156,45 @@ public class TodolistServiceImpl implements TodolistService {
 	    
 	    if (!hasAppropriatePermissions)
 	    {
-	    	throw new AuthorizationException("User not authorized to complete this action.");
+	    	throw new AuthorizationException(
+	    			ApiExceptionCode.USER_PRIVILEGES_TOO_LOW, "User not authorized to complete this action.");
 	    }
-	    todolistRepository.deleteById(id);
+		if (todolist.get().getIsDefault()) {
+		throw new BadRequestException(
+			ApiExceptionCode.ILLEGAL_ACTION_REQUESTED,
+			"The family's default to do list cannot be deleted.");
+		}
+		todolistRepository.delete(todolist.get());
 	}
 	
 	@Override
 	public TodotaskDto getTask(Long id) 
 			throws UserNotFoundException, AuthorizationException, ResourceNotFoundException 
 	{
-				//locate user and their role privileges
-				User requestingUser = userService.getRequestingUser();
-			    Optional<Todotask> todotaskOpt = todotaskRepository.findById(id);
-			    
-			    if (todotaskOpt.isEmpty()) //Check if to do task can be found
-			    {
-			    	throw new ResourceNotFoundException("Task with id " + id + " not found.");
-			    }
-			      
-			    boolean hasAppropriatePermissions = familyService
-			        .verfiyMinimumRoleSecurity(todotaskOpt.get().getFamily(), requestingUser, Role.CHILD);
-			    
-			    if (!hasAppropriatePermissions) //Check if user us allowed to access task
-			    {
-			    	throw new AuthorizationException("User not authorized to complete this actions.");
-			    }
-			    
-			    //Ask for help here
+		if (id == null) {
+		throw new BadRequestException(
+			ApiExceptionCode.REQUIRED_PARAM_MISSING, "Item id must not be null.");
+		}
+		Optional<Todotask> todotask = todotaskRepository.findById(id);
+		if (todotask.isEmpty()) {
+		throw new ResourceNotFoundException(
+			ApiExceptionCode.LIST_ITEM_DOESNT_EXIST, "List item with id " + id + " not found.");
+		}
+		User requestingUser = userService.getRequestingUser();
+		boolean hasAppropriatePermissions =
+			familyService.verfiyMinimumRoleSecurity(
+				todotask.get().getFamily(), requestingUser, Role.CHILD);
+		if (!hasAppropriatePermissions) {
+		throw new AuthorizationException(
+			ApiExceptionCode.USER_PRIVILEGES_TOO_LOW, "User not authorized to complete this action.");
+		}
+
+		return new ToDoListDtoBuilder()
+			.setId(todotask.get().getId())
+			.setDescription(todotask.get().getDescription())
+			.setIsDefault(todotask.get().getIsDefault())
+			.setFamilyId(todotask.get().getFamily())
+			.build();
 	}
 	
 	
@@ -185,7 +209,7 @@ public class TodolistServiceImpl implements TodolistService {
 	    if (family.isEmpty()) //If family cannot be found
 	    {
 	    	throw new ResourceNotFoundException(
-			          "Family with id " + task.getId() + " not found.");
+	    			ApiExceptionCode.LIST_DOESNT_EXIST, "Family with id " + task.getId() + " not found.");
 	    }
 	    
 	    boolean hasAppropriatePermissions =
@@ -193,11 +217,13 @@ public class TodolistServiceImpl implements TodolistService {
 	    
 	    if (!hasAppropriatePermissions) //If user does not have permissions to add task
 	    {
-	    	throw new AuthorizationException("User not authorized to complete this action.");
+	    	throw new AuthorizationException(
+	    			ApiExceptionCode.USER_PRIVILEGES_TOO_LOW, "User not authorized to complete this action.");
 	    }
 	      
 	    Todotask todotask = new Todotask();
 	    todotask.setId(task.getId());
+		todotask.setDescription(task.getDescription());
 	    todotask.setFamily(family.get());
 	    todotask.setIsDefault(false);
 	    todotaskRepository.save(todotask);
@@ -214,7 +240,8 @@ public class TodolistServiceImpl implements TodolistService {
 			    
 		if (todotaskOpt.isEmpty())
 		{
-			throw new ResourceNotFoundException("To do list with id " + task.getId() + " not found.");
+			throw new ResourceNotFoundException(
+					ApiExceptionCode.LIST_DOESNT_EXIST, "To do list with id " + task.getId() + " not found.");
 		}
 			      
 		boolean hasAppropriatePermissions = familyService
@@ -222,18 +249,19 @@ public class TodolistServiceImpl implements TodolistService {
 			    
 		if (!hasAppropriatePermissions)
 		{
-			throw new AuthorizationException("User not authorized to complete this actions.");
+			throw new AuthorizationException(
+					ApiExceptionCode.USER_PRIVILEGES_TOO_LOW,"User not authorized to complete this actions.");
 		}
 			    
-			    Todotask todotask = todotaskOpt.get();
-			    /*
-			    if (todotask.getDescription() != task.getDescription())
-			    {
-			    	todotask.setDescription(task.getDescription());
-			    }
-			    */
-			    //Save to do list item to the repository
-			    todotaskRepository.save(todotask);
+			Todotask todotask = todotaskOpt.get();
+			if (task.getDescription() != null) {
+      			todotask.getId().setDescription(todotask.getDescription());
+    		}
+			todotask.getId().setId(todotask.getId());
+			todotask.setFamily(todotask.getFamily());
+			
+	    	todotask.setIsDefault(false);
+			todotaskRepository.save(todotask.getId());
 	}
 	
 	@Override
@@ -246,7 +274,8 @@ public class TodolistServiceImpl implements TodolistService {
 	    
 	    if (todotask.isEmpty())
 	    {
-	    	throw new ResourceNotFoundException("To do task with id " + id + " not found.");
+	    	throw new ResourceNotFoundException(
+	    			ApiExceptionCode.LIST_DOESNT_EXIST,"To do task with id " + id + " not found.");
 	    }
 	    
 	    boolean hasAppropriatePermissions = familyService
@@ -254,10 +283,11 @@ public class TodolistServiceImpl implements TodolistService {
 	    
 	    if (!hasAppropriatePermissions)
 	    {
-	    	throw new AuthorizationException("User not authorized to complete this action.");
+	    	throw new AuthorizationException(
+	    			ApiExceptionCode.USER_PRIVILEGES_TOO_LOW, "User not authorized to complete this action.");
 	    }
 	    
-	    todotaskRepository.deleteById(id);
+	    todotaskRepository.delete(todotask.get());
 	}
 
 }
