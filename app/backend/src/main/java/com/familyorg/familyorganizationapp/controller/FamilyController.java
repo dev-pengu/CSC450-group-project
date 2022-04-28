@@ -60,6 +60,12 @@ public class FamilyController {
     return new ResponseEntity<FamilyDto>(family, HttpStatus.OK);
   }
 
+  @DeleteMapping("/leave")
+  public ResponseEntity<String> leaveFamily(@RequestParam("id") Long familyId) {
+    familyService.leaveFamily(familyId);
+    return new ResponseEntity<String>("Successfully left family", HttpStatus.OK);
+  }
+
   @GetMapping("/get-family")
   public ResponseEntity<List<FamilyDto>> getFamilies() {
     List<FamilyDto> families = familyService.getFamiliesByUser();
@@ -95,6 +101,12 @@ public class FamilyController {
   public ResponseEntity<FamilyDto> updateFamily(@RequestBody FamilyDto familyRequest) {
     FamilyDto family = familyService.updateFamily(familyRequest);
     return new ResponseEntity<FamilyDto>(family, HttpStatus.OK);
+  }
+
+  @DeleteMapping("/admin/removeMember")
+  public ResponseEntity<String> removeMember(@RequestParam("familyId") Long familyId, @RequestParam("userId") Long userId) {
+    familyService.removeMember(familyId, userId);
+    return new ResponseEntity<>("Member removed successfully.", HttpStatus.OK);
   }
 
   @DeleteMapping("/admin/delete")

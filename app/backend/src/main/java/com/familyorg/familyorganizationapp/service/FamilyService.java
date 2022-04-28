@@ -50,4 +50,8 @@ public interface FamilyService {
   List<FamilyDto> getFamiliesForFormSelect();
 
   List<UserDto> getMembersForFormSelect(Long familyId);
+
+  void leaveFamily(Long familyId);
+
+  void removeMember(Long familyId, Long userId);
 }
