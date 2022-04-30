@@ -27,7 +27,6 @@ import com.familyorg.familyorganizationapp.domain.User;
 import com.familyorg.familyorganizationapp.service.SecurityService;
 import com.familyorg.familyorganizationapp.service.UserService;
 
-@CrossOrigin(origins = "http://localhost")
 @RestController
 @RequestMapping("/api/services/auth")
 public class AuthController {

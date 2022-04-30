@@ -21,7 +21,6 @@ import com.familyorg.familyorganizationapp.DTO.CalendarSearchRequestDto;
 import com.familyorg.familyorganizationapp.DTO.CalendarSearchResponseDto;
 import com.familyorg.familyorganizationapp.service.CalendarService;
 
-@CrossOrigin(origins = "http://localhost:8081")
 @RestController
 @RequestMapping("/api/v1/calendar")
 public class CalendarController {

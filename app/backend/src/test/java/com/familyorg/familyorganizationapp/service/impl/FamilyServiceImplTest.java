@@ -13,6 +13,7 @@ import static org.mockito.Mockito.when;
 
 import com.familyorg.familyorganizationapp.repository.PollVoteRepository;
 import com.familyorg.familyorganizationapp.repository.ShoppingListRepository;
+import com.familyorg.familyorganizationapp.repository.ToDoListRepository;
 import com.familyorg.familyorganizationapp.service.AuthService;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -151,7 +152,7 @@ public class FamilyServiceImplTest {
     shoppingListRepository = mock(ShoppingListRepository.class);
     familyService = new FamilyServiceImpl(familyRepository, familyMemberRepository,
         calendarRepository, userService, shoppingListRepository, mock(AuthService.class), mock(
-      PollVoteRepository.class));
+      PollVoteRepository.class), mock(ToDoListRepository.class));
 
     when(userService.getUserByEmail(any(String.class)))
         .thenAnswer(invocation -> usersByEmail.get(invocation.getArgument(0)));
