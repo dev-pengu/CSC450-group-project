@@ -1,7 +1,9 @@
 package com.familyorg.familyorganizationapp.service.impl;
 
 import com.familyorg.familyorganizationapp.domain.ShoppingList;
+import com.familyorg.familyorganizationapp.domain.ToDoList;
 import com.familyorg.familyorganizationapp.repository.ShoppingListRepository;
+import com.familyorg.familyorganizationapp.repository.ToDoListRepository;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -47,6 +49,7 @@ public class FamilyServiceImpl implements FamilyService {
   FamilyMemberRepository familyMemberRepository;
   CalendarRepository calendarRepository;
   ShoppingListRepository shoppingListRepository;
+  ToDoListRepository toDoListRepository;
   UserService userService;
 
   @Autowired
@@ -55,12 +58,14 @@ public class FamilyServiceImpl implements FamilyService {
       FamilyMemberRepository familyMemberRepository,
       CalendarRepository calendarRepository,
       UserService userService,
-      ShoppingListRepository shoppingListRepository) {
+      ShoppingListRepository shoppingListRepository,
+    ToDoListRepository toDoListRepository) {
     this.familyRepository = familyRepository;
     this.familyMemberRepository = familyMemberRepository;
     this.calendarRepository = calendarRepository;
     this.userService = userService;
     this.shoppingListRepository = shoppingListRepository;
+    this.toDoListRepository = toDoListRepository;
   }
 
   @Override
@@ -91,6 +96,15 @@ public class FamilyServiceImpl implements FamilyService {
     shoppingList.setCreatedBy(ownerUser);
     ShoppingList savedShoppingList = shoppingListRepository.save(shoppingList);
     savedFamily.addShoppingList(savedShoppingList);
+
+    ToDoList list = new ToDoList();
+    list.setDefaultList(true);
+    list.setDescription("Family To-Do List");
+    list.setFamily(family);
+    list.setCreatedDatetime(Timestamp.from(Instant.now()));
+    list.setCreatedBy(ownerUser);
+    ToDoList savedList = toDoListRepository.save(list);
+    savedFamily.addToDoList(savedList);
 
     FamilyMembers ownerRelation = new FamilyMembers();
     ownerRelation.setFamily(savedFamily);

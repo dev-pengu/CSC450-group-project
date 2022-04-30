@@ -31,9 +31,9 @@ public class LoggingFilter extends OncePerRequestFilter {
         getStringValue(requestWrapper.getContentAsByteArray(), request.getCharacterEncoding());
 
     logger.info(
-        "FINISHED PROCESSING : TIME TAKEN={}; METHOD={}; REQUESTURI={}; REQUEST PAYLOAD={}; RESPONSE CODE={}",
+        "FINISHED PROCESSING : TIME TAKEN={}; METHOD={}; REQUESTURI={}; REQUEST PAYLOAD={}; RESPONSE CODE={}; {}; {}; {}",
         timeTaken, request.getMethod(), request.getRequestURI(),
-        request.getRequestURI().contains("auth") ? "***" : requestBody, response.getStatus());
+        request.getRequestURI().contains("auth") ? "***" : requestBody, response.getStatus(), request.getRemoteAddr(), request.getRemoteHost(), request.getRemotePort());
     responseWrapper.copyBodyToResponse();
   }
 
