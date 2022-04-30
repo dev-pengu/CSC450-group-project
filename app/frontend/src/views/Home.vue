@@ -86,8 +86,9 @@
           </v-carousel>
         </v-sheet>
       </v-col>
-      <v-col cols="12" sm="4" md="6" align-self="center">
-        <v-alert type="warning" icon="mdi-alert-outline">Work in progess</v-alert>
+      <v-col cols="12" sm="4" md="6">
+        <!-- TODO add polling widget -->
+        <PollPreview></PollPreview>
       </v-col>
     </v-row>
     <v-row>
@@ -121,6 +122,7 @@
 import { mapActions, mapGetters } from 'vuex';
 import FamilyModal from '../components/FamilyModal.vue';
 import InviteModal from '../components/InviteUserModal.vue';
+import PollPreview from '../components/poll-app/PollPreview.vue';
 import api from '../api';
 import { isAdmin } from '../util/RoleUtil';
 
@@ -129,6 +131,7 @@ export default {
   components: {
     FamilyModal,
     InviteModal,
+    PollPreview,
   },
   data: () => ({
     // TODO: replace with real api calls

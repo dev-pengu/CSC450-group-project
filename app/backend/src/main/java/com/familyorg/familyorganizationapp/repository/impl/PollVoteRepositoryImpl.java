@@ -32,6 +32,13 @@ public class PollVoteRepositoryImpl extends QuerydslRepositorySupport
   }
 
   @Override
+  public void deleteOpenPollsForFamilyByUser(Long userId, Long familyId) {
+    new JPADeleteClause(getEntityManager(), voteTable)
+      .where(voteTable.user.id.eq(userId).and(voteTable.poll.family.id.eq(familyId)))
+      .execute();
+  }
+
+  @Override
   public void deleteAllByUserIdAndPoll(List<Long> userIds, Long pollId) {
     new JPADeleteClause(getEntityManager(), voteTable)
         .where(voteTable.user.id.in(userIds)

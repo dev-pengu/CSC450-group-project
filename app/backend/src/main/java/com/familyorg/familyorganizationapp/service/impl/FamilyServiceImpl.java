@@ -1,9 +1,13 @@
 package com.familyorg.familyorganizationapp.service.impl;
 
+import com.familyorg.familyorganizationapp.domain.PollVote;
 import com.familyorg.familyorganizationapp.domain.ShoppingList;
 import com.familyorg.familyorganizationapp.domain.ToDoList;
-import com.familyorg.familyorganizationapp.repository.ShoppingListRepository;
 import com.familyorg.familyorganizationapp.repository.ToDoListRepository;
+import com.familyorg.familyorganizationapp.repository.CalendarEventRepository;
+import com.familyorg.familyorganizationapp.repository.PollVoteRepository;
+import com.familyorg.familyorganizationapp.repository.ShoppingListRepository;
+import com.familyorg.familyorganizationapp.service.AuthService;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -51,6 +55,8 @@ public class FamilyServiceImpl implements FamilyService {
   ShoppingListRepository shoppingListRepository;
   ToDoListRepository toDoListRepository;
   UserService userService;
+  AuthService authService;
+  PollVoteRepository voteRepository;
 
   @Autowired
   public FamilyServiceImpl(
@@ -59,13 +65,17 @@ public class FamilyServiceImpl implements FamilyService {
       CalendarRepository calendarRepository,
       UserService userService,
       ShoppingListRepository shoppingListRepository,
-    ToDoListRepository toDoListRepository) {
+      AuthService authService,
+      PollVoteRepository voteRepository,
+      ToDoListRepository toDoListRepository) {
     this.familyRepository = familyRepository;
     this.familyMemberRepository = familyMemberRepository;
     this.calendarRepository = calendarRepository;
     this.userService = userService;
     this.shoppingListRepository = shoppingListRepository;
     this.toDoListRepository = toDoListRepository;
+    this.authService = authService;
+    this.voteRepository = voteRepository;
   }
 
   @Override
@@ -359,6 +369,74 @@ public class FamilyServiceImpl implements FamilyService {
                     .withLastName(member.getUser().getLastName())
                     .build())
         .collect(Collectors.toList());
+  }
+
+  @Override
+  public void leaveFamily(Long familyId) {
+    if (familyId == null) {
+      throw new BadRequestException(ApiExceptionCode.REQUIRED_PARAM_MISSING, "Family id must not be null");
+    }
+    User requestingUser = userService.getRequestingUser();
+    if (authService.hasAuthenticatedForSensitiveActions(requestingUser.getUsername())) {
+      Optional<FamilyMembers> memberRecord = familyMemberRepository.findById(new FamilyMemberId(requestingUser.getId(), familyId));
+      if (memberRecord.isEmpty()) {
+        throw new AuthorizationException(ApiExceptionCode.USER_NOT_IN_FAMILY, "User is not a member of the requested family.");
+      }
+      if (memberRecord.get().getRole().equals(Role.OWNER)) {
+        throw new AuthorizationException(ApiExceptionCode.ACTION_NOT_PERMITTED, "User cannot leave a family they own. The family ownership must first be transferred.");
+      }
+      // remove all events assigned to the user
+      requestingUser.getEvents().removeIf(event -> event.getCalendar().getFamily().getId().equals(familyId));
+      // remove all todos assigned to the user
+      // TODO after todo list is implemented
+
+      // remove any outstanding poll responses from the user and any open polls
+      voteRepository.deleteOpenPollsForFamilyByUser(requestingUser.getId(), familyId);
+      // remove the family member record
+      requestingUser.getFamilies().removeIf(family -> family.getFamily().getId().equals(familyId));
+      userService.updateUser(requestingUser);
+    } else {
+      throw new AuthorizationException(ApiExceptionCode.REAUTHENTICATION_NEEDED_FOR_REQUEST,
+        "Users must reauthenticate to perform this action.");
+    }
+  }
+
+  @Override
+  public void removeMember(Long familyId, Long userId) {
+    if (familyId == null) {
+      throw new BadRequestException(ApiExceptionCode.REQUIRED_PARAM_MISSING, "Family id must not be null");
+    }
+    if (userId == null) {
+      throw new BadRequestException(ApiExceptionCode.REQUIRED_PARAM_MISSING, "User id must not be null");
+    }
+    User requestingUser = userService.getRequestingUser();
+    if (authService.hasAuthenticatedForSensitiveActions(requestingUser.getUsername())) {
+      Optional<FamilyMembers> memberRecord = familyMemberRepository.findById(new FamilyMemberId(requestingUser.getId(), familyId));
+      if (memberRecord.isEmpty()) {
+        throw new AuthorizationException(ApiExceptionCode.USER_NOT_IN_FAMILY, "User is not a member of the requested family.");
+      }
+      if (verfiyMinimumRoleSecurity(memberRecord.get().getFamily(), requestingUser, Role.ADMIN)) {
+        throw new AuthorizationException(ApiExceptionCode.ACTION_NOT_PERMITTED, "User does not have permissions to remove a member from the specified family.");
+      }
+      Optional<FamilyMembers> memberRecordToRemove = familyMemberRepository.findById(new FamilyMemberId(userId, familyId));
+      if (memberRecordToRemove.isEmpty()) {
+        throw new AuthorizationException(ApiExceptionCode.USER_NOT_IN_FAMILY, "User to be removed is not a member of the requested family.");
+      }
+
+      // remove all events assigned to the user
+      memberRecordToRemove.get().getUser().getEvents().removeIf(event -> event.getCalendar().getFamily().getId().equals(familyId));
+      // remove all todos assigned to the user
+      // TODO after todo list is implemented
+
+      // remove any outstanding poll responses from the user and any open polls
+      voteRepository.deleteOpenPollsForFamilyByUser(memberRecordToRemove.get().getUser().getId(), familyId);
+      // remove the family member record
+      memberRecordToRemove.get().getUser().getFamilies().removeIf(family -> family.getFamily().getId().equals(familyId));
+      userService.updateUser(memberRecordToRemove.get().getUser());
+    } else {
+      throw new AuthorizationException(ApiExceptionCode.REAUTHENTICATION_NEEDED_FOR_REQUEST,
+        "Users must reauthenticate to perform this action.");
+    }
   }
 
   /**
