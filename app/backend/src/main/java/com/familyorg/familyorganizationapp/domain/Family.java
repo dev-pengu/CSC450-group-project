@@ -54,6 +54,14 @@ public class Family implements Serializable {
   @OneToMany(mappedBy = "family", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
   private Set<ShoppingList> shoppingLists;
 
+  @JsonIgnore
+  @OneToMany(mappedBy = "family", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+  private Set<Poll> polls;
+
+  @JsonIgnore
+  @OneToMany(mappedBy = "family", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+  private Set<MemberInvite> invites;
+
   public Family() {}
 
   public Family(Long id, String name, String eventColor, String timezone, String inviteCode,
@@ -190,10 +198,20 @@ public class Family implements Serializable {
     this.shoppingLists.add(list);
   }
 
+  public Set<Poll> getPolls() {return  polls;}
+
+  public void setPoll(Set<Poll> polls) {
+    this.polls = polls;
+  }
+
+  public Set<MemberInvite> getInvites() {return invites;}
+
+  public void setInvites(Set<MemberInvite> invites) {
+    this.invites = invites;
+  }
+
   public boolean isMember(User user) {
-    return this.members.stream()
-        .filter(member -> member.getUser().getId().equals(user.getId()))
-        .count() > 0;
+    return this.members.stream().anyMatch(member -> member.getUser().getId().equals(user.getId()));
   }
 
   @Override
