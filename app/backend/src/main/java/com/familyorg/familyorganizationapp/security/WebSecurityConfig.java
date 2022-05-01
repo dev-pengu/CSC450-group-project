@@ -18,6 +18,7 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -31,6 +32,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
   @Override
   protected void configure(HttpSecurity http) throws Exception {
     http.cors()
+        .configurationSource(CustomCorsFilter.configurationSource())
         .and()
         .authorizeRequests()
         .antMatchers(HttpMethod.POST, "/api/services/auth/**")
@@ -58,7 +60,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         .authenticationEntryPoint(customAuthenticationEntryPoint)
         .and()
         .csrf()
-        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse());
+        .disable();
+    // .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse());
   }
 
   @Override
@@ -71,12 +74,25 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     return authenticationManager();
   }
 
-  @Bean
-  CorsConfigurationSource corsConfigurationSource() {
-    final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-    CorsConfiguration corsConfiguration = new CorsConfiguration().applyPermitDefaultValues();
-    corsConfiguration.setAllowedMethods(Arrays.asList("POST", "GET", "PATCH", "DELETE"));
-    source.registerCorsConfiguration("/**", corsConfiguration);
-    return source;
+  private class CustomCorsFilter extends CorsFilter {
+
+    public CustomCorsFilter() {
+      super(configurationSource());
+    }
+
+    public static UrlBasedCorsConfigurationSource configurationSource() {
+      CorsConfiguration configuration = new CorsConfiguration();
+      configuration.setAllowCredentials(true);
+      configuration.addAllowedOrigin("*");
+      configuration.addAllowedHeader("*");
+      configuration.setAllowedMethods(Arrays.asList("POST", "GET", "PATCH", "DELETE"));
+      configuration.setMaxAge(3600L);
+
+      UrlBasedCorsConfigurationSource corsConfigurationSource =
+          new UrlBasedCorsConfigurationSource();
+      corsConfigurationSource.registerCorsConfiguration("/**", configuration);
+
+      return corsConfigurationSource;
+    }
   }
 }

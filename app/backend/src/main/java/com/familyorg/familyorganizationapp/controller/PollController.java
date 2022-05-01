@@ -18,7 +18,6 @@ import com.familyorg.familyorganizationapp.DTO.PollSearchResponseDto;
 import com.familyorg.familyorganizationapp.DTO.VoteDto;
 import com.familyorg.familyorganizationapp.service.PollService;
 
-@CrossOrigin(origins = "http://localhost:8081")
 @RestController
 @RequestMapping("/api/v1/poll")
 public class PollController {

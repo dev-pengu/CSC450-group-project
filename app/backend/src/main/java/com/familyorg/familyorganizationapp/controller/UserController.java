@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.familyorg.familyorganizationapp.DTO.UserDto;
 import com.familyorg.familyorganizationapp.service.UserService;
 
-@CrossOrigin(origins = "http://localhost:8081")
 @RestController
 @RequestMapping("/api/v1/user")
 public class UserController {

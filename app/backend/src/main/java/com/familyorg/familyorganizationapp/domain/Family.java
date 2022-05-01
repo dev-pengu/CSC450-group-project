@@ -41,30 +41,61 @@ public class Family implements Serializable {
   private String inviteCode;
 
   @JsonIgnore
-  @OneToMany(mappedBy = "family", fetch = FetchType.LAZY, cascade = CascadeType.ALL,
+  @OneToMany(
+      mappedBy = "family",
+      fetch = FetchType.LAZY,
+      cascade = CascadeType.ALL,
       orphanRemoval = true)
   private Set<FamilyMembers> members;
 
   @JsonIgnore
-  @OneToMany(mappedBy = "family", fetch = FetchType.LAZY, cascade = CascadeType.ALL,
+  @OneToMany(
+      mappedBy = "family",
+      fetch = FetchType.LAZY,
+      cascade = CascadeType.ALL,
       orphanRemoval = true)
   private Set<Calendar> calendars;
 
   @JsonIgnore
-  @OneToMany(mappedBy = "family", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+  @OneToMany(
+      mappedBy = "family",
+      fetch = FetchType.LAZY,
+      cascade = CascadeType.ALL,
+      orphanRemoval = true)
   private Set<ShoppingList> shoppingLists;
 
   @JsonIgnore
-  @OneToMany(mappedBy = "family", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+  @OneToMany(
+      mappedBy = "family",
+      fetch = FetchType.LAZY,
+      cascade = CascadeType.ALL,
+      orphanRemoval = true)
   private Set<Poll> polls;
 
   @JsonIgnore
-  @OneToMany(mappedBy = "family", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+  @OneToMany(
+      mappedBy = "family",
+      fetch = FetchType.LAZY,
+      cascade = CascadeType.ALL,
+      orphanRemoval = true)
   private Set<MemberInvite> invites;
+
+  @JsonIgnore
+  @OneToMany(
+      mappedBy = "family",
+      fetch = FetchType.LAZY,
+      cascade = CascadeType.ALL,
+      orphanRemoval = true)
+  private Set<ToDoList> toDoLists;
 
   public Family() {}
 
-  public Family(Long id, String name, String eventColor, String timezone, String inviteCode,
+  public Family(
+      Long id,
+      String name,
+      String eventColor,
+      String timezone,
+      String inviteCode,
       Set<FamilyMembers> members) {
     this.id = id;
     this.name = name;
@@ -74,7 +105,11 @@ public class Family implements Serializable {
     this.members = members;
   }
 
-  public Family(String name, String eventColor, String timezone, String inviteCode,
+  public Family(
+      String name,
+      String eventColor,
+      String timezone,
+      String inviteCode,
       Set<FamilyMembers> members) {
     super();
     this.name = name;
@@ -147,9 +182,11 @@ public class Family implements Serializable {
     if (this.members == null) {
       this.members = new HashSet<>();
     }
-    Long existingUsersWithId = this.members.stream()
-        .filter(existingMember -> existingMember.getUser().getId().equals(member.getUser().getId()))
-        .count();
+    Long existingUsersWithId =
+        this.members.stream()
+            .filter(
+                existingMember -> existingMember.getUser().getId().equals(member.getUser().getId()))
+            .count();
     if (existingUsersWithId > 0) {
       return;
     }
@@ -186,8 +223,7 @@ public class Family implements Serializable {
     return shoppingLists;
   }
 
-  public void setShoppingLists(
-    Set<ShoppingList> shoppingLists) {
+  public void setShoppingLists(Set<ShoppingList> shoppingLists) {
     this.shoppingLists = shoppingLists;
   }
 
@@ -209,6 +245,21 @@ public class Family implements Serializable {
   public void setInvites(Set<MemberInvite> invites) {
     this.invites = invites;
   }
+  
+  public Set<ToDoList> getToDoLists() {
+    return toDoLists;
+  }
+
+  public void setToDoLists(Set<ToDoList> toDoLists) {
+    this.toDoLists = toDoLists;
+  }
+
+  public void addToDoList(ToDoList toDoList) {
+    if (toDoLists == null) {
+      toDoLists = new HashSet<>();
+    }
+    this.toDoLists.add(toDoList);
+  }
 
   public boolean isMember(User user) {
     return this.members.stream().anyMatch(member -> member.getUser().getId().equals(user.getId()));
@@ -216,8 +267,17 @@ public class Family implements Serializable {
 
   @Override
   public String toString() {
-    return "Family [id=" + id + ", name=" + name + ", eventColor=" + eventColor + ", timezone="
-        + timezone + ", inviteCode=" + inviteCode + "]";
+    return "Family [id="
+        + id
+        + ", name="
+        + name
+        + ", eventColor="
+        + eventColor
+        + ", timezone="
+        + timezone
+        + ", inviteCode="
+        + inviteCode
+        + "]";
   }
 
   @Override
@@ -227,16 +287,14 @@ public class Family implements Serializable {
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj)
-      return true;
-    if (obj == null)
-      return false;
-    if (getClass() != obj.getClass())
-      return false;
+    if (this == obj) return true;
+    if (obj == null) return false;
+    if (getClass() != obj.getClass()) return false;
     Family other = (Family) obj;
-    return Objects.equals(eventColor, other.eventColor) && Objects.equals(id, other.id)
-        && Objects.equals(inviteCode, other.inviteCode) && Objects.equals(name, other.name)
+    return Objects.equals(eventColor, other.eventColor)
+        && Objects.equals(id, other.id)
+        && Objects.equals(inviteCode, other.inviteCode)
+        && Objects.equals(name, other.name)
         && Objects.equals(timezone, other.timezone);
   }
-
 }
