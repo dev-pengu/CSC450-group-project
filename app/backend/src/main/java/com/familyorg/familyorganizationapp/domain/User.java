@@ -59,6 +59,9 @@ public class User implements Serializable {
   @ManyToMany(mappedBy = "assignees", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
   Set<CalendarEvent> events = new HashSet<CalendarEvent>();
 
+  @JsonIgnore
+  @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, orphanRemoval = true)
+  Set<PasswordResetCode> resetCodes;
 
 
   public User() {}
@@ -191,6 +194,12 @@ public class User implements Serializable {
 
   public void setEvents(Set<CalendarEvent> events) {
     this.events = events;
+  }
+
+  public Set<PasswordResetCode> getResetCodes() {return resetCodes;}
+
+  public void setResetCodes(Set<PasswordResetCode> resetCodes) {
+    this.resetCodes = resetCodes;
   }
 
   @Override
