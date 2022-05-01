@@ -387,11 +387,9 @@ public class FamilyServiceImpl implements FamilyService {
       }
       // remove all events assigned to the user
       requestingUser.getEvents().removeIf(event -> event.getCalendar().getFamily().getId().equals(familyId));
-      // remove all todos assigned to the user
-      // TODO after todo list is implemented
-
       // remove any outstanding poll responses from the user and any open polls
-      voteRepository.deleteOpenPollsForFamilyByUser(requestingUser.getId(), familyId);
+      voteRepository.deleteAll(
+        voteRepository.getVotesForDeletionByUserAndFamily(requestingUser.getId(), familyId));
       // remove the family member record
       requestingUser.getFamilies().removeIf(family -> family.getFamily().getId().equals(familyId));
       userService.updateUser(requestingUser);
@@ -425,11 +423,9 @@ public class FamilyServiceImpl implements FamilyService {
 
       // remove all events assigned to the user
       memberRecordToRemove.get().getUser().getEvents().removeIf(event -> event.getCalendar().getFamily().getId().equals(familyId));
-      // remove all todos assigned to the user
-      // TODO after todo list is implemented
-
       // remove any outstanding poll responses from the user and any open polls
-      voteRepository.deleteOpenPollsForFamilyByUser(memberRecordToRemove.get().getUser().getId(), familyId);
+      voteRepository.deleteAll(
+        voteRepository.getVotesForDeletionByUserAndFamily(memberRecordToRemove.get().getUser().getId(), familyId));
       // remove the family member record
       memberRecordToRemove.get().getUser().getFamilies().removeIf(family -> family.getFamily().getId().equals(familyId));
       userService.updateUser(memberRecordToRemove.get().getUser());
