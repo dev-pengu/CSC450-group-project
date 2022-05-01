@@ -82,8 +82,8 @@ public class FamilyServiceImpl implements FamilyService {
   @Transactional
   public FamilyDto createFamily(FamilyDto familyRequest)
       throws BadRequestException, UserNotFoundException {
-    User ownerUser = userService.getRequestingUser();
     verifyFamilyCreationRequest(familyRequest);
+    User ownerUser = userService.getRequestingUser();
     Family family = new Family();
     family.setEventColor(familyRequest.getEventColor());
     family.setName(familyRequest.getName());
@@ -128,13 +128,15 @@ public class FamilyServiceImpl implements FamilyService {
   }
 
   @Override
-  public FamilyDto getFamily(FamilyDto familyRequest) {
-    Optional<Family> family = familyRepository.findById(familyRequest.getId());
+  public FamilyDto getFamily(Long familyId) {
+    if (familyId == null) {
+      throw new BadRequestException(ApiExceptionCode.REQUIRED_PARAM_MISSING, "Id cannot be null.");
+    }
+    Optional<Family> family = familyRepository.findById(familyId);
 
     if (family.isEmpty()) {
       throw new ResourceNotFoundException(
-          ApiExceptionCode.FAMILY_DOESNT_EXIST,
-          "Family with id " + familyRequest.getId() + " not found");
+          ApiExceptionCode.FAMILY_DOESNT_EXIST, "Family with id " + familyId + " not found");
     }
 
     User requestingUser = userService.getRequestingUser();
@@ -233,6 +235,14 @@ public class FamilyServiceImpl implements FamilyService {
   @Transactional
   @Override
   public FamilyDto transferOwnership(FamilyDto request) {
+    if (request.getId() == null) {
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING, "Family id cannot be null.");
+    }
+    if (request.getOwner() == null) {
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING, "A user to transfer to is required.");
+    }
     User requestingUser = userService.getRequestingUser();
     Optional<Family> family = familyRepository.findById(request.getId());
     if (family.isEmpty()) {
@@ -289,6 +299,14 @@ public class FamilyServiceImpl implements FamilyService {
 
   @Override
   public void updateMemberRoles(FamilyRoleUpdateRequest request) {
+    if (request.getFamilyId() == null) {
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING, "Family id cannot be null.");
+    }
+    if (request.getMembers() == null || request.getMembers().isEmpty()) {
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING, "No members were supplied to update.");
+    }
     User requestingUser = userService.getRequestingUser();
     if (request.getFamilyId() == null) {
       throw new BadRequestException(
@@ -347,6 +365,9 @@ public class FamilyServiceImpl implements FamilyService {
 
   @Override
   public List<UserDto> getMembersForFormSelect(Long familyId) {
+    if (familyId == null) {
+      throw new BadRequestException(ApiExceptionCode.REQUIRED_PARAM_MISSING, "Id cannot be null.");
+    }
     User requestingUser = userService.getRequestingUser();
     Optional<Family> family = familyRepository.findById(familyId);
     if (family.isEmpty()) {
@@ -374,19 +395,26 @@ public class FamilyServiceImpl implements FamilyService {
   @Override
   public void leaveFamily(Long familyId) {
     if (familyId == null) {
-      throw new BadRequestException(ApiExceptionCode.REQUIRED_PARAM_MISSING, "Family id must not be null");
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING, "Family id must not be null");
     }
     User requestingUser = userService.getRequestingUser();
     if (authService.hasAuthenticatedForSensitiveActions(requestingUser.getUsername())) {
-      Optional<FamilyMembers> memberRecord = familyMemberRepository.findById(new FamilyMemberId(requestingUser.getId(), familyId));
+      Optional<FamilyMembers> memberRecord =
+          familyMemberRepository.findById(new FamilyMemberId(requestingUser.getId(), familyId));
       if (memberRecord.isEmpty()) {
-        throw new AuthorizationException(ApiExceptionCode.USER_NOT_IN_FAMILY, "User is not a member of the requested family.");
+        throw new AuthorizationException(
+            ApiExceptionCode.USER_NOT_IN_FAMILY, "User is not a member of the requested family.");
       }
       if (memberRecord.get().getRole().equals(Role.OWNER)) {
-        throw new AuthorizationException(ApiExceptionCode.ACTION_NOT_PERMITTED, "User cannot leave a family they own. The family ownership must first be transferred.");
+        throw new AuthorizationException(
+            ApiExceptionCode.ACTION_NOT_PERMITTED,
+            "User cannot leave a family they own. The family ownership must first be transferred.");
       }
       // remove all events assigned to the user
-      requestingUser.getEvents().removeIf(event -> event.getCalendar().getFamily().getId().equals(familyId));
+      requestingUser
+          .getEvents()
+          .removeIf(event -> event.getCalendar().getFamily().getId().equals(familyId));
       // remove all todos assigned to the user
       // TODO after todo list is implemented
 
@@ -396,46 +424,66 @@ public class FamilyServiceImpl implements FamilyService {
       requestingUser.getFamilies().removeIf(family -> family.getFamily().getId().equals(familyId));
       userService.updateUser(requestingUser);
     } else {
-      throw new AuthorizationException(ApiExceptionCode.REAUTHENTICATION_NEEDED_FOR_REQUEST,
-        "Users must reauthenticate to perform this action.");
+      throw new AuthorizationException(
+          ApiExceptionCode.REAUTHENTICATION_NEEDED_FOR_REQUEST,
+          "Users must reauthenticate to perform this action.");
     }
   }
 
   @Override
   public void removeMember(Long familyId, Long userId) {
     if (familyId == null) {
-      throw new BadRequestException(ApiExceptionCode.REQUIRED_PARAM_MISSING, "Family id must not be null");
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING, "Family id must not be null");
     }
     if (userId == null) {
-      throw new BadRequestException(ApiExceptionCode.REQUIRED_PARAM_MISSING, "User id must not be null");
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING, "User id must not be null");
     }
     User requestingUser = userService.getRequestingUser();
     if (authService.hasAuthenticatedForSensitiveActions(requestingUser.getUsername())) {
-      Optional<FamilyMembers> memberRecord = familyMemberRepository.findById(new FamilyMemberId(requestingUser.getId(), familyId));
+      Optional<FamilyMembers> memberRecord =
+          familyMemberRepository.findById(new FamilyMemberId(requestingUser.getId(), familyId));
       if (memberRecord.isEmpty()) {
-        throw new AuthorizationException(ApiExceptionCode.USER_NOT_IN_FAMILY, "User is not a member of the requested family.");
+        throw new AuthorizationException(
+            ApiExceptionCode.USER_NOT_IN_FAMILY, "User is not a member of the requested family.");
       }
       if (verfiyMinimumRoleSecurity(memberRecord.get().getFamily(), requestingUser, Role.ADMIN)) {
-        throw new AuthorizationException(ApiExceptionCode.ACTION_NOT_PERMITTED, "User does not have permissions to remove a member from the specified family.");
+        throw new AuthorizationException(
+            ApiExceptionCode.ACTION_NOT_PERMITTED,
+            "User does not have permissions to remove a member from the specified family.");
       }
-      Optional<FamilyMembers> memberRecordToRemove = familyMemberRepository.findById(new FamilyMemberId(userId, familyId));
+      Optional<FamilyMembers> memberRecordToRemove =
+          familyMemberRepository.findById(new FamilyMemberId(userId, familyId));
       if (memberRecordToRemove.isEmpty()) {
-        throw new AuthorizationException(ApiExceptionCode.USER_NOT_IN_FAMILY, "User to be removed is not a member of the requested family.");
+        throw new AuthorizationException(
+            ApiExceptionCode.USER_NOT_IN_FAMILY,
+            "User to be removed is not a member of the requested family.");
       }
 
       // remove all events assigned to the user
-      memberRecordToRemove.get().getUser().getEvents().removeIf(event -> event.getCalendar().getFamily().getId().equals(familyId));
+      memberRecordToRemove
+          .get()
+          .getUser()
+          .getEvents()
+          .removeIf(event -> event.getCalendar().getFamily().getId().equals(familyId));
       // remove all todos assigned to the user
       // TODO after todo list is implemented
 
       // remove any outstanding poll responses from the user and any open polls
-      voteRepository.deleteOpenPollsForFamilyByUser(memberRecordToRemove.get().getUser().getId(), familyId);
+      voteRepository.deleteOpenPollsForFamilyByUser(
+          memberRecordToRemove.get().getUser().getId(), familyId);
       // remove the family member record
-      memberRecordToRemove.get().getUser().getFamilies().removeIf(family -> family.getFamily().getId().equals(familyId));
+      memberRecordToRemove
+          .get()
+          .getUser()
+          .getFamilies()
+          .removeIf(family -> family.getFamily().getId().equals(familyId));
       userService.updateUser(memberRecordToRemove.get().getUser());
     } else {
-      throw new AuthorizationException(ApiExceptionCode.REAUTHENTICATION_NEEDED_FOR_REQUEST,
-        "Users must reauthenticate to perform this action.");
+      throw new AuthorizationException(
+          ApiExceptionCode.REAUTHENTICATION_NEEDED_FOR_REQUEST,
+          "Users must reauthenticate to perform this action.");
     }
   }
 
@@ -445,11 +493,15 @@ public class FamilyServiceImpl implements FamilyService {
    */
   @Override
   public Family getFamilyByInviteCode(String inviteCode) {
+    Objects.requireNonNull(inviteCode);
     return familyRepository.findByInviteCode(inviteCode);
   }
 
   @Override
   public boolean verfiyMinimumRoleSecurity(Family family, User user, Role minimumRole) {
+    Objects.requireNonNull(family);
+    Objects.requireNonNull(user);
+    Objects.requireNonNull(minimumRole);
     Optional<FamilyMembers> memberRecord =
         family.getMembers().stream()
             .filter(member -> member.getUser().getUsername().equals(user.getUsername()))
@@ -465,33 +517,41 @@ public class FamilyServiceImpl implements FamilyService {
 
   @Override
   public TimeZone getUserTimeZoneOrDefault(User requestingUser, Family family) {
-    return requestingUser.getTimezone() != null ? TimeZone.getTimeZone(requestingUser.getTimezone())
+    Objects.requireNonNull(requestingUser);
+    Objects.requireNonNull(family);
+    return requestingUser.getTimezone() != null
+        ? TimeZone.getTimeZone(requestingUser.getTimezone())
         : TimeZone.getTimeZone(family.getTimezone());
   }
 
   @Override
   public List<Long> getFamilyIdsByUser(String username) {
+    Objects.requireNonNull(username);
     return familyRepository.getFamilyIdsByUser(username);
   }
 
   @Override
   public List<Family> getFamiliesByUser(String username) {
+    Objects.requireNonNull(username);
     return familyRepository.getFamiliesByUser(username);
   }
 
   @Override
   public Iterable<Family> findAllByIds(List<Long> familyIds) {
+    Objects.requireNonNull(familyIds);
     return familyRepository.findAllById(familyIds);
   }
 
   @Override
   @Transactional
   public Family updateFamily(Family family) {
+    Objects.requireNonNull(family);
     return familyRepository.save(family);
   }
 
   @Override
   public Optional<Family> getFamilyById(Long id) {
+    Objects.requireNonNull(id);
     return familyRepository.findById(id);
   }
 
@@ -520,5 +580,4 @@ public class FamilyServiceImpl implements FamilyService {
           ApiExceptionCode.BAD_PARAM_VALUE, "Owner event color is not a valid hex code.");
     }
   }
-
 }

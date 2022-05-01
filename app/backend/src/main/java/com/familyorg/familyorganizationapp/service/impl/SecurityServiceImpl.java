@@ -1,5 +1,8 @@
 package com.familyorg.familyorganizationapp.service.impl;
 
+import com.familyorg.familyorganizationapp.Exception.ApiExceptionCode;
+import com.familyorg.familyorganizationapp.Exception.BadRequestException;
+import java.util.Objects;
 import javax.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,23 +20,28 @@ import com.familyorg.familyorganizationapp.service.SecurityService;
 
 @Service
 public class SecurityServiceImpl implements SecurityService {
-  @Autowired
-  private AuthenticationManager authenticationManager;
+  @Autowired private AuthenticationManager authenticationManager;
 
-  @Autowired
-  private UserDetailsService userDetailsService;
-  @Autowired
-  private UserRepository userRepository;
+  @Autowired private UserDetailsService userDetailsService;
+  @Autowired private UserRepository userRepository;
 
   private Logger logger = LoggerFactory.getLogger(SecurityServiceImpl.class);
 
   @Override
   @Transactional
   public void autologin(String username, String password) {
+    if (username == null || username.isBlank()) {
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING, "Username cannot be null.");
+    }
+    if (password == null || password.isBlank()) {
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING, "Password cannot be null.");
+    }
     UserDetails userDetails = userDetailsService.loadUserByUsername(username);
     UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken =
-        new UsernamePasswordAuthenticationToken(userDetails, password,
-            userDetails.getAuthorities());
+        new UsernamePasswordAuthenticationToken(
+            userDetails, password, userDetails.getAuthorities());
 
     authenticationManager.authenticate(usernamePasswordAuthenticationToken);
     if (usernamePasswordAuthenticationToken.isAuthenticated()) {
@@ -59,10 +67,18 @@ public class SecurityServiceImpl implements SecurityService {
   @Override
   @Transactional
   public UserDetails reauthenticate(String username, String password) {
+    if (username == null || username.isBlank()) {
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING, "Username cannot be null.");
+    }
+    if (password == null || password.isBlank()) {
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING, "Password cannot be null.");
+    }
     UserDetails userDetails = userDetailsService.loadUserByUsername(username);
     UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken =
-        new UsernamePasswordAuthenticationToken(userDetails, password,
-            userDetails.getAuthorities());
+        new UsernamePasswordAuthenticationToken(
+            userDetails, password, userDetails.getAuthorities());
 
     authenticationManager.authenticate(usernamePasswordAuthenticationToken);
     if (usernamePasswordAuthenticationToken.isAuthenticated()) {
