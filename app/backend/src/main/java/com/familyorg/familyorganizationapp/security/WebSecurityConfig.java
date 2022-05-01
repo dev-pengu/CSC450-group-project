@@ -17,7 +17,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
@@ -28,7 +27,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
   @Autowired private UserDetailsService userDetailsService;
   @Autowired private BCryptPasswordEncoder bCryptPasswordEncoder;
   @Autowired private CustomLogoutSuccessHandler customLogoutSuccessHandler;
-  @Autowired private CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
   @Override
   protected void configure(HttpSecurity http) throws Exception {
@@ -58,7 +56,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         .logoutSuccessHandler(customLogoutSuccessHandler)
         .and()
         .exceptionHandling()
-        .authenticationEntryPoint(customAuthenticationEntryPoint)
         .and()
         .csrf()
         .disable();
