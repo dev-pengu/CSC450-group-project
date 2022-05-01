@@ -1,6 +1,7 @@
 package com.familyorg.familyorganizationapp.security;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -83,7 +84,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     public static UrlBasedCorsConfigurationSource configurationSource() {
       CorsConfiguration configuration = new CorsConfiguration();
       configuration.setAllowCredentials(true);
-      configuration.addAllowedOrigin("*");
+      configuration.setAllowedOriginPatterns(Collections.singletonList("*"));
       configuration.addAllowedHeader("*");
       configuration.setAllowedMethods(Arrays.asList("POST", "GET", "PATCH", "DELETE"));
       configuration.setMaxAge(3600L);

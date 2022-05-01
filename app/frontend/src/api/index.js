@@ -210,9 +210,7 @@ export default {
   },
   deletePoll(id) {
     return http.delete('poll', {
-      params: {
-        id,
-      },
+      params: { id },
       validateStatus(status) {
         return status < 500;
       },
@@ -225,9 +223,17 @@ export default {
       },
     });
   },
+  leaveFamily(id) {
+    return http.delete('/family/leave', {
+      params: { id },
+      validateStatus(status) {
+        return status < 500;
+      },
+    });
+  },
   deleteFamily(id) {
     return http.delete('/family/admin/delete', {
-      params: { familyId: id },
+      params: { id },
       validateStatus(status) {
         return status < 500;
       },
