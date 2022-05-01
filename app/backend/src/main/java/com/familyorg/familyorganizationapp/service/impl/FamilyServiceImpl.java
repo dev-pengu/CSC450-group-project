@@ -1,8 +1,11 @@
 package com.familyorg.familyorganizationapp.service.impl;
 
+import com.familyorg.familyorganizationapp.domain.Poll;
 import com.familyorg.familyorganizationapp.domain.PollVote;
 import com.familyorg.familyorganizationapp.domain.ShoppingList;
 import com.familyorg.familyorganizationapp.domain.ToDoList;
+import com.familyorg.familyorganizationapp.repository.PollOptionRepository;
+import com.familyorg.familyorganizationapp.repository.PollRepository;
 import com.familyorg.familyorganizationapp.repository.ToDoListRepository;
 import com.familyorg.familyorganizationapp.repository.CalendarEventRepository;
 import com.familyorg.familyorganizationapp.repository.PollVoteRepository;
@@ -14,6 +17,8 @@ import java.time.ZoneId;
 import com.familyorg.familyorganizationapp.DTO.UserDto;
 import com.familyorg.familyorganizationapp.DTO.builder.FamilyDtoBuilder;
 import com.familyorg.familyorganizationapp.DTO.builder.UserDtoBuilder;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -23,6 +28,8 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.stream.Collectors;
 import javax.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.familyorg.familyorganizationapp.DTO.FamilyDto;
@@ -49,6 +56,7 @@ import com.familyorg.familyorganizationapp.util.ColorUtil;
 @Service
 public class FamilyServiceImpl implements FamilyService {
 
+  private Logger logger = LoggerFactory.getLogger(FamilyServiceImpl.class);
   FamilyRepository familyRepository;
   FamilyMemberRepository familyMemberRepository;
   CalendarRepository calendarRepository;
@@ -57,6 +65,8 @@ public class FamilyServiceImpl implements FamilyService {
   UserService userService;
   AuthService authService;
   PollVoteRepository voteRepository;
+  PollRepository pollRepository;
+  PollOptionRepository pollOptionRepository;
 
   @Autowired
   public FamilyServiceImpl(
@@ -67,7 +77,9 @@ public class FamilyServiceImpl implements FamilyService {
       ShoppingListRepository shoppingListRepository,
       AuthService authService,
       PollVoteRepository voteRepository,
-      ToDoListRepository toDoListRepository) {
+      ToDoListRepository toDoListRepository,
+      PollRepository pollRepository,
+      PollOptionRepository pollOptionRepository) {
     this.familyRepository = familyRepository;
     this.familyMemberRepository = familyMemberRepository;
     this.calendarRepository = calendarRepository;
@@ -76,6 +88,8 @@ public class FamilyServiceImpl implements FamilyService {
     this.toDoListRepository = toDoListRepository;
     this.authService = authService;
     this.voteRepository = voteRepository;
+    this.pollRepository = pollRepository;
+    this.pollOptionRepository = pollOptionRepository;
   }
 
   @Override
@@ -227,7 +241,18 @@ public class FamilyServiceImpl implements FamilyService {
       throw new AuthorizationException(
           ApiExceptionCode.USER_PRIVILEGES_TOO_LOW, "User not authorized to complete this action.");
     }
-    familyRepository.deleteById(id);
+    List<Poll> polls =
+        pollRepository.findByFamily(family.get());
+    logger.info(polls.toString());
+    for (Poll poll : polls) {
+      voteRepository.deleteByPollId(poll.getId());
+      pollOptionRepository.deleteByPollId(poll.getId());
+      poll.setOptions(null);
+      poll.setRespondents(null);
+      pollRepository.delete(poll);
+    }
+    family.get().setPoll(null);
+    familyRepository.delete(family.get());
   }
 
   @Transactional
@@ -374,19 +399,26 @@ public class FamilyServiceImpl implements FamilyService {
   @Override
   public void leaveFamily(Long familyId) {
     if (familyId == null) {
-      throw new BadRequestException(ApiExceptionCode.REQUIRED_PARAM_MISSING, "Family id must not be null");
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING, "Family id must not be null");
     }
     User requestingUser = userService.getRequestingUser();
     if (authService.hasAuthenticatedForSensitiveActions(requestingUser.getUsername())) {
-      Optional<FamilyMembers> memberRecord = familyMemberRepository.findById(new FamilyMemberId(requestingUser.getId(), familyId));
+      Optional<FamilyMembers> memberRecord =
+          familyMemberRepository.findById(new FamilyMemberId(requestingUser.getId(), familyId));
       if (memberRecord.isEmpty()) {
-        throw new AuthorizationException(ApiExceptionCode.USER_NOT_IN_FAMILY, "User is not a member of the requested family.");
+        throw new AuthorizationException(
+            ApiExceptionCode.USER_NOT_IN_FAMILY, "User is not a member of the requested family.");
       }
       if (memberRecord.get().getRole().equals(Role.OWNER)) {
-        throw new AuthorizationException(ApiExceptionCode.ACTION_NOT_PERMITTED, "User cannot leave a family they own. The family ownership must first be transferred.");
+        throw new AuthorizationException(
+            ApiExceptionCode.ACTION_NOT_PERMITTED,
+            "User cannot leave a family they own. The family ownership must first be transferred.");
       }
       // remove all events assigned to the user
-      requestingUser.getEvents().removeIf(event -> event.getCalendar().getFamily().getId().equals(familyId));
+      requestingUser
+          .getEvents()
+          .removeIf(event -> event.getCalendar().getFamily().getId().equals(familyId));
       // remove all todos assigned to the user
       // TODO after todo list is implemented
 
@@ -396,46 +428,66 @@ public class FamilyServiceImpl implements FamilyService {
       requestingUser.getFamilies().removeIf(family -> family.getFamily().getId().equals(familyId));
       userService.updateUser(requestingUser);
     } else {
-      throw new AuthorizationException(ApiExceptionCode.REAUTHENTICATION_NEEDED_FOR_REQUEST,
-        "Users must reauthenticate to perform this action.");
+      throw new AuthorizationException(
+          ApiExceptionCode.REAUTHENTICATION_NEEDED_FOR_REQUEST,
+          "Users must reauthenticate to perform this action.");
     }
   }
 
   @Override
   public void removeMember(Long familyId, Long userId) {
     if (familyId == null) {
-      throw new BadRequestException(ApiExceptionCode.REQUIRED_PARAM_MISSING, "Family id must not be null");
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING, "Family id must not be null");
     }
     if (userId == null) {
-      throw new BadRequestException(ApiExceptionCode.REQUIRED_PARAM_MISSING, "User id must not be null");
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING, "User id must not be null");
     }
     User requestingUser = userService.getRequestingUser();
     if (authService.hasAuthenticatedForSensitiveActions(requestingUser.getUsername())) {
-      Optional<FamilyMembers> memberRecord = familyMemberRepository.findById(new FamilyMemberId(requestingUser.getId(), familyId));
+      Optional<FamilyMembers> memberRecord =
+          familyMemberRepository.findById(new FamilyMemberId(requestingUser.getId(), familyId));
       if (memberRecord.isEmpty()) {
-        throw new AuthorizationException(ApiExceptionCode.USER_NOT_IN_FAMILY, "User is not a member of the requested family.");
+        throw new AuthorizationException(
+            ApiExceptionCode.USER_NOT_IN_FAMILY, "User is not a member of the requested family.");
       }
       if (verfiyMinimumRoleSecurity(memberRecord.get().getFamily(), requestingUser, Role.ADMIN)) {
-        throw new AuthorizationException(ApiExceptionCode.ACTION_NOT_PERMITTED, "User does not have permissions to remove a member from the specified family.");
+        throw new AuthorizationException(
+            ApiExceptionCode.ACTION_NOT_PERMITTED,
+            "User does not have permissions to remove a member from the specified family.");
       }
-      Optional<FamilyMembers> memberRecordToRemove = familyMemberRepository.findById(new FamilyMemberId(userId, familyId));
+      Optional<FamilyMembers> memberRecordToRemove =
+          familyMemberRepository.findById(new FamilyMemberId(userId, familyId));
       if (memberRecordToRemove.isEmpty()) {
-        throw new AuthorizationException(ApiExceptionCode.USER_NOT_IN_FAMILY, "User to be removed is not a member of the requested family.");
+        throw new AuthorizationException(
+            ApiExceptionCode.USER_NOT_IN_FAMILY,
+            "User to be removed is not a member of the requested family.");
       }
 
       // remove all events assigned to the user
-      memberRecordToRemove.get().getUser().getEvents().removeIf(event -> event.getCalendar().getFamily().getId().equals(familyId));
+      memberRecordToRemove
+          .get()
+          .getUser()
+          .getEvents()
+          .removeIf(event -> event.getCalendar().getFamily().getId().equals(familyId));
       // remove all todos assigned to the user
       // TODO after todo list is implemented
 
       // remove any outstanding poll responses from the user and any open polls
-      voteRepository.deleteOpenPollsForFamilyByUser(memberRecordToRemove.get().getUser().getId(), familyId);
+      voteRepository.deleteOpenPollsForFamilyByUser(
+          memberRecordToRemove.get().getUser().getId(), familyId);
       // remove the family member record
-      memberRecordToRemove.get().getUser().getFamilies().removeIf(family -> family.getFamily().getId().equals(familyId));
+      memberRecordToRemove
+          .get()
+          .getUser()
+          .getFamilies()
+          .removeIf(family -> family.getFamily().getId().equals(familyId));
       userService.updateUser(memberRecordToRemove.get().getUser());
     } else {
-      throw new AuthorizationException(ApiExceptionCode.REAUTHENTICATION_NEEDED_FOR_REQUEST,
-        "Users must reauthenticate to perform this action.");
+      throw new AuthorizationException(
+          ApiExceptionCode.REAUTHENTICATION_NEEDED_FOR_REQUEST,
+          "Users must reauthenticate to perform this action.");
     }
   }
 
@@ -465,7 +517,8 @@ public class FamilyServiceImpl implements FamilyService {
 
   @Override
   public TimeZone getUserTimeZoneOrDefault(User requestingUser, Family family) {
-    return requestingUser.getTimezone() != null ? TimeZone.getTimeZone(requestingUser.getTimezone())
+    return requestingUser.getTimezone() != null
+        ? TimeZone.getTimeZone(requestingUser.getTimezone())
         : TimeZone.getTimeZone(family.getTimezone());
   }
 
@@ -520,5 +573,4 @@ public class FamilyServiceImpl implements FamilyService {
           ApiExceptionCode.BAD_PARAM_VALUE, "Owner event color is not a valid hex code.");
     }
   }
-
 }
