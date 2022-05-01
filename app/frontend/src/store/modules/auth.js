@@ -35,6 +35,13 @@ export default {
         throw err;
       }
     },
+    async reauthenticateUser({ commit }, userCredentials) {
+      const res = await api.login(userCredentials);
+      if (res.status === 200) {
+        commit('LOGIN_SUCCESS', { user: res.data });
+      }
+      return res;
+    },
     async logoutUser({ commit }) {
       await api.logout();
       commit('LOGOUT_SUCCESS');
