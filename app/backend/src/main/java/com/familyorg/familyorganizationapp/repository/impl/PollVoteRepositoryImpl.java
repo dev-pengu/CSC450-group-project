@@ -22,13 +22,11 @@ public class PollVoteRepositoryImpl extends QuerydslRepositorySupport
 
   @Override
   public List<PollVote> getUnvotedPolls(Long userId) {
-    List<PollVote> votes =
-        from(voteTable)
+    return from(voteTable)
             .where(voteTable.user.id.eq(userId)
                 .and(voteTable.vote.isNull())
                 .and(voteTable.poll.closeDateTime.goe(Timestamp.from(Instant.now()))))
             .fetch();
-    return votes;
   }
 
   @Override
@@ -44,6 +42,12 @@ public class PollVoteRepositoryImpl extends QuerydslRepositorySupport
         .where(voteTable.user.id.in(userIds)
             .and(voteTable.poll.id.eq(pollId)))
         .execute();
+  }
+
+  @Override
+  public List<PollVote> getVotesForDeletionByUserAndFamily(Long userId, Long familyId) {
+    return from(voteTable)
+      .where(voteTable.user.id.eq(userId).and(voteTable.poll.family.id.eq(familyId))).fetch();
   }
 
   @Override

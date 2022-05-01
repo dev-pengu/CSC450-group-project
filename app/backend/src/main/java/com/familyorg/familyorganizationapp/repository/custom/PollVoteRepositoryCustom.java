@@ -10,5 +10,7 @@ public interface PollVoteRepositoryCustom {
 
   void deleteAllByUserIdAndPoll(List<Long> userIds, Long pollId);
 
+  List<PollVote> getVotesForDeletionByUserAndFamily(Long userId, Long familyId);
+
   void deleteByPollId(Long pollId);
 }
