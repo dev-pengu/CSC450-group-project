@@ -23,5 +23,6 @@
     <mapping class="com.familyorg.familyorganizationapp.domain.PollVote" />
     <mapping class="com.familyorg.familyorganizationapp.domain.ToDoList" />
     <mapping class="com.familyorg.familyorganizationapp.domain.ToDoTask" />
+    <mapping class="com.familyorg.familyorganizationapp.domain.PasswordResetCode"/>
   </session-factory>
 </hibernate-configuration>
