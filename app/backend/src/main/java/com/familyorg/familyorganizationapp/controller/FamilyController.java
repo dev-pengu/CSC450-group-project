@@ -53,9 +53,9 @@ public class FamilyController {
     return new ResponseEntity<FamilyDto>(createdFamily, HttpStatus.CREATED);
   }
 
-  @PostMapping("/get-family")
-  public ResponseEntity<FamilyDto> getFamily(@RequestBody FamilyDto familyRequest) {
-    FamilyDto family = familyService.getFamily(familyRequest);
+  @GetMapping()
+  public ResponseEntity<FamilyDto> getFamily(@RequestParam("id") Long familyId) {
+    FamilyDto family = familyService.getFamily(familyId);
     return new ResponseEntity<FamilyDto>(family, HttpStatus.OK);
   }
 

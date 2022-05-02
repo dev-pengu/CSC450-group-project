@@ -11,6 +11,8 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.familyorg.familyorganizationapp.repository.PollOptionRepository;
+import com.familyorg.familyorganizationapp.repository.PollRepository;
 import com.familyorg.familyorganizationapp.repository.PollVoteRepository;
 import com.familyorg.familyorganizationapp.repository.ShoppingListRepository;
 import com.familyorg.familyorganizationapp.repository.ToDoListRepository;
@@ -152,7 +154,8 @@ public class FamilyServiceImplTest {
     shoppingListRepository = mock(ShoppingListRepository.class);
     familyService = new FamilyServiceImpl(familyRepository, familyMemberRepository,
         calendarRepository, userService, shoppingListRepository, mock(AuthService.class), mock(
-      PollVoteRepository.class), mock(ToDoListRepository.class));
+      PollVoteRepository.class), mock(ToDoListRepository.class), mock(PollRepository.class), mock(
+      PollOptionRepository.class));
 
     when(userService.getUserByEmail(any(String.class)))
         .thenAnswer(invocation -> usersByEmail.get(invocation.getArgument(0)));

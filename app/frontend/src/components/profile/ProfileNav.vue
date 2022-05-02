@@ -21,6 +21,7 @@ export default {
       { title: 'Edit Profile', icon: 'mdi-pencil', route: '/profile/settings' },
       { title: 'Password & Security', icon: 'mdi-lock', route: '/profile/security' },
       { title: 'Manage Families', icon: 'mdi-human-male-female-child', route: '/profile/families' },
+      { title: 'Manager Calendars', icon: 'mdi-calendar', route: '/profile/calendars' },
     ],
   }),
 };

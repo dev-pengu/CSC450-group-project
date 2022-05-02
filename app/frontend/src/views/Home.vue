@@ -63,8 +63,14 @@
                       :family-id="family.id"
                       :family-name="family.name"
                     />
-                    <router-link class="d-block foa_link--text" to="/test">Manage Members</router-link>
-                    <router-link class="d-block foa_link--text" to="/test">Family Calendar</router-link>
+                    <router-link v-if="isAdmin(family.memberData.role)" class="d-block foa_link--text" to="/test"
+                      >Manage Members</router-link
+                    >
+                    <router-link
+                      class="d-block foa_link--text"
+                      :to="{ path: '/calendar/view', query: { familyId: family.id } }"
+                      >Family Calendar</router-link
+                    >
                     <router-link class="d-block foa_link--text" to="/test">Family To Do List</router-link>
                     <router-link
                       class="d-block foa_link--text"
@@ -93,13 +99,7 @@
     </v-row>
     <v-row>
       <v-col cols="12" sm="6">
-        <div class="text-h5 foa_text_header--text mb-3">
-          My Calendar
-          <v-btn class="pb-1" icon :color="btnColor"><v-icon>mdi-plus-box</v-icon></v-btn>
-        </div>
-        <v-sheet height="400">
-          <v-calendar type="4day" :events="events"></v-calendar>
-        </v-sheet>
+        <CalendarPreview :start="calendarStart" :end="calendarEnd" :calendar-height="500"></CalendarPreview>
       </v-col>
       <v-col cols="12" sm="6">
         <div class="text-h5 foa_text_header--text mb-3">
@@ -123,6 +123,7 @@ import { mapActions, mapGetters } from 'vuex';
 import FamilyModal from '../components/FamilyModal.vue';
 import InviteModal from '../components/InviteUserModal.vue';
 import PollPreview from '../components/poll-app/PollPreview.vue';
+import CalendarPreview from '../components/calendar/CalendarPreview.vue';
 import api from '../api';
 import { isAdmin } from '../util/RoleUtil';
 
@@ -132,18 +133,11 @@ export default {
     FamilyModal,
     InviteModal,
     PollPreview,
+    CalendarPreview,
   },
   data: () => ({
     // TODO: replace with real api calls
-    events: [
-      {
-        name: 'Event #1',
-        start: new Date(),
-        end: new Date(new Date().getTime() + 60 * 60000),
-        timed: true,
-        color: 'red',
-      },
-    ],
+    events: [],
     todos: [
       { title: 'Mow the lawn', familyColor: 'red' },
       { title: 'File taxes', familyColor: 'orange' },
@@ -151,9 +145,18 @@ export default {
     ],
   }),
   computed: {
-    ...mapGetters({ families: 'getFamilies', user: 'getUser' }),
+    ...mapGetters({ families: 'getFamilies', getFamily: 'getFamily', user: 'getUser' }),
     btnColor() {
       return this.$vuetify.theme.dark ? 'foa_button' : 'foa_button_dark';
+    },
+    calendarStart() {
+      const date = new Date();
+      return `${date.getFullYear()}-${`0${date.getMonth() + 1}`.slice(-2)}-${date.getDate()}`;
+    },
+    calendarEnd() {
+      const date = new Date();
+      date.setDate(date.getDate() + 1);
+      return `${date.getFullYear()}-${`0${date.getMonth() + 1}`.slice(-2)}-${date.getDate()}`;
     },
   },
   created() {
