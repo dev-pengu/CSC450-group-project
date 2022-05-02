@@ -34,10 +34,12 @@ public class InviteServiceImpl implements InviteService {
   AuthService authService;
   UserService userService;
 
-
   @Autowired
-  public InviteServiceImpl(MemberInviteRepository memberInviteRepository,
-      FamilyService familyService, AuthService authService, UserService userService) {
+  public InviteServiceImpl(
+      MemberInviteRepository memberInviteRepository,
+      FamilyService familyService,
+      AuthService authService,
+      UserService userService) {
     this.memberInviteRepository = memberInviteRepository;
     this.familyService = familyService;
     this.authService = authService;
@@ -48,17 +50,25 @@ public class InviteServiceImpl implements InviteService {
   @Transactional
   public MemberInvite createUniqueMemberInvite(Long familyId, String userEmail)
       throws AuthorizationException {
+    if (familyId == null) {
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING, "Family id cannot be null.");
+    }
+    if (userEmail == null || userEmail.isBlank()) {
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING, "Recipient cannot be null.");
+    }
     Optional<Family> family = familyService.getFamilyById(familyId);
     if (family.isEmpty()) {
-      throw new ResourceNotFoundException(ApiExceptionCode.FAMILY_DOESNT_EXIST,
-          "Family with id " + familyId + " not found");
+      throw new ResourceNotFoundException(
+          ApiExceptionCode.FAMILY_DOESNT_EXIST, "Family with id " + familyId + " not found");
     }
     User requestingUser = userService.getRequestingUser();
     boolean hasAppropriatePermissions =
         familyService.verfiyMinimumRoleSecurity(family.get(), requestingUser, Role.ADULT);
     if (!hasAppropriatePermissions)
-      throw new AuthorizationException(ApiExceptionCode.USER_PRIVILEGES_TOO_LOW,
-          "User not authorized to complete this action.");
+      throw new AuthorizationException(
+          ApiExceptionCode.USER_PRIVILEGES_TOO_LOW, "User not authorized to complete this action.");
     MemberInvite invite = new MemberInvite(family.get(), userEmail);
     MemberInvite savedInvite = memberInviteRepository.save(invite);
     return savedInvite;
@@ -68,17 +78,29 @@ public class InviteServiceImpl implements InviteService {
   @Transactional
   public MemberInvite createUniqueMemberInviteWithRole(Long familyId, String userEmail, Role role)
       throws AuthorizationException {
+    if (familyId == null) {
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING, "Family id cannot be null.");
+    }
+    if (userEmail == null || userEmail.isBlank()) {
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING, "Recipient cannot be null.");
+    }
+    if (role == null) {
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING, "Role cannot be null.");
+    }
     Optional<Family> family = familyService.getFamilyById(familyId);
     if (family.isEmpty()) {
-      throw new ResourceNotFoundException(ApiExceptionCode.FAMILY_DOESNT_EXIST,
-          "Family with id " + familyId + " not found");
+      throw new ResourceNotFoundException(
+          ApiExceptionCode.FAMILY_DOESNT_EXIST, "Family with id " + familyId + " not found");
     }
     User requestingUser = userService.getRequestingUser();
     boolean hasAppropriatePermissions =
         familyService.verfiyMinimumRoleSecurity(family.get(), requestingUser, Role.ADULT);
     if (!hasAppropriatePermissions)
-      throw new AuthorizationException(ApiExceptionCode.USER_PRIVILEGES_TOO_LOW,
-          "User not authorized to complete this action.");
+      throw new AuthorizationException(
+          ApiExceptionCode.USER_PRIVILEGES_TOO_LOW, "User not authorized to complete this action.");
     MemberInvite invite = new MemberInvite(family.get(), userEmail, role);
     MemberInvite savedInvite = memberInviteRepository.save(invite);
     return savedInvite;
@@ -86,43 +108,50 @@ public class InviteServiceImpl implements InviteService {
 
   @Override
   @Transactional
-  public FamilyDto generatePersistentMemberInvite(Long familyId)
-      throws AuthorizationException {
+  public FamilyDto generatePersistentMemberInvite(Long familyId) throws AuthorizationException {
+    if (familyId == null) {
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING, "Family id cannot be null.");
+    }
     Optional<Family> family = familyService.getFamilyById(familyId);
     if (family.isEmpty()) {
-      throw new ResourceNotFoundException(ApiExceptionCode.FAMILY_DOESNT_EXIST,
-          "Family with id " + familyId + " not found");
+      throw new ResourceNotFoundException(
+          ApiExceptionCode.FAMILY_DOESNT_EXIST, "Family with id " + familyId + " not found");
     }
     User requestingUser = userService.getRequestingUser();
     boolean hasAppropriatePermissions =
         familyService.verfiyMinimumRoleSecurity(family.get(), requestingUser, Role.ADMIN);
     if (!hasAppropriatePermissions)
-      throw new AuthorizationException(ApiExceptionCode.USER_PRIVILEGES_TOO_LOW,
-          "User not authorized to complete this action.");
+      throw new AuthorizationException(
+          ApiExceptionCode.USER_PRIVILEGES_TOO_LOW, "User not authorized to complete this action.");
 
     InviteCode inviteCode = new InviteCode(true);
     family.get().setInviteCode(inviteCode);
     Family updatedFamily = familyService.updateFamily(family.get());
-    return FamilyDto.fromFamilyObj(updatedFamily,
-        userService.getUserByUsername(requestingUser.getUsername()));
+    return FamilyDto.fromFamilyObj(
+        updatedFamily, userService.getUserByUsername(requestingUser.getUsername()));
   }
 
   @Override
   @Transactional
   public void verifyMemberInvite(InviteCode invite, String eventColor)
       throws AuthorizationException {
-    // Get the currently signed in user
-    User requestingUser = userService.getRequestingUser();
-    if (!ColorUtil.isValidHexCode(eventColor)) {
-      throw new BadRequestException(ApiExceptionCode.BAD_PARAM_VALUE,
-          "Event color is not a valid hexcode");
+    if (invite == null) {
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING, "Invite code cannot be null.");
     }
+    if (eventColor == null || !ColorUtil.isValidHexCode(eventColor)) {
+      throw new BadRequestException(
+          ApiExceptionCode.BAD_PARAM_VALUE, "Event color is not a valid hexcode");
+    }
+    User requestingUser = userService.getRequestingUser();
+
     if (invite.isPersistent()) {
       // Find the family with the persistent invite code
       Family family = familyService.getFamilyByInviteCode(invite.toString());
       if (family == null) {
-        throw new ResourceNotFoundException(ApiExceptionCode.INVITE_CODE_DOESNT_EXIST,
-            "Invalid invite code");
+        throw new ResourceNotFoundException(
+            ApiExceptionCode.INVITE_CODE_DOESNT_EXIST, "Invalid invite code");
       }
       // Add the user to the family
       FamilyMembers member = new FamilyMembers(requestingUser, family, Role.CHILD, eventColor);
@@ -132,18 +161,22 @@ public class InviteServiceImpl implements InviteService {
       // Get the invite data
       MemberInvite memberInvite = memberInviteRepository.findByInviteCode(invite.toString());
       if (memberInvite == null) {
-        throw new ResourceNotFoundException(ApiExceptionCode.INVITE_CODE_DOESNT_EXIST,
-            "Invalid invite code");
+        throw new ResourceNotFoundException(
+            ApiExceptionCode.INVITE_CODE_DOESNT_EXIST, "Invalid invite code");
       }
       if (!memberInvite.getUserEmail().equals(requestingUser.getEmail())) {
-        throw new AuthorizationException(ApiExceptionCode.ILLEGAL_ACTION_REQUESTED,
-            "You are not authorized to use this invite code", false);
+        throw new AuthorizationException(
+            ApiExceptionCode.ILLEGAL_ACTION_REQUESTED,
+            "You are not authorized to use this invite code",
+            false);
       }
       // Get the family from the invite
       Optional<Family> family = familyService.getFamilyById(memberInvite.getFamilyId());
       if (family.isEmpty()) {
-        throw new ResourceNotFoundException(ApiExceptionCode.FAMILY_DOESNT_EXIST,
-            "Family not found for invite code " + invite.toString()
+        throw new ResourceNotFoundException(
+            ApiExceptionCode.FAMILY_DOESNT_EXIST,
+            "Family not found for invite code "
+                + invite.toString()
                 + ". The family may have been removed before you joined.");
       }
       // Add the user to the family
@@ -158,18 +191,22 @@ public class InviteServiceImpl implements InviteService {
 
   @Override
   public List<MemberInvite> getInvites(Long familyId) {
+    if (familyId == null) {
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING, "Family id cannot be null.");
+    }
     User requestingUser = userService.getRequestingUser();
 
     Optional<Family> family = familyService.getFamilyById(familyId);
     if (family.isEmpty()) {
-      throw new ResourceNotFoundException(ApiExceptionCode.FAMILY_DOESNT_EXIST,
-          "Family with id " + familyId + " not found");
+      throw new ResourceNotFoundException(
+          ApiExceptionCode.FAMILY_DOESNT_EXIST, "Family with id " + familyId + " not found");
     }
     boolean hasAppropriatePermissions =
         familyService.verfiyMinimumRoleSecurity(family.get(), requestingUser, Role.ADULT);
     if (!hasAppropriatePermissions)
-      throw new AuthorizationException(ApiExceptionCode.USER_PRIVILEGES_TOO_LOW,
-          "User not authorized to complete this action.");
+      throw new AuthorizationException(
+          ApiExceptionCode.USER_PRIVILEGES_TOO_LOW, "User not authorized to complete this action.");
 
     return memberInviteRepository.getByFamilyId(family.get().getId());
   }

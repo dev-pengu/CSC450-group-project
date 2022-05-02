@@ -17,7 +17,7 @@ import com.familyorg.familyorganizationapp.domain.User;
 public interface FamilyService {
   FamilyDto createFamily(FamilyDto familyRequest) throws BadRequestException, UserNotFoundException;
 
-  FamilyDto getFamily(FamilyDto familyRequest) throws AuthorizationException;
+  FamilyDto getFamily(Long familyId) throws AuthorizationException;
 
   Optional<Family> getFamilyById(Long id);
 

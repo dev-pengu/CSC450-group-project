@@ -96,8 +96,8 @@ public class FamilyServiceImpl implements FamilyService {
   @Transactional
   public FamilyDto createFamily(FamilyDto familyRequest)
       throws BadRequestException, UserNotFoundException {
-    User ownerUser = userService.getRequestingUser();
     verifyFamilyCreationRequest(familyRequest);
+    User ownerUser = userService.getRequestingUser();
     Family family = new Family();
     family.setEventColor(familyRequest.getEventColor());
     family.setName(familyRequest.getName());
@@ -142,13 +142,15 @@ public class FamilyServiceImpl implements FamilyService {
   }
 
   @Override
-  public FamilyDto getFamily(FamilyDto familyRequest) {
-    Optional<Family> family = familyRepository.findById(familyRequest.getId());
+  public FamilyDto getFamily(Long familyId) {
+    if (familyId == null) {
+      throw new BadRequestException(ApiExceptionCode.REQUIRED_PARAM_MISSING, "Id cannot be null.");
+    }
+    Optional<Family> family = familyRepository.findById(familyId);
 
     if (family.isEmpty()) {
       throw new ResourceNotFoundException(
-          ApiExceptionCode.FAMILY_DOESNT_EXIST,
-          "Family with id " + familyRequest.getId() + " not found");
+          ApiExceptionCode.FAMILY_DOESNT_EXIST, "Family with id " + familyId + " not found");
     }
 
     User requestingUser = userService.getRequestingUser();
@@ -258,6 +260,14 @@ public class FamilyServiceImpl implements FamilyService {
   @Transactional
   @Override
   public FamilyDto transferOwnership(FamilyDto request) {
+    if (request.getId() == null) {
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING, "Family id cannot be null.");
+    }
+    if (request.getOwner() == null) {
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING, "A user to transfer to is required.");
+    }
     User requestingUser = userService.getRequestingUser();
     Optional<Family> family = familyRepository.findById(request.getId());
     if (family.isEmpty()) {
@@ -314,6 +324,14 @@ public class FamilyServiceImpl implements FamilyService {
 
   @Override
   public void updateMemberRoles(FamilyRoleUpdateRequest request) {
+    if (request.getFamilyId() == null) {
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING, "Family id cannot be null.");
+    }
+    if (request.getMembers() == null || request.getMembers().isEmpty()) {
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING, "No members were supplied to update.");
+    }
     User requestingUser = userService.getRequestingUser();
     if (request.getFamilyId() == null) {
       throw new BadRequestException(
@@ -372,6 +390,9 @@ public class FamilyServiceImpl implements FamilyService {
 
   @Override
   public List<UserDto> getMembersForFormSelect(Long familyId) {
+    if (familyId == null) {
+      throw new BadRequestException(ApiExceptionCode.REQUIRED_PARAM_MISSING, "Id cannot be null.");
+    }
     User requestingUser = userService.getRequestingUser();
     Optional<Family> family = familyRepository.findById(familyId);
     if (family.isEmpty()) {
@@ -497,11 +518,15 @@ public class FamilyServiceImpl implements FamilyService {
    */
   @Override
   public Family getFamilyByInviteCode(String inviteCode) {
+    Objects.requireNonNull(inviteCode);
     return familyRepository.findByInviteCode(inviteCode);
   }
 
   @Override
   public boolean verfiyMinimumRoleSecurity(Family family, User user, Role minimumRole) {
+    Objects.requireNonNull(family);
+    Objects.requireNonNull(user);
+    Objects.requireNonNull(minimumRole);
     Optional<FamilyMembers> memberRecord =
         family.getMembers().stream()
             .filter(member -> member.getUser().getUsername().equals(user.getUsername()))
@@ -517,6 +542,8 @@ public class FamilyServiceImpl implements FamilyService {
 
   @Override
   public TimeZone getUserTimeZoneOrDefault(User requestingUser, Family family) {
+    Objects.requireNonNull(requestingUser);
+    Objects.requireNonNull(family);
     return requestingUser.getTimezone() != null
         ? TimeZone.getTimeZone(requestingUser.getTimezone())
         : TimeZone.getTimeZone(family.getTimezone());
@@ -524,27 +551,32 @@ public class FamilyServiceImpl implements FamilyService {
 
   @Override
   public List<Long> getFamilyIdsByUser(String username) {
+    Objects.requireNonNull(username);
     return familyRepository.getFamilyIdsByUser(username);
   }
 
   @Override
   public List<Family> getFamiliesByUser(String username) {
+    Objects.requireNonNull(username);
     return familyRepository.getFamiliesByUser(username);
   }
 
   @Override
   public Iterable<Family> findAllByIds(List<Long> familyIds) {
+    Objects.requireNonNull(familyIds);
     return familyRepository.findAllById(familyIds);
   }
 
   @Override
   @Transactional
   public Family updateFamily(Family family) {
+    Objects.requireNonNull(family);
     return familyRepository.save(family);
   }
 
   @Override
   public Optional<Family> getFamilyById(Long id) {
+    Objects.requireNonNull(id);
     return familyRepository.findById(id);
   }
 

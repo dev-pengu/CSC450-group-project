@@ -1,5 +1,6 @@
 package com.familyorg.familyorganizationapp.service.impl;
 
+import com.familyorg.familyorganizationapp.Exception.ApiException;
 import com.familyorg.familyorganizationapp.domain.FamilyMembers;
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -87,6 +88,14 @@ public class CalendarServiceImpl implements CalendarService {
   @Transactional
   public void createCalendar(CalendarDto request)
       throws UserNotFoundException, AuthorizationException, ResourceNotFoundException {
+    if (request.getDescription() == null || request.getDescription().isBlank()) {
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING, "Calendar description cannot be null.");
+    }
+    if (request.getFamilyId() == null) {
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING, "Family id cannot be null.");
+    }
     User requestingUser = userService.getRequestingUser();
     Optional<Family> family = familyService.getFamilyById(request.getFamilyId());
     if (family.isEmpty())
@@ -109,6 +118,10 @@ public class CalendarServiceImpl implements CalendarService {
   @Override
   @Transactional
   public void updateCalendar(CalendarDto request) {
+    if (request.getId() == null) {
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING, "Calendar id cannot be null.");
+    }
     User requestingUser = userService.getRequestingUser();
     Optional<Calendar> calendarOpt = calendarRepository.findById(request.getId());
     if (calendarOpt.isEmpty())
@@ -132,14 +145,21 @@ public class CalendarServiceImpl implements CalendarService {
   @Transactional
   public void addEvent(CalendarEventDto request) {
     User requestingUser = userService.getRequestingUser();
-    if (request.getStartDate() == null
-        || request.getEndDate() == null
-        || request.getCalendarId() == null
-        || request.getDescription() == null
-        || request.getDescription().isBlank()) {
+    if (request.getCalendarId() == null) {
       throw new BadRequestException(
-          ApiExceptionCode.REQUIRED_PARAM_MISSING,
-          "Request is missing one or more required fields.");
+          ApiExceptionCode.REQUIRED_PARAM_MISSING, "Calendar id cannot be null");
+    }
+    if (request.getDescription() == null || request.getDescription().isBlank()) {
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING, "Description cannot be null or empty.");
+    }
+    if (request.getStartDate() == null) {
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING, "Start date cannot be null.");
+    }
+    if (request.getEndDate() == null) {
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING, "End date cannot be null.");
     }
     if (DateUtil.parseDateTime(request.getStartDate()).compareTo(Date.from(Instant.now())) < 0) {
       throw new BadRequestException(
@@ -307,6 +327,9 @@ public class CalendarServiceImpl implements CalendarService {
   @Override
   @Transactional
   public void deleteCalendar(Long id) {
+    if (id == null) {
+      throw new BadRequestException(ApiExceptionCode.REQUIRED_PARAM_MISSING, "Id cannot be null.");
+    }
     User requestingUser = userService.getRequestingUser();
     Optional<Calendar> calendar = calendarRepository.findById(id);
     if (calendar.isEmpty())
@@ -327,6 +350,9 @@ public class CalendarServiceImpl implements CalendarService {
   @Override
   @Transactional
   public void deleteEvent(Long id, boolean removeRecurring) {
+    if (id == null) {
+      throw new BadRequestException(ApiExceptionCode.REQUIRED_PARAM_MISSING, "Id cannot be null.");
+    }
     User requestingUser = userService.getRequestingUser();
     Optional<CalendarEvent> event = eventRepository.findById(id);
     if (event.isEmpty())
@@ -397,6 +423,9 @@ public class CalendarServiceImpl implements CalendarService {
   @Override
   @Transactional
   public void deleteRecurringEvent(Long id) {
+    if (id == null) {
+      throw new BadRequestException(ApiExceptionCode.REQUIRED_PARAM_MISSING, "Id cannt be null.");
+    }
     User requestingUser = userService.getRequestingUser();
     Optional<RecurringCalendarEvent> event = recurringEventRepository.findById(id);
     if (event.isEmpty())
@@ -424,13 +453,16 @@ public class CalendarServiceImpl implements CalendarService {
   @Override
   public CalendarSearchResponseDto search(CalendarSearchRequestDto request) {
     verifyCalendarSearchRequest(request);
+    if (request.getStart() == null && request.getEnd() == null) {
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING, "A search unlimited by date is not allowed.");
+    }
     User requestingUser = userService.getRequestingUser();
 
     CalendarSearchResponseDto response = new CalendarSearchResponseDto();
     response.setStart(request.getStart());
     response.setEnd(request.getEnd());
     response.setActiveSearchFilters(request.getFilters());
-
     List<Long> permittedFamilyIds = familyService.getFamilyIdsByUser(requestingUser.getUsername());
     List<Long> requestFamilyIds = request.getIdsByField(CalendarField.FAMILY);
 
@@ -469,6 +501,9 @@ public class CalendarServiceImpl implements CalendarService {
 
   @Override
   public CalendarEventDto getEvent(Long id) {
+    if (id == null) {
+      throw new BadRequestException(ApiExceptionCode.REQUIRED_PARAM_MISSING, "Id cannot be null.");
+    }
     User requestingUser = userService.getRequestingUser();
     Optional<CalendarEvent> eventOpt = eventRepository.findById(id);
     if (eventOpt.isEmpty())
@@ -489,6 +524,9 @@ public class CalendarServiceImpl implements CalendarService {
 
   @Override
   public CalendarEventDto getRecurringEvent(Long id) {
+    if (id == null) {
+      throw new BadRequestException(ApiExceptionCode.REQUIRED_PARAM_MISSING, "Id cannot be null.");
+    }
     User requestingUser = userService.getRequestingUser();
 
     Optional<RecurringCalendarEvent> recurringEvent = recurringEventRepository.findById(id);
