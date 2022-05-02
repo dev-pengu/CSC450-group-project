@@ -10,7 +10,7 @@
     <v-list-item v-if="$vuetify.breakpoint.mdAndDown">
       <v-list-item-content>
         <v-img height="75%" contain src="@/assets/logo-light.png"></v-img>
-        <v-list-item-title class="text-center font-weight-bold">Family Command Center</v-list-item-title>
+        <v-list-item-title class="text-center foa_nav_link--text font-weight-bold">Family Organization</v-list-item-title>
       </v-list-item-content>
     </v-list-item>
     <v-list nav>

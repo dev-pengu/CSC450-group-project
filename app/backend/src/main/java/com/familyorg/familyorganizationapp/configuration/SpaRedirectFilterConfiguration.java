@@ -30,7 +30,7 @@ public class SpaRedirectFilterConfiguration {
 
 	private OncePerRequestFilter createRedirectFilter() {
 		return new OncePerRequestFilter() {
-			private final String REGEX = "(?!/actuator|/api|/_nuxt|/static|/index\\\\.html|/200\\\\.html|/favicon\\\\.ico|/sw\\\\.js).*$";
+			private final String REGEX = "(?!/actuator|/api|/_nuxt|/static|/index\\\\.html|/200\\\\.html|/favicon\\.ico|/img|/sw\\\\.js).*$";
 			private Pattern pattern = Pattern.compile(REGEX);
 			@Override
 			protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain)
