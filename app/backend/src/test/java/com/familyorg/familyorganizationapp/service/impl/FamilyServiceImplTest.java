@@ -191,7 +191,6 @@ public class FamilyServiceImplTest {
   public void test_get_family() {
     /* Given */
     when(userService.getRequestingUser()).thenReturn(TEST_USER_1);
-    FamilyDto request = new FamilyDtoBuilder().withId(1l).build();
     FamilyDto expected = new FamilyDtoBuilder().withId(FAMILY_1.getId())
         .withInviteCode(null)
         .withEventColor(FAMILY_1.getEventColor())
@@ -205,7 +204,7 @@ public class FamilyServiceImplTest {
         .build();
 
     /* When */
-    FamilyDto response = familyService.getFamily(request);
+    FamilyDto response = familyService.getFamily(1l);
 
     /* Then */
     assertNotNull(response);
@@ -217,11 +216,10 @@ public class FamilyServiceImplTest {
   public void when_get_family_and_not_part_of_family_then_authorization_exception_thrown() {
     /* Given */
     when(userService.getRequestingUser()).thenReturn(TEST_USER_2);
-    FamilyDto request = new FamilyDtoBuilder().withId(1l).build();
 
     /* When */
     assertThrows(AuthorizationException.class, () -> {
-      familyService.getFamily(request);
+      familyService.getFamily(1l);
     });
   }
 

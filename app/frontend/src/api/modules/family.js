@@ -1,5 +1,4 @@
 import { http } from "./clients";
-import router from "../../router";
 
 export default {
   joinFamily(formData) {
