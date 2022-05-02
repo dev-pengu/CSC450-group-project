@@ -246,6 +246,8 @@ export default {
     },
     activeFilters: { FAMILY: [], POLL: [] },
     unvoted: false,
+    error: false,
+    errorMsg: '',
     closed: false,
     startDate: null,
     endDate: null,
@@ -339,7 +341,8 @@ export default {
         this.activeFilters = res.data.activeSearchFilters;
       } else {
         this.polls = [];
-        // TODO: display some sort of error
+        this.error = true;
+        this.errorMsg = 'We ran into an error retrieving the poll.';
       }
     },
   },

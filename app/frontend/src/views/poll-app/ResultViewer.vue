@@ -85,6 +85,8 @@ export default {
     loading: true,
     search: '',
     showChart: false,
+    error: false,
+    errorMsg: '',
   }),
   watch: {
     selected(val) {
@@ -108,14 +110,16 @@ export default {
               };
               this.showChart = true;
             } else {
-              // TODO: handle error
+              this.error = true;
+              this.errorMsg = 'We ran into an issue retrieving the result. Please try again in a few minutes.';
               this.poll = {};
               this.showChart = false;
               this.selected = [];
             }
           })
           .catch((err) => {
-            // TODO: handle error
+            this.error = true;
+            this.errorMsg = 'We ran into an issue regarding the poll. ';
             console.log(err);
             this.poll = {};
             this.selected = [];
@@ -144,7 +148,8 @@ export default {
       if (res.status === 200) {
         this.polls = res.data.polls;
       } else {
-        // TODO: show an error
+        this.error = true;
+        this.errorMsg = 'There was an error processing your request. Please try again in a few minutes.';
         this.polls = [];
       }
       this.loading = false;

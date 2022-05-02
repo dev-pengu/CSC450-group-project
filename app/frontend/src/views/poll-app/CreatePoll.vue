@@ -192,10 +192,11 @@ export default {
       const res = await api.createPoll(req);
 
       if (res.status === 201) {
-        // TODO: display success message
+        this.showSnackbar({ type: 'success', message: 'Your poll was created successfully!', timeout: 3000 });
         this.reset();
       } else {
-        // TODO: add error handling
+        this.error = true;
+        this.errorMsg = 'There was an error creating your poll. Please try again in a few minutes.';
       }
       this.loading = false;
     },
