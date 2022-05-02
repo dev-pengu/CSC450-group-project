@@ -1,5 +1,7 @@
 package com.familyorg.familyorganizationapp.repository.impl;
 
+import com.familyorg.familyorganizationapp.domain.QCalendarEvent;
+import com.familyorg.familyorganizationapp.domain.QUser;
 import java.util.List;
 import java.util.Set;
 import org.slf4j.Logger;
@@ -19,8 +21,6 @@ public class CalendarRepositoryImpl extends QuerydslRepositorySupport
   private Logger logger = LoggerFactory.getLogger(CalendarRepositoryImpl.class);
 
   private QCalendar calendarTable = QCalendar.calendar;
-  private QFamily familyTable = QFamily.family;
-  private QFamilyMembers memberTable = QFamilyMembers.familyMembers;
 
   public CalendarRepositoryImpl() {
     super(Calendar.class);
@@ -34,20 +34,12 @@ public class CalendarRepositoryImpl extends QuerydslRepositorySupport
   }
 
   @Override
-  public List<Calendar> search(List<Long> familyIds, List<Long> calendarIds, Set<Long> userIds) {
-    JPQLQuery<Calendar> query = from(calendarTable).innerJoin(calendarTable.family, familyTable)
-        .innerJoin(familyTable.members, memberTable)
-        .select(calendarTable)
-        .distinct();
-    if (familyIds != null && familyIds.size() > 0) {
-      query.where(familyTable.id.in(familyIds));
-    }
-    if (calendarIds != null && calendarIds.size() > 0) {
+  public List<Calendar> search(List<Long> familyIds, List<Long> calendarIds) {
+    JPQLQuery<Calendar> query = from(calendarTable).where(calendarTable.family.id.in(familyIds));
+
+    if (calendarIds != null && !calendarIds.isEmpty()) {
       query.where(calendarTable.id.in(calendarIds));
     }
-    if (userIds != null && userIds.size() > 0) {
-      query.where(memberTable.user.id.in(userIds));
-    }
-    return query.fetch();
+    return query.distinct().fetch();
   }
 }

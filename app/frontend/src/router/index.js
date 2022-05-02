@@ -15,6 +15,8 @@ import UserSecurity from '../views/profile/UserSecurity.vue';
 import UserFamilies from '../views/profile/UserFamilies.vue';
 import Shopping from '../views/shopping-app/Shopping.vue';
 import ShoppingList from '../views/shopping-app/ShoppingList.vue';
+import Calendaring from '../views/calendar/Calendar.vue';
+import CalendarManager from '../views/profile/CalendarManager.vue';
 
 Vue.use(VueRouter);
 const routes = [
@@ -141,6 +143,28 @@ const routes = [
     meta: {
       requiresAuth: true,
       title: 'Shopping List',
+    },
+  },
+  {
+    path: '/calendar/view',
+    name: 'Family Calendar',
+    component: Calendaring,
+    meta: {
+      requiresAuth: true,
+      title: 'Family Calendar',
+    },
+  },
+  {
+    path: '/calendar',
+    redirect: '/calendar/view',
+  },
+  {
+    path: '/profile/calendars',
+    name: 'Manage Calendars',
+    component: CalendarManager,
+    meta: {
+      requiresAuth: true,
+      title: 'Manage Calendars',
     },
   },
   {

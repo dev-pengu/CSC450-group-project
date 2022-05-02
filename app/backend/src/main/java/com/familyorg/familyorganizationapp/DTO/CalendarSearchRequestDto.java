@@ -9,9 +9,12 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import com.familyorg.familyorganizationapp.domain.search.CalendarField;
 import com.familyorg.familyorganizationapp.domain.search.SearchFilter;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 public class CalendarSearchRequestDto {
+  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd hh:mm")
   private Date start;
+  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd hh:mm")
   private Date end;
   private Map<CalendarField, List<SearchFilter>> filters;
 

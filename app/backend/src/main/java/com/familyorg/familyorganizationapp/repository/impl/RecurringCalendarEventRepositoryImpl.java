@@ -76,7 +76,7 @@ public class RecurringCalendarEventRepositoryImpl extends QuerydslRepositorySupp
 
   @Override
   public Map<Long, List<RecurringCalendarEvent>> getEventsByCalendarIdsInDateRange(
-      Set<Long> calendarIds, Timestamp start, Timestamp end, Set<Long> userIds) {
+      Set<Long> calendarIds, Timestamp start, Timestamp end, List<Long> userIds) {
     Map<Long, List<RecurringCalendarEvent>> result = new HashMap<>();
 
     JPQLQuery<RecurringCalendarEvent> query =
@@ -92,7 +92,7 @@ public class RecurringCalendarEventRepositoryImpl extends QuerydslRepositorySupp
       query.where(userTable.id.in(userIds).or(eventTable.familyEvent.eq(true)));
     }
 
-    query.select(recurringEventTable);
+    query.select(recurringEventTable).distinct();
 
     List<RecurringCalendarEvent> events = query.fetch();
     events.forEach(event -> {

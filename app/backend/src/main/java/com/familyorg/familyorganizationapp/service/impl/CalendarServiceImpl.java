@@ -1,9 +1,11 @@
 package com.familyorg.familyorganizationapp.service.impl;
 
 import com.familyorg.familyorganizationapp.Exception.ApiException;
+import com.familyorg.familyorganizationapp.domain.FamilyMembers;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -383,6 +385,42 @@ public class CalendarServiceImpl implements CalendarService {
   }
 
   @Override
+  public List<CalendarDto> getCalendars() {
+    User requestingUser = userService.getRequestingUser();
+    List<Long> permittedFamilyIds = familyService.getFamilyIdsByUser(requestingUser.getUsername());
+    List<Calendar> calendars = calendarRepository.search(permittedFamilyIds, null);
+    return calendars.stream()
+        .map(
+            calendar ->
+                new CalendarDtoBuilder()
+                    .withId(calendar.getId())
+                    .withDescription(calendar.getDescription())
+                    .withFamily(calendar.getFamily().getId())
+                  .setDefault(calendar.isDefault())
+                    .build())
+        .collect(Collectors.toList());
+  }
+
+  @Override
+  public List<SearchFilter> getPotentialAssignees(Long id) {
+    User requestingUser = userService.getRequestingUser();
+    Optional<Calendar> calendar = calendarRepository.findById(id);
+    if (calendar.isEmpty()) {
+      throw new ResourceNotFoundException(
+          ApiExceptionCode.CALENDAR_DOESNT_EXIST, "Calendar with id " + id + " not found.");
+    }
+    Family family = calendar.get().getFamily();
+    if (!family.isMember(requestingUser)) {
+      throw new AuthorizationException(
+          ApiExceptionCode.USER_NOT_IN_FAMILY,
+          "User is not a member of family associated with calendar.");
+    }
+    return family.getMembers().stream()
+        .map(member -> new SearchFilter(member.getUser().getId(), member.getUser().getFullname()))
+        .collect(Collectors.toList());
+  }
+
+  @Override
   @Transactional
   public void deleteRecurringEvent(Long id) {
     if (id == null) {
@@ -425,23 +463,21 @@ public class CalendarServiceImpl implements CalendarService {
     response.setStart(request.getStart());
     response.setEnd(request.getEnd());
     response.setActiveSearchFilters(request.getFilters());
-    response.setSearchFilters(
-        getSearchFilters(
-            requestingUser,
-            request.getIdsByField(CalendarField.FAMILY),
-            request.getIdsByField(CalendarField.CALENDAR)));
+    List<Long> permittedFamilyIds = familyService.getFamilyIdsByUser(requestingUser.getUsername());
+    List<Long> requestFamilyIds = request.getIdsByField(CalendarField.FAMILY);
 
-    Set<Long> userIdParams =
-        request.getIdsByField(CalendarField.USER).stream().collect(Collectors.toSet());
-    if (userIdParams.isEmpty()) {
-      userIdParams.add(requestingUser.getId());
-    }
+    List<Long> userIds =
+        request.getIdsByField(CalendarField.USER).stream().collect(Collectors.toList());
+    List<Long> calendarIds = request.getIdsByField(CalendarField.CALENDAR);
 
     List<Calendar> calendars =
         calendarRepository.search(
-            request.getIdsByField(CalendarField.FAMILY),
-            request.getIdsByField(CalendarField.CALENDAR),
-            userIdParams);
+            requestFamilyIds.isEmpty()
+                ? permittedFamilyIds
+                : permittedFamilyIds.stream()
+                    .filter(requestFamilyIds::contains)
+                    .collect(Collectors.toList()),
+            calendarIds.isEmpty() ? null : calendarIds);
 
     Set<Long> calendarIdsParam =
         calendars.stream().map(Calendar::getId).collect(Collectors.toSet());
@@ -450,15 +486,16 @@ public class CalendarServiceImpl implements CalendarService {
     Timestamp endParam = new Timestamp(request.getEnd().getTime());
     Map<Long, List<CalendarEvent>> eventsByCalendar =
         eventRepository.getEventsByCalendarIdsInDateRange(
-            calendarIdsParam, startParam, endParam, userIdParams);
+            calendarIdsParam, startParam, endParam, userIds);
 
     Map<Long, List<RecurringCalendarEvent>> recurringEventsByCalendar =
         recurringEventRepository.getEventsByCalendarIdsInDateRange(
-            calendarIdsParam, startParam, endParam, userIdParams);
+            calendarIdsParam, startParam, endParam, userIds);
 
     response.setCalendars(
         buildResponseCalendars(
-            calendars, eventsByCalendar, recurringEventsByCalendar, requestingUser));
+            calendars, eventsByCalendar, recurringEventsByCalendar, requestingUser, userIds));
+    response.setSearchFilters(getSearchFilters(calendars));
     return response;
   }
 
@@ -482,7 +519,7 @@ public class CalendarServiceImpl implements CalendarService {
     TimeZone timezone =
         familyService.getUserTimeZoneOrDefault(requestingUser, event.getCalendar().getFamily());
 
-    return buildEventDtoFromCalendarEvent(event, timezone, requestingUser);
+    return buildEventDtoFromCalendarEvent(event, timezone, requestingUser, Collections.emptyList());
   }
 
   @Override
@@ -508,7 +545,8 @@ public class CalendarServiceImpl implements CalendarService {
         familyService.getUserTimeZoneOrDefault(requestingUser, event.getCalendar().getFamily());
 
     CalendarEventDto response =
-        buildEventDtoFromRecurringEvent(recurringEvent.get(), timezone, requestingUser);
+        buildEventDtoFromRecurringEvent(
+            recurringEvent.get(), timezone, requestingUser, Collections.emptyList());
     return response;
   }
 
@@ -516,7 +554,8 @@ public class CalendarServiceImpl implements CalendarService {
       List<Calendar> calendars,
       Map<Long, List<CalendarEvent>> eventsByCalendar,
       Map<Long, List<RecurringCalendarEvent>> recurringEventsByCalendar,
-      User requestingUser) {
+      User requestingUser,
+      List<Long> userIds) {
     calendars.stream()
         .forEach(
             calendar -> {
@@ -530,11 +569,14 @@ public class CalendarServiceImpl implements CalendarService {
                   familyService.getUserTimeZoneOrDefault(requestingUser, calendar.getFamily());
               List<CalendarEventDto> events =
                   calendar.getEvents().stream()
-                      .map(event -> buildEventDtoFromCalendarEvent(event, timezone, requestingUser))
+                      .map(
+                          event ->
+                              buildEventDtoFromCalendarEvent(
+                                  event, timezone, requestingUser, userIds))
                       .collect(Collectors.toList());
               List<CalendarEventDto> recurringEvents =
                   buildRecurringEventsForResponse(
-                      calendar, recurringEventsByCalendar, timezone, requestingUser);
+                      calendar, recurringEventsByCalendar, timezone, requestingUser, userIds);
 
               events.addAll(recurringEvents);
               Collections.sort(events, new EventDateComparator());
@@ -555,21 +597,22 @@ public class CalendarServiceImpl implements CalendarService {
       Calendar calendar,
       Map<Long, List<RecurringCalendarEvent>> recurringEventsByCalendar,
       TimeZone timezone,
-      User requestingUser) {
+      User requestingUser,
+      List<Long> userIds) {
     List<CalendarEventDto> recurringEvents = new LinkedList<>();
     List<RecurringCalendarEvent> re = recurringEventsByCalendar.get(calendar.getId());
     if (re != null && re.size() > 0) {
       re.forEach(
           recurringEvent -> {
             recurringEvents.add(
-                buildEventDtoFromRecurringEvent(recurringEvent, timezone, requestingUser));
+                buildEventDtoFromRecurringEvent(recurringEvent, timezone, requestingUser, userIds));
           });
     }
     return recurringEvents;
   }
 
   private CalendarEventDto buildEventDtoFromCalendarEvent(
-      CalendarEvent event, TimeZone timezone, User requestingUser) {
+      CalendarEvent event, TimeZone timezone, User requestingUser, List<Long> userIds) {
     Map<Long, String> colors =
         event.getCalendar().getFamily().getMembers().stream()
             .collect(
@@ -612,6 +655,7 @@ public class CalendarServiceImpl implements CalendarService {
                     event.getCalendar().getFamily(), requestingUser, Role.ADULT))
         .withAssignees(
             event.getAssignees().stream()
+                .filter(assignee -> userIds.isEmpty() || userIds.contains(assignee.getId()))
                 .map(
                     assignee ->
                         new ColorDtoBuilder()
@@ -624,7 +668,10 @@ public class CalendarServiceImpl implements CalendarService {
   }
 
   private CalendarEventDto buildEventDtoFromRecurringEvent(
-      RecurringCalendarEvent recurringEvent, TimeZone timezone, User requestingUser) {
+      RecurringCalendarEvent recurringEvent,
+      TimeZone timezone,
+      User requestingUser,
+      List<Long> userIds) {
     CalendarEvent event = recurringEvent.getOriginatingEvent();
     Map<Long, String> colors =
         event.getCalendar().getFamily().getMembers().stream()
@@ -671,6 +718,7 @@ public class CalendarServiceImpl implements CalendarService {
                     event.getCalendar().getFamily(), requestingUser, Role.ADULT))
         .withAssignees(
             event.getAssignees().stream()
+                .filter(assignee -> userIds.isEmpty() || userIds.contains(assignee.getId()))
                 .map(
                     assignee ->
                         new ColorDtoBuilder()
@@ -817,7 +865,7 @@ public class CalendarServiceImpl implements CalendarService {
     event.setTimezone(timezone.getID());
     event.setFamilyEvent(request.isFamilyEvent());
     event.setNotes(request.getNotes());
-    event.setAssignees(recurringEvent.getOriginatingEvent().getAssignees());
+    event.setAssignees(new HashSet<>(recurringEvent.getOriginatingEvent().getAssignees()));
     return eventRepository.save(event);
   }
 
@@ -833,60 +881,26 @@ public class CalendarServiceImpl implements CalendarService {
     return color;
   }
 
-  private Map<CalendarField, List<SearchFilter>> getSearchFilters(
-      User user, List<Long> familyIds, List<Long> calendarIds) {
-
-    List<Family> families = familyService.getFamiliesByUser(user.getUsername());
-    List<Calendar> calendars =
-        calendarRepository
-            .calendarDataByFamilyIds(
-                families.stream()
-                    .filter(family -> familyIds.isEmpty() || familyIds.contains(family.getId()))
-                    .map(Family::getId)
-                    .collect(Collectors.toList()))
-            .stream()
-            .filter(calendar -> calendarIds.isEmpty() || calendarIds.contains(calendar.getId()))
-            .collect(Collectors.toList());
-
+  private Map<CalendarField, List<SearchFilter>> getSearchFilters(List<Calendar> calendars) {
     Map<CalendarField, List<SearchFilter>> filters = new HashMap<>();
-    filters.put(
-        CalendarField.FAMILY,
-        families.stream()
-            .map(
-                family -> {
-                  SearchFilter filter = new SearchFilter();
-                  filter.setId(family.getId());
-                  filter.setDisplay(family.getName());
-                  return filter;
-                })
-            .collect(Collectors.toList()));
-    filters.put(
-        CalendarField.CALENDAR,
-        calendars.stream()
-            .map(
-                calendar -> {
-                  SearchFilter filter = new SearchFilter();
-                  filter.setId(calendar.getId());
-                  filter.setDisplay(calendar.getDescription());
-                  return filter;
-                })
-            .collect(Collectors.toList()));
+    Set<SearchFilter> calendarFilters = new HashSet<>();
+    Set<SearchFilter> familyFilters = new HashSet<>();
     Set<SearchFilter> userFilters = new HashSet<>();
 
-    calendars.forEach(
-        calendar -> {
-          calendar
-              .getFamily()
-              .getMembers()
-              .forEach(
-                  member -> {
-                    SearchFilter filter = new SearchFilter();
-                    filter.setId(member.getUser().getId());
-                    filter.setDisplay(member.getUser().getFullname());
-                    userFilters.add(filter);
-                  });
-        });
+    for (Calendar calendar : calendars) {
+      familyFilters.add(
+          new SearchFilter(calendar.getFamily().getId(), calendar.getFamily().getName()));
+      calendarFilters.add(
+          new SearchFilter(
+              calendar.getId(),
+              calendar.getFamily().getName() + " - " + calendar.getDescription()));
+      for (FamilyMembers member : calendar.getFamily().getMembers()) {
+        userFilters.add(new SearchFilter(member.getUser().getId(), member.getUser().getFullname()));
+      }
+    }
 
+    filters.put(CalendarField.CALENDAR, new ArrayList<>(calendarFilters));
+    filters.put(CalendarField.FAMILY, new ArrayList<>(familyFilters));
     filters.put(CalendarField.USER, new ArrayList<>(userFilters));
     return filters;
   }

@@ -44,7 +44,7 @@ export default {
   data: () => ({
     navItems: [
       { title: 'Home', icon: 'mdi-home', route: '/dashboard' },
-      { title: 'Calendar', icon: 'mdi-calendar', route: '/calendar' },
+      { title: 'Calendar', icon: 'mdi-calendar', route: '/calendar/view' },
       { title: 'To-Do', icon: 'mdi-check-circle-outline', route: '/todo' },
       { title: 'Shopping Lists', icon: 'mdi-cart', route: '/shopping/view' },
       { title: 'Family Polling', icon: 'mdi-chart-box', route: '/polls/view' },
