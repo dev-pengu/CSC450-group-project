@@ -21,6 +21,11 @@ router.beforeEach((to, from, next) => {
   }
 });
 
+router.beforeEach((to, from, next) => {
+  document.title = to.meta ? `${to.meta.title} | Happy Home` : 'Happy Home';
+  next()
+})
+
 http.interceptors.response.use((response) => {
   if (response.status === 403) {
     router.push('/login');

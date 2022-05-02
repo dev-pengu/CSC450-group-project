@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.Objects;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
@@ -11,6 +12,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.mail.MailParseException;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -28,10 +31,12 @@ public class MessagingServiceImpl implements MessagingService {
 
   private JavaMailSender mailSender;
   private TaskExecutor taskExecutor;
+  private static ResourceLoader resourceLoader;
+
 
   @Autowired
   public MessagingServiceImpl(
-      Environment env, JavaMailSender mailSender, TaskExecutor taskExecutor) {
+      Environment env, JavaMailSender mailSender, TaskExecutor taskExecutor, ResourceLoader loader) {
     this.env = env;
     domain =
         env.getProperty("server.domain") != null
@@ -39,6 +44,7 @@ public class MessagingServiceImpl implements MessagingService {
             : (env.getProperty("server.host") + ":" + env.getProperty("server.port"));
     this.mailSender = mailSender;
     this.taskExecutor = taskExecutor;
+    resourceLoader = loader;
   }
 
   private static String inviteTemplateContents;
@@ -48,8 +54,9 @@ public class MessagingServiceImpl implements MessagingService {
     if (inviteTemplateContents != null) {
       return inviteTemplateContents;
     }
+    Resource fileResource = resourceLoader.getResource("classpath:email_templates/invite-template/index.html");
     try (FileReader fileReader =
-        new FileReader("src/main/resources/email_templates/invite-template/index.html")) {
+        new FileReader(Paths.get(fileResource.getURI()).toString())) {
       try (BufferedReader bufferedReader = new BufferedReader(fileReader)) {
         StringBuilder content = new StringBuilder(20000);
         String s;
@@ -72,8 +79,9 @@ public class MessagingServiceImpl implements MessagingService {
     if (passwordResetTemplateContents != null) {
       return passwordResetTemplateContents;
     }
+    Resource fileResource = resourceLoader.getResource("classpath:email_templates/password-reset-template/index.html");
     try (FileReader fileReader =
-        new FileReader("src/main/resources/email_templates/password-reset-template/index.html")) {
+        new FileReader(Paths.get(fileResource.getURI()).toString())) {
       try (BufferedReader bufferedReader = new BufferedReader(fileReader)) {
         StringBuilder content = new StringBuilder(18000);
         String s;
@@ -155,7 +163,6 @@ public class MessagingServiceImpl implements MessagingService {
 
   @Override
   public String buildInviteContent(String inviteCode, String owner) {
-    // TODO: replace unsub link |UNSUB-LINK| in the template
     String joinLink = "http://" + domain + "/family/join?code=" + inviteCode;
     String contents = getInviteTemplateContents();
     if (contents == null) {
@@ -164,19 +171,22 @@ public class MessagingServiceImpl implements MessagingService {
     contents = contents.replace("|FAMILY-CODE|", inviteCode);
     contents = contents.replace("|JOIN-LINK|", joinLink);
     contents = contents.replace("|OWNER-NAME|", owner);
+    contents = contents.replace("|LOGO-LINK|", "http://" + domain + "/img/logo-light.png");
+
 
     return contents;
   }
 
   @Override
   public String buildPasswordResetContent(String resetCode) {
-    // TODO: replace unsub link |UNSUB-LINK| in the template
     String resetLink = "http://" + domain + "/passwordReset?code=" + resetCode;
     String contents = getPasswordResetTemplateContents();
     if (contents == null) {
       return null;
     }
     contents = contents.replace("|RESET-LINK|", resetLink);
+    contents = contents.replace("|LOGO-LINK|", "http://" + domain + "/img/logo-light.png");
+
 
     return contents;
   }

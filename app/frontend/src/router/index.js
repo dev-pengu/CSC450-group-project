@@ -25,7 +25,7 @@ const routes = [
     component: Home,
     meta: {
       requiresAuth: true,
-      title: 'Home',
+      title: 'Dashboard',
     },
   },
   {
@@ -40,16 +40,25 @@ const routes = [
     path: '/login',
     name: 'Login',
     component: Login,
+    meta: {
+      title: 'Login'
+    }
   },
   {
     path: '/signup',
     name: 'Sign Up',
     component: SignUp,
+    meta: {
+      title: 'Sign Up'
+    }
   },
   {
     path: '/passwordReset',
     name: 'Password Reset',
     component: PasswordReset,
+    meta: {
+      title: 'Reset Password'
+    }
   },
   {
     path: '/polls',
