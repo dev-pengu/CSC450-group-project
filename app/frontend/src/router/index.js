@@ -1,6 +1,5 @@
 import VueRouter from 'vue-router';
 import Vue from 'vue';
-import store from '../store';
 import Home from '../views/Home.vue';
 import Login from '../views/Login.vue';
 import SignUp from '../views/SignUp.vue';
@@ -178,20 +177,6 @@ const router = new VueRouter({
   mode: 'history',
   base: process.env.BASE_URL,
   routes,
-});
-
-router.beforeEach((to, from, next) => {
-  if (to.matched.some((record) => record.meta.requiresAuth)) {
-    if (!store.getters.isLoggedIn) {
-      next({
-        path: '/login',
-      });
-    } else {
-      next();
-    }
-  } else {
-    next();
-  }
 });
 
 export default router;
