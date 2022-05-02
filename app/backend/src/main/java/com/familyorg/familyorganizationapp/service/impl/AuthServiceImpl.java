@@ -1,5 +1,6 @@
 package com.familyorg.familyorganizationapp.service.impl;
 
+import com.familyorg.familyorganizationapp.Exception.BadRequestException;
 import com.familyorg.familyorganizationapp.domain.PasswordResetCode;
 import com.familyorg.familyorganizationapp.repository.PasswordResetCodeRepository;
 import java.sql.Timestamp;
@@ -7,6 +8,7 @@ import java.time.Instant;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -57,6 +59,7 @@ public class AuthServiceImpl implements AuthService {
    */
   @Override
   public boolean verifyPasswordRequirements(String password) {
+    Objects.requireNonNull(password);
     if (password.length() < 12) {
       return false;
     }
@@ -65,6 +68,7 @@ public class AuthServiceImpl implements AuthService {
 
   @Override
   public boolean hasAuthenticatedForSensitiveActions(String username) {
+    Objects.requireNonNull(username);
     User user = userRepository.findByUsername(username);
     Calendar cal = Calendar.getInstance();
     cal.setTime(Date.from(Instant.now()));
@@ -78,6 +82,10 @@ public class AuthServiceImpl implements AuthService {
   @Override
   @Transactional
   public String generateResetCode(User user) {
+    if (user == null) {
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING, "User cannot be null.");
+    }
     List<PasswordResetCode> existingCodes = codeRepository.getResetCodesByUser(user.getId());
     if (existingCodes.size() > 0) {
       codeRepository.batchExpire(
@@ -93,8 +101,15 @@ public class AuthServiceImpl implements AuthService {
 
   @Override
   @Transactional
-  public boolean verifyResetCode(String resetCode,
-    User user) {
+  public boolean verifyResetCode(String resetCode, User user) {
+    if (resetCode == null) {
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING, "Reset Code cannot be null.");
+    }
+    if (user == null) {
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING, "User cannot be null.");
+    }
     PasswordResetCode code = codeRepository.findByResetCode(resetCode);
     if (code == null) {
       return false;
@@ -102,7 +117,8 @@ public class AuthServiceImpl implements AuthService {
     Calendar cal = Calendar.getInstance();
     cal.setTime(Date.from(Instant.now()));
     cal.add(Calendar.MINUTE, 15);
-    if(code.getUser().getId().equals(user.getId()) && code.getCreated().compareTo(cal.getTime()) < 0) {
+    if (code.getUser().getId().equals(user.getId())
+        && code.getCreated().compareTo(cal.getTime()) < 0) {
       code.setExpired(true);
       codeRepository.save(code);
       return true;

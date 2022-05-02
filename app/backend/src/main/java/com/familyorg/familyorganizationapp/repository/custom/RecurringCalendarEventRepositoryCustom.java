@@ -18,7 +18,7 @@ public interface RecurringCalendarEventRepositoryCustom {
   RecurringCalendarEvent getFirstOccurrence(Long originatingId);
 
   Map<Long, List<RecurringCalendarEvent>> getEventsByCalendarIdsInDateRange(Set<Long> calendarIds,
-      Timestamp start, Timestamp end, Set<Long> userIds);
+      Timestamp start, Timestamp end, List<Long> userIds);
 
   void removeById(Long id);
 }

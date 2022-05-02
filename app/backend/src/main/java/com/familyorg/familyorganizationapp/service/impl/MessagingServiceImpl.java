@@ -93,7 +93,6 @@ public class MessagingServiceImpl implements MessagingService {
   }
 
   public void sendHtmlEmail(String recipient, String subject, String content) {
-
     Objects.requireNonNull(recipient);
     Objects.requireNonNull(subject);
     Objects.requireNonNull(content);

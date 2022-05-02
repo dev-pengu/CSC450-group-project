@@ -2,6 +2,7 @@ package com.familyorg.familyorganizationapp.service.impl;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,8 +40,11 @@ public class UserServiceImpl implements UserService {
   BCryptPasswordEncoder bCryptPasswordEncoder;
 
   @Autowired
-  public UserServiceImpl(UserRepository userRepository, AuthService authService,
-      SecurityService securityService, BCryptPasswordEncoder bCryptPasswordEncoder,
+  public UserServiceImpl(
+      UserRepository userRepository,
+      AuthService authService,
+      SecurityService securityService,
+      BCryptPasswordEncoder bCryptPasswordEncoder,
       FamilyMemberRepository memberRepository) {
     super();
     this.userRepository = userRepository;
@@ -48,7 +52,6 @@ public class UserServiceImpl implements UserService {
     this.securityService = securityService;
     this.bCryptPasswordEncoder = bCryptPasswordEncoder;
     this.memberRepository = memberRepository;
-
   }
 
   @Override
@@ -61,11 +64,12 @@ public class UserServiceImpl implements UserService {
   @Transactional
   public UserDto createUser(User user) throws BadRequestException, ExistingUserException {
     if (!user.isValid()) {
-      throw new BadRequestException(ApiExceptionCode.REQUIRED_PARAM_MISSING,
-          "User is missing one or more required fields");
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING, "User is missing one or more required fields");
     }
     if (!authService.verifyPasswordRequirements(user.getPassword())) {
-      throw new BadRequestException(ApiExceptionCode.PASSWORD_MINIMUM_REQUIREMENTS_NOT_MET,
+      throw new BadRequestException(
+          ApiExceptionCode.PASSWORD_MINIMUM_REQUIREMENTS_NOT_MET,
           "Password does not meet minimum requirements");
     }
     User existingUser = userRepository.findByUsername(user.getUsername());
@@ -85,9 +89,15 @@ public class UserServiceImpl implements UserService {
   @Transactional
   public void deleteUser(String username) throws AuthorizationException, UserNotFoundException {
     User requestingUser = getRequestingUser();
+    if (username == null || username.isBlank()) {
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING, "Username cannot be null.");
+    }
     if (!username.equals(requestingUser.getUsername())) {
-      throw new AuthorizationException(ApiExceptionCode.ILLEGAL_ACTION_REQUESTED,
-          "User account requested for deletion does not match authenticated user.", true);
+      throw new AuthorizationException(
+          ApiExceptionCode.ILLEGAL_ACTION_REQUESTED,
+          "User account requested for deletion does not match authenticated user.",
+          true);
     }
     User user = getUserByUsername(username);
     if (user == null) {
@@ -96,7 +106,8 @@ public class UserServiceImpl implements UserService {
     if (authService.hasAuthenticatedForSensitiveActions(username)) {
       userRepository.delete(user);
     } else {
-      throw new AuthorizationException(ApiExceptionCode.REAUTHENTICATION_NEEDED_FOR_REQUEST,
+      throw new AuthorizationException(
+          ApiExceptionCode.REAUTHENTICATION_NEEDED_FOR_REQUEST,
           "Users must reauthenticate to perform this action.");
     }
   }
@@ -104,8 +115,16 @@ public class UserServiceImpl implements UserService {
   @Override
   @Transactional
   public void changePassword(User user, String newPassword) {
-      user.setPassword(bCryptPasswordEncoder.encode(newPassword));
-      userRepository.save(user);
+    if (user == null) {
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING, "User cannot be null.");
+    }
+    if (newPassword == null || newPassword.isBlank()) {
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING, "New Password cannot be null.");
+    }
+    user.setPassword(bCryptPasswordEncoder.encode(newPassword));
+    userRepository.save(user);
   }
 
   @Override
@@ -121,16 +140,23 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public UserDto updateUserSettingsAndData(UserDto request) {
+    if (request.getId() == null) {
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING, "User id cannot be null.");
+    }
     User requestingUser = getRequestingUser();
     if (!requestingUser.getId().equals(request.getId())) {
-      throw new AuthorizationException(ApiExceptionCode.USER_NOT_LOGGED_IN,
+      throw new AuthorizationException(
+          ApiExceptionCode.USER_NOT_LOGGED_IN,
           "User id on request does not match currently logged in user.");
     }
 
-    if (!requestingUser.getFirstName().equals(request.getFirstName())) {
+    if (request.getFirstName() != null
+        && !requestingUser.getFirstName().equals(request.getFirstName())) {
       requestingUser.setFirstName(request.getFirstName());
     }
-    if (!requestingUser.getLastName().equals(request.getLastName())) {
+    if (request.getLastName() != null
+        && !requestingUser.getLastName().equals(request.getLastName())) {
       requestingUser.setLastName(request.getLastName());
     }
     if (requestingUser.useDarkMode() != request.getUseDarkMode()) {
@@ -140,51 +166,61 @@ public class UserServiceImpl implements UserService {
     List<ColorDto> colors = new ArrayList<>();
     if (request.getColorsByFamily() != null) {
 
-      List<FamilyMembers> updated = request.getColorsByFamily().stream().map(color -> {
-        if (!ColorUtil.isValidHexCode(color.getColor())) {
-          throw new BadRequestException(ApiExceptionCode.BAD_PARAM_VALUE,
-              "Color for family " + color.getFamily() + " is not a valid hexcode");
-        }
-        Optional<FamilyMembers> familyMembers = memberRepository
-            .findById(new FamilyMemberId(requestingUser.getId(), color.getFamilyId()));
+      List<FamilyMembers> updated =
+          request.getColorsByFamily().stream()
+              .map(
+                  color -> {
+                    if (!ColorUtil.isValidHexCode(color.getColor())) {
+                      throw new BadRequestException(
+                          ApiExceptionCode.BAD_PARAM_VALUE,
+                          "Color for family " + color.getFamily() + " is not a valid hexcode");
+                    }
+                    Optional<FamilyMembers> familyMembers =
+                        memberRepository.findById(
+                            new FamilyMemberId(requestingUser.getId(), color.getFamilyId()));
 
-        if (familyMembers.isPresent()) {
-          familyMembers.get().setEventColor(color.getColor());
-          return familyMembers.get();
-        }
-        return null;
-      }).filter(member -> member != null).collect(Collectors.toList());
+                    if (familyMembers.isPresent()) {
+                      familyMembers.get().setEventColor(color.getColor());
+                      return familyMembers.get();
+                    }
+                    return null;
+                  })
+              .filter(member -> member != null)
+              .collect(Collectors.toList());
 
       Iterable<FamilyMembers> savedMembers = memberRepository.saveAll(updated);
 
-      savedMembers.forEach(member -> {
-        colors.add(new ColorDtoBuilder().withFamily(member.getFamily().getName())
-            .withFamilyId(member.getFamily().getId())
-            .withUserId(requestingUser.getId())
-            .withColor(member.getEventColor())
-            .build());
-      });
+      savedMembers.forEach(
+          member -> {
+            colors.add(
+                new ColorDtoBuilder()
+                    .withFamily(member.getFamily().getName())
+                    .withFamilyId(member.getFamily().getId())
+                    .withUserId(requestingUser.getId())
+                    .withColor(member.getEventColor())
+                    .build());
+          });
     }
     User savedUser = userRepository.save(requestingUser);
     return new UserDtoBuilder().fromUserObj(savedUser).withColorsByFamily(colors).build();
   }
 
-  /**
-   * Methods below this point should only be used by other services.
-   */
-
+  /** Methods below this point should only be used by other services. */
   @Override
   public User getUserByUsername(String username) {
+    Objects.requireNonNull(username);
     return userRepository.findByUsername(username);
   }
 
   @Override
   public User getUserByEmail(String email) {
+    Objects.requireNonNull(email);
     return userRepository.findByEmail(email);
   }
 
   @Override
   public User getUserById(Long id) {
+    Objects.requireNonNull(id);
     Optional<User> user = userRepository.findById(id);
     if (user.isEmpty()) {
       return null;
@@ -196,19 +232,24 @@ public class UserServiceImpl implements UserService {
   public User getRequestingUser() throws AuthorizationException, UserNotFoundException {
     UserDetails userDetails = authService.getSessionUserDetails();
     if (userDetails.getUsername() == null) {
-      throw new AuthorizationException(ApiExceptionCode.USER_NOT_LOGGED_IN,
-          "No authenticated user found", true);
+      throw new AuthorizationException(
+          ApiExceptionCode.USER_NOT_LOGGED_IN, "No authenticated user found", true);
     }
     User user = getUserByUsername(userDetails.getUsername());
     if (user == null) {
-      throw new UserNotFoundException(ApiExceptionCode.USER_DOESNT_EXIST,
-          "User data not found for authenticated user");
+      throw new UserNotFoundException(
+          ApiExceptionCode.USER_DOESNT_EXIST, "User data not found for authenticated user");
     }
     return user;
   }
 
   @Override
+  @Transactional
   public UserDto updateUser(UserDto request) {
+    if (request.getId() == null) {
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING, "User id cannot be null.");
+    }
     User requestingUser = getRequestingUser();
     requestingUser.setFirstName(request.getFirstName());
     requestingUser.setLastName(requestingUser.getLastName());
@@ -219,6 +260,7 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public void updateUser(User user) {
+    Objects.requireNonNull(user);
     userRepository.save(user);
   }
 }

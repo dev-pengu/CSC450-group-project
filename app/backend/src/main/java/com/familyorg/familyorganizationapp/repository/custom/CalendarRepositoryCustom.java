@@ -8,5 +8,5 @@ public interface CalendarRepositoryCustom {
 
   List<Calendar> calendarDataByFamilyIds(List<Long> familyIds);
 
-  List<Calendar> search(List<Long> familyIds, List<Long> calendarIds, Set<Long> userIds);
+  List<Calendar> search(List<Long> familyIds, List<Long> calendarIds);
 }

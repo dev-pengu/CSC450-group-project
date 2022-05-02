@@ -245,7 +245,7 @@ public class Family implements Serializable {
   public void setInvites(Set<MemberInvite> invites) {
     this.invites = invites;
   }
-  
+
   public Set<ToDoList> getToDoLists() {
     return toDoLists;
   }

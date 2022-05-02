@@ -1,6 +1,7 @@
 package com.familyorg.familyorganizationapp.security;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -16,7 +17,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
@@ -27,7 +27,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
   @Autowired private UserDetailsService userDetailsService;
   @Autowired private BCryptPasswordEncoder bCryptPasswordEncoder;
   @Autowired private CustomLogoutSuccessHandler customLogoutSuccessHandler;
-  @Autowired private CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
   @Override
   protected void configure(HttpSecurity http) throws Exception {
@@ -57,7 +56,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         .logoutSuccessHandler(customLogoutSuccessHandler)
         .and()
         .exceptionHandling()
-        .authenticationEntryPoint(customAuthenticationEntryPoint)
         .and()
         .csrf()
         .disable();
@@ -83,7 +81,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     public static UrlBasedCorsConfigurationSource configurationSource() {
       CorsConfiguration configuration = new CorsConfiguration();
       configuration.setAllowCredentials(true);
-      configuration.addAllowedOrigin("*");
+      configuration.setAllowedOriginPatterns(Collections.singletonList("*"));
       configuration.addAllowedHeader("*");
       configuration.setAllowedMethods(Arrays.asList("POST", "GET", "PATCH", "DELETE"));
       configuration.setMaxAge(3600L);
