@@ -372,6 +372,7 @@ public class FamilyServiceImpl implements FamilyService {
   }
 
   @Override
+  @Transactional
   public void leaveFamily(Long familyId) {
     if (familyId == null) {
       throw new BadRequestException(ApiExceptionCode.REQUIRED_PARAM_MISSING, "Family id must not be null");
@@ -400,6 +401,7 @@ public class FamilyServiceImpl implements FamilyService {
   }
 
   @Override
+  @Transactional
   public void removeMember(Long familyId, Long userId) {
     if (familyId == null) {
       throw new BadRequestException(ApiExceptionCode.REQUIRED_PARAM_MISSING, "Family id must not be null");
