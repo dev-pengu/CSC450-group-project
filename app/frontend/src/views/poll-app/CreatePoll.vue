@@ -142,6 +142,8 @@ export default {
     responseOptions: [],
     defaultOptions: ['Yes', 'No'],
     dateModal: false,
+    error: false,
+    errorMsg: '',
   }),
   watch: {
     responseOptions(val) {
