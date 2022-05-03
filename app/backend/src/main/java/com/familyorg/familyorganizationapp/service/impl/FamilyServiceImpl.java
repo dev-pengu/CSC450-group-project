@@ -418,6 +418,7 @@ public class FamilyServiceImpl implements FamilyService {
   }
 
   @Override
+  @Transactional
   public void leaveFamily(Long familyId) {
     if (familyId == null) {
       throw new BadRequestException(
@@ -437,14 +438,10 @@ public class FamilyServiceImpl implements FamilyService {
             "User cannot leave a family they own. The family ownership must first be transferred.");
       }
       // remove all events assigned to the user
-      requestingUser
-          .getEvents()
-          .removeIf(event -> event.getCalendar().getFamily().getId().equals(familyId));
-      // remove all todos assigned to the user
-      // TODO after todo list is implemented
-
+      requestingUser.getEvents().removeIf(event -> event.getCalendar().getFamily().getId().equals(familyId));
       // remove any outstanding poll responses from the user and any open polls
-      voteRepository.deleteOpenPollsForFamilyByUser(requestingUser.getId(), familyId);
+      voteRepository.deleteAll(
+        voteRepository.getVotesForDeletionByUserAndFamily(requestingUser.getId(), familyId));
       // remove the family member record
       requestingUser.getFamilies().removeIf(family -> family.getFamily().getId().equals(familyId));
       userService.updateUser(requestingUser);
@@ -456,6 +453,7 @@ public class FamilyServiceImpl implements FamilyService {
   }
 
   @Override
+  @Transactional
   public void removeMember(Long familyId, Long userId) {
     if (familyId == null) {
       throw new BadRequestException(
@@ -487,17 +485,11 @@ public class FamilyServiceImpl implements FamilyService {
       }
 
       // remove all events assigned to the user
-      memberRecordToRemove
-          .get()
-          .getUser()
-          .getEvents()
-          .removeIf(event -> event.getCalendar().getFamily().getId().equals(familyId));
-      // remove all todos assigned to the user
-      // TODO after todo list is implemented
-
+      memberRecordToRemove.get().getUser().getEvents().removeIf(event -> event.getCalendar().getFamily().getId().equals(familyId));
       // remove any outstanding poll responses from the user and any open polls
-      voteRepository.deleteOpenPollsForFamilyByUser(
-          memberRecordToRemove.get().getUser().getId(), familyId);
+      voteRepository.deleteAll(
+        voteRepository.getVotesForDeletionByUserAndFamily(memberRecordToRemove.get().getUser().getId(), familyId));
+
       // remove the family member record
       memberRecordToRemove
           .get()
