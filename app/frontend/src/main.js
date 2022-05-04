@@ -1,26 +1,60 @@
 import Vue from 'vue';
-import axios from 'axios';
-
+import { http, authHttp } from './api/modules/clients';
 import App from './App.vue';
 import router from './router';
 import store from './store';
 import vuetify from './plugins/vuetify';
 
-// eslint-disable-next-line consistent-return
-axios.interceptors.response.use(undefined, (err) => {
-  if (err) {
-    const originalRequest = err.config;
-    // eslint-disable-next-line no-underscore-dangle
-    if (err.response.status === 401 && !originalRequest._retry) {
-      // eslint-disable-next-line no-underscore-dangle
-      originalRequest._retry = true;
-      store.dispatch('logout');
-      return router.push('/login');
+Vue.config.productionTip = false;
+
+router.beforeEach((to, from, next) => {
+  if (to.matched.some((record) => record.meta.requiresAuth)) {
+    if (!store.getters.isLoggedIn) {
+      next({
+        path: '/login',
+      });
+    } else {
+      next();
     }
+  } else {
+    next();
   }
 });
 
-Vue.config.productionTip = false;
+router.beforeEach((to, from, next) => {
+  document.title = to.meta ? `${to.meta.title} | Happy Home` : 'Happy Home';
+  next()
+})
+
+http.interceptors.response.use((response) => {
+  if (response.status === 403) {
+    router.push('/login');
+  }
+  return response;
+}, (err) => {
+  if (err) {
+    alert(err);
+    if (err.response.status === 403) {
+      router.push('/login');
+    }
+  }
+  return Promise.reject(err);
+});
+
+authHttp.interceptors.response.use((response) => {
+  if (response.status === 403) {
+    router.push('/login');
+  }
+  return response;
+}, (err) => {
+  if (err) {
+    alert(err);
+    if (err.response.status === 403) {
+      router.push('/login');
+    }
+  }
+  return Promise.reject(err);
+});
 
 new Vue({
   store,

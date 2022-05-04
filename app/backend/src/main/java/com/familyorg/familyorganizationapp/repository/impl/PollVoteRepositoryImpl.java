@@ -32,6 +32,12 @@ public class PollVoteRepositoryImpl extends QuerydslRepositorySupport
   }
 
   @Override
+  public List<PollVote> getVotesForDeletionByUserAndFamily(Long userId, Long familyId) {
+    return from(voteTable)
+      .where(voteTable.user.id.eq(userId).and(voteTable.poll.family.id.eq(familyId))).fetch();
+  }
+
+  @Override
   public void deleteAllByUserIdAndPoll(List<Long> userIds, Long pollId) {
     new JPADeleteClause(getEntityManager(), voteTable)
         .where(voteTable.user.id.in(userIds)

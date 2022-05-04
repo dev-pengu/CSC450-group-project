@@ -1,6 +1,5 @@
 import VueRouter from 'vue-router';
 import Vue from 'vue';
-import store from '../store';
 import Home from '../views/Home.vue';
 import Login from '../views/Login.vue';
 import SignUp from '../views/SignUp.vue';
@@ -15,6 +14,8 @@ import UserSecurity from '../views/profile/UserSecurity.vue';
 import UserFamilies from '../views/profile/UserFamilies.vue';
 import Shopping from '../views/shopping-app/Shopping.vue';
 import ShoppingList from '../views/shopping-app/ShoppingList.vue';
+import Calendaring from '../views/calendar/Calendar.vue';
+import CalendarManager from '../views/profile/CalendarManager.vue';
 
 Vue.use(VueRouter);
 const routes = [
@@ -24,7 +25,7 @@ const routes = [
     component: Home,
     meta: {
       requiresAuth: true,
-      title: 'Home',
+      title: 'Dashboard',
     },
   },
   {
@@ -39,16 +40,25 @@ const routes = [
     path: '/login',
     name: 'Login',
     component: Login,
+    meta: {
+      title: 'Login'
+    }
   },
   {
     path: '/signup',
     name: 'Sign Up',
     component: SignUp,
+    meta: {
+      title: 'Sign Up'
+    }
   },
   {
     path: '/passwordReset',
     name: 'Password Reset',
     component: PasswordReset,
+    meta: {
+      title: 'Reset Password'
+    }
   },
   {
     path: '/polls',
@@ -144,6 +154,28 @@ const routes = [
     },
   },
   {
+    path: '/calendar/view',
+    name: 'Family Calendar',
+    component: Calendaring,
+    meta: {
+      requiresAuth: true,
+      title: 'Family Calendar',
+    },
+  },
+  {
+    path: '/calendar',
+    redirect: '/calendar/view',
+  },
+  {
+    path: '/profile/calendars',
+    name: 'Manage Calendars',
+    component: CalendarManager,
+    meta: {
+      requiresAuth: true,
+      title: 'Manage Calendars',
+    },
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'Not Found',
     component: NotFound,
@@ -154,20 +186,6 @@ const router = new VueRouter({
   mode: 'history',
   base: process.env.BASE_URL,
   routes,
-});
-
-router.beforeEach((to, from, next) => {
-  if (to.matched.some((record) => record.meta.requiresAuth)) {
-    if (!store.getters.isLoggedIn) {
-      next({
-        path: '/login',
-      });
-    } else {
-      next();
-    }
-  } else {
-    next();
-  }
 });
 
 export default router;

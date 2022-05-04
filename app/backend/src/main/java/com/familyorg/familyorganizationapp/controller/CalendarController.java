@@ -1,5 +1,7 @@
 package com.familyorg.familyorganizationapp.controller;
 
+import com.familyorg.familyorganizationapp.domain.search.SearchFilter;
+import java.util.List;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +23,6 @@ import com.familyorg.familyorganizationapp.DTO.CalendarSearchRequestDto;
 import com.familyorg.familyorganizationapp.DTO.CalendarSearchResponseDto;
 import com.familyorg.familyorganizationapp.service.CalendarService;
 
-@CrossOrigin(origins = "http://localhost:8081")
 @RestController
 @RequestMapping("/api/v1/calendar")
 public class CalendarController {
@@ -33,6 +34,18 @@ public class CalendarController {
   @Autowired
   public CalendarController(CalendarService calendarService) {
     this.calendarService = calendarService;
+  }
+
+  @GetMapping()
+  public ResponseEntity<List<CalendarDto>> getCalendars() {
+    List<CalendarDto> calendars = calendarService.getCalendars();
+    return new ResponseEntity<>(calendars, HttpStatus.OK);
+  }
+
+  @GetMapping("/assignees")
+  public ResponseEntity<List<SearchFilter>> getPotentialAssignees(@RequestParam("id") Long calendarId) {
+    List<SearchFilter> assignees = calendarService.getPotentialAssignees(calendarId);
+    return new ResponseEntity<>(assignees, HttpStatus.OK);
   }
 
   @PostMapping()

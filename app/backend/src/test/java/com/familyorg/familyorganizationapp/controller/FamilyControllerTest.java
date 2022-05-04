@@ -56,24 +56,22 @@ public class FamilyControllerTest {
     messagingService = mock(MessagingServiceImpl.class);
     when(messagingService.buildInviteContent(any(String.class), any(String.class)))
         .thenReturn("test");
-    doNothing().when(messagingService)
-        .sendHtmlEmail(any(String.class), any(String.class),
-            any(String.class));
+    doNothing()
+        .when(messagingService)
+        .sendHtmlEmail(any(String.class), any(String.class), any(String.class));
     familyController = new FamilyController(familyService, inviteService, messagingService);
   }
 
   @Test
   public void getFamily_success() throws Exception {
     /* Given */
-    when(familyService.getFamily(any(FamilyDto.class))).thenAnswer(
-        invocation -> mockServiceResponse(invocation.getArgument(0), false, false, false, false));
-    FamilyDto request = new FamilyDtoBuilder()
-        .withRequestingUser(new UserDtoBuilder().withUsername("testuser").build())
-        .withId(1l)
-        .build();
+    when(familyService.getFamily(any(Long.class)))
+        .thenAnswer(
+            invocation ->
+                mockServiceResponse((Long) invocation.getArgument(0), false, false, false, false));
 
     /* When */
-    ResponseEntity<?> response = familyController.getFamily(request);
+    ResponseEntity<?> response = familyController.getFamily(1l);
 
     /* Then */
     assertNotNull(response);
@@ -101,16 +99,21 @@ public class FamilyControllerTest {
   @Test
   public void createFamily_success() {
     /* Given */
-    when(familyService.createFamily(any(FamilyDto.class))).thenAnswer(
-        invocation -> mockServiceResponse(invocation.getArgument(0), false, false, false, false));
-    FamilyDto request = new FamilyDtoBuilder().withName("Test Family")
-        .withEventColor("fffff")
-        .withTimezone("America/Chicago")
-        .withOwner(new FamilyMemberDtoBuilder()
-            .withUser(new UserDtoBuilder().withUsername("testuser").build())
-            .withEventColor("ffffff")
-            .build())
-        .build();
+    when(familyService.createFamily(any(FamilyDto.class)))
+        .thenAnswer(
+            invocation ->
+                mockServiceResponse((FamilyDto) invocation.getArgument(0), false, false, false, false));
+    FamilyDto request =
+        new FamilyDtoBuilder()
+            .withName("Test Family")
+            .withEventColor("fffff")
+            .withTimezone("America/Chicago")
+            .withOwner(
+                new FamilyMemberDtoBuilder()
+                    .withUser(new UserDtoBuilder().withUsername("testuser").build())
+                    .withEventColor("ffffff")
+                    .build())
+            .build();
 
     /* When */
     ResponseEntity<?> response = familyController.createFamily(request);
@@ -124,12 +127,16 @@ public class FamilyControllerTest {
   @Test
   public void updateFamily_success() {
     /* Given */
-    when(familyService.updateFamily(any(FamilyDto.class))).thenAnswer(
-        invocation -> mockServiceResponse(invocation.getArgument(0), false, false, false, false));
-    FamilyDto request = new FamilyDtoBuilder().withId(1l)
-        .withRequestingUser(new UserDtoBuilder().withUsername("testuser").build())
-        .withEventColor("000000")
-        .build();
+    when(familyService.updateFamily(any(FamilyDto.class)))
+        .thenAnswer(
+            invocation ->
+                mockServiceResponse((FamilyDto) invocation.getArgument(0), false, false, false, false));
+    FamilyDto request =
+        new FamilyDtoBuilder()
+            .withId(1l)
+            .withRequestingUser(new UserDtoBuilder().withUsername("testuser").build())
+            .withEventColor("000000")
+            .build();
 
     /* When */
     ResponseEntity<?> response = familyController.updateFamily(request);
@@ -157,20 +164,24 @@ public class FamilyControllerTest {
   public void when_generate_non_persistent_invite_then_200_status_returned() {
     /* Given */
     when(inviteService.createUniqueMemberInvite(any(Long.class), any(String.class)))
-        .thenAnswer(invocation -> {
-          User user =
-              new User(1l, "Test", "User", "testuser", "password", "testemail@test.com", null);
-          Family family = new Family(invocation.getArgument(0), "Test", "ffffff", "America/Chicago",
-              null, null);
-          FamilyMembers owner = new FamilyMembers(user, family, Role.OWNER, "ffffff");
-          user.setFamilies(new HashSet<>(Collections.singleton(owner)));
-          family.setMembers(new HashSet<>(Collections.singleton(owner)));
-          return new MemberInvite(family, invocation.getArgument(1));
-        });
-    MemberInviteDto request = new MemberInviteDtoBuilder().withFamilyId(1l)
-        .withPersistence(false)
-        .withRecipientEmail("testemail@test.com")
-        .build();
+        .thenAnswer(
+            invocation -> {
+              User user =
+                  new User(1l, "Test", "User", "testuser", "password", "testemail@test.com", null);
+              Family family =
+                  new Family(
+                      invocation.getArgument(0), "Test", "ffffff", "America/Chicago", null, null);
+              FamilyMembers owner = new FamilyMembers(user, family, Role.OWNER, "ffffff");
+              user.setFamilies(new HashSet<>(Collections.singleton(owner)));
+              family.setMembers(new HashSet<>(Collections.singleton(owner)));
+              return new MemberInvite(family, invocation.getArgument(1));
+            });
+    MemberInviteDto request =
+        new MemberInviteDtoBuilder()
+            .withFamilyId(1l)
+            .withPersistence(false)
+            .withRecipientEmail("testemail@test.com")
+            .build();
 
     /* When */
     ResponseEntity<?> response = familyController.generateInvite(request);
@@ -183,22 +194,27 @@ public class FamilyControllerTest {
   @Test
   public void when_generate_non_persistent_invite_with_role_then_200_status_returned() {
     /* Given */
-    when(inviteService.createUniqueMemberInviteWithRole(any(Long.class), any(String.class),
-        any(Role.class))).thenAnswer(invocation -> {
-          User user =
-              new User(1l, "Test", "User", "testuser", "password", "testemail@test.com", null);
-          Family family = new Family(invocation.getArgument(0), "Test", "ffffff", "America/Chicago",
-              null, null);
-          FamilyMembers owner = new FamilyMembers(user, family, Role.OWNER, "ffffff");
-          user.setFamilies(new HashSet<>(Collections.singleton(owner)));
-          family.setMembers(new HashSet<>(Collections.singleton(owner)));
-          return new MemberInvite(family, invocation.getArgument(1), invocation.getArgument(2));
-        });
-    MemberInviteDto request = new MemberInviteDtoBuilder().withFamilyId(1l)
-        .withPersistence(false)
-        .withRecipientEmail("testemail@test.com")
-        .withInitialRole(Role.ADULT)
-        .build();
+    when(inviteService.createUniqueMemberInviteWithRole(
+            any(Long.class), any(String.class), any(Role.class)))
+        .thenAnswer(
+            invocation -> {
+              User user =
+                  new User(1l, "Test", "User", "testuser", "password", "testemail@test.com", null);
+              Family family =
+                  new Family(
+                      invocation.getArgument(0), "Test", "ffffff", "America/Chicago", null, null);
+              FamilyMembers owner = new FamilyMembers(user, family, Role.OWNER, "ffffff");
+              user.setFamilies(new HashSet<>(Collections.singleton(owner)));
+              family.setMembers(new HashSet<>(Collections.singleton(owner)));
+              return new MemberInvite(family, invocation.getArgument(1), invocation.getArgument(2));
+            });
+    MemberInviteDto request =
+        new MemberInviteDtoBuilder()
+            .withFamilyId(1l)
+            .withPersistence(false)
+            .withRecipientEmail("testemail@test.com")
+            .withInitialRole(Role.ADULT)
+            .build();
 
     /* When */
     ResponseEntity<?> response = familyController.generateInvite(request);
@@ -211,17 +227,21 @@ public class FamilyControllerTest {
   @Test
   public void when_generate_persistent_invite_then_invite_code_populated_on_response() {
     /* Given */
-    when(inviteService.generatePersistentMemberInvite(any(Long.class))).thenAnswer(invocation -> {
-      Family family =
-          new Family(invocation.getArgument(0), "Test", "ffffff", "America/Chicago", null, null);
-      User user = new User(1l, "Test", "User", "testuser", "password", "testemail@test.com", null);
-      FamilyMembers member = new FamilyMembers(user, family, Role.OWNER, "eaeaea");
-      family.addMember(member);
-      user.setFamilies(Collections.singleton(member));
-      InviteCode invite = new InviteCode(true);
-      family.setInviteCode(invite);
-      return FamilyDto.fromFamilyObj(family, user);
-    });
+    when(inviteService.generatePersistentMemberInvite(any(Long.class)))
+        .thenAnswer(
+            invocation -> {
+              Family family =
+                  new Family(
+                      invocation.getArgument(0), "Test", "ffffff", "America/Chicago", null, null);
+              User user =
+                  new User(1l, "Test", "User", "testuser", "password", "testemail@test.com", null);
+              FamilyMembers member = new FamilyMembers(user, family, Role.OWNER, "eaeaea");
+              family.addMember(member);
+              user.setFamilies(Collections.singleton(member));
+              InviteCode invite = new InviteCode(true);
+              family.setInviteCode(invite);
+              return FamilyDto.fromFamilyObj(family, user);
+            });
     MemberInviteDto request =
         new MemberInviteDtoBuilder().withFamilyId(1l).withPersistence(true).build();
 
@@ -271,13 +291,18 @@ public class FamilyControllerTest {
   @Test
   public void transferOwnership_success() {
     /* Given */
-    when(familyService.transferOwnership(any(FamilyDto.class))).thenAnswer(
-        invocation -> mockServiceResponse(invocation.getArgument(0), false, false, false, false));
-    FamilyDto request = new FamilyDtoBuilder().withId(1l)
-        .withOwner(new FamilyMemberDtoBuilder()
-            .withUser(new UserDtoBuilder().withUsername("testuser").build())
-            .build())
-        .build();
+    when(familyService.transferOwnership(any(FamilyDto.class)))
+        .thenAnswer(
+            invocation ->
+                mockServiceResponse((FamilyDto) invocation.getArgument(0), false, false, false, false));
+    FamilyDto request =
+        new FamilyDtoBuilder()
+            .withId(1l)
+            .withOwner(
+                new FamilyMemberDtoBuilder()
+                    .withUser(new UserDtoBuilder().withUsername("testuser").build())
+                    .build())
+            .build();
 
     /* When */
     ResponseEntity<?> response = familyController.transferOwnership(request);
@@ -288,8 +313,26 @@ public class FamilyControllerTest {
     assertEquals(200, response.getStatusCodeValue());
   }
 
-  private FamilyDto mockServiceResponse(FamilyDto request, boolean throwUser, boolean throwFamily,
-      boolean throwAuth, boolean throwBadRequest)
+  private FamilyDto mockServiceResponse(
+      Long familyId,
+      boolean throwUser,
+      boolean throwFamily,
+      boolean throwAuth,
+      boolean throwBadRequest) {
+    return mockServiceResponse(
+        new FamilyDtoBuilder().withId(familyId).build(),
+        throwUser,
+        throwFamily,
+        throwAuth,
+        throwBadRequest);
+  }
+
+  private FamilyDto mockServiceResponse(
+      FamilyDto request,
+      boolean throwUser,
+      boolean throwFamily,
+      boolean throwAuth,
+      boolean throwBadRequest)
       throws UserNotFoundException, ResourceNotFoundException, AuthorizationException {
     if (throwUser) {
       throw new UserNotFoundException(ApiExceptionCode.USER_DOESNT_EXIST);
@@ -304,32 +347,40 @@ public class FamilyControllerTest {
     if (throwBadRequest) {
       throw new BadRequestException(ApiExceptionCode.REQUIRED_PARAM_MISSING);
     }
-    UserDto requestingUser = new UserDtoBuilder().withFirstName("Test")
-        .withLastName("User")
-        .withUsername("testuser")
+    UserDto requestingUser =
+        new UserDtoBuilder()
+            .withFirstName("Test")
+            .withLastName("User")
+            .withUsername("testuser")
+            .withId(1l)
+            .withEmail("testuser@test.com")
+            .build();
+    return new FamilyDtoBuilder()
         .withId(1l)
-        .withEmail("testuser@test.com")
-        .build();
-    return new FamilyDtoBuilder().withId(1l)
         .withEventColor("ffffff")
         .withInviteCode(null)
         .withName("Test Family")
         .withTimezone("America/Chicago")
         .withRequestingUser(requestingUser)
         .withOwner(new FamilyMemberDto(requestingUser, "ffffff", 1l, Role.OWNER))
-        .withMembers(new HashSet<>() {
-          {
-            add(new FamilyMemberDto(requestingUser, "ffffff", 1l, Role.OWNER));
-            add(new FamilyMemberDto(
-                new UserDtoBuilder().withId(2l)
-                    .withEmail("testuser2@test.com")
-                    .withFirstName("Test")
-                    .withLastName("User2")
-                    .withUsername("testuser2")
-                    .build(),
-                "eaeaea", 1l, Role.ADMIN));
-          }
-        })
+        .withMembers(
+            new HashSet<>() {
+              {
+                add(new FamilyMemberDto(requestingUser, "ffffff", 1l, Role.OWNER));
+                add(
+                    new FamilyMemberDto(
+                        new UserDtoBuilder()
+                            .withId(2l)
+                            .withEmail("testuser2@test.com")
+                            .withFirstName("Test")
+                            .withLastName("User2")
+                            .withUsername("testuser2")
+                            .build(),
+                        "eaeaea",
+                        1l,
+                        Role.ADMIN));
+              }
+            })
         .build();
   }
 
@@ -338,24 +389,31 @@ public class FamilyControllerTest {
     if (throwUser) {
       throw new UserNotFoundException(ApiExceptionCode.USER_DOESNT_EXIST);
     }
-    UserDto requestingUser = new UserDtoBuilder().withFirstName("Test")
-        .withLastName("User")
-        .withUsername("testuser")
-        .withId(userId)
-        .withEmail("testuser@test.com")
-        .build();
+    UserDto requestingUser =
+        new UserDtoBuilder()
+            .withFirstName("Test")
+            .withLastName("User")
+            .withUsername("testuser")
+            .withId(userId)
+            .withEmail("testuser@test.com")
+            .build();
     List<FamilyDto> response = new ArrayList<>();
     for (int i = 1; i <= numResponse; i++) {
-      response.add(new FamilyDtoBuilder().withId(Long.valueOf(i))
-          .withEventColor("ffffff")
-          .withInviteCode(null)
-          .withName("Test Family " + i)
-          .withTimezone("America/Chicago")
-          .withRequestingUser(requestingUser)
-          .withOwner(new FamilyMemberDto(requestingUser, "ffffff", Long.valueOf(i), Role.OWNER))
-          .withMembers(new HashSet<>(Collections.singleton(
-              new FamilyMemberDto(requestingUser, "ffffff", Long.valueOf(i), Role.OWNER))))
-          .build());
+      response.add(
+          new FamilyDtoBuilder()
+              .withId(Long.valueOf(i))
+              .withEventColor("ffffff")
+              .withInviteCode(null)
+              .withName("Test Family " + i)
+              .withTimezone("America/Chicago")
+              .withRequestingUser(requestingUser)
+              .withOwner(new FamilyMemberDto(requestingUser, "ffffff", Long.valueOf(i), Role.OWNER))
+              .withMembers(
+                  new HashSet<>(
+                      Collections.singleton(
+                          new FamilyMemberDto(
+                              requestingUser, "ffffff", Long.valueOf(i), Role.OWNER))))
+              .build());
     }
     return response;
   }

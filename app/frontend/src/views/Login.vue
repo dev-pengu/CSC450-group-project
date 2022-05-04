@@ -5,35 +5,30 @@
     <v-row justify="center">
       <v-col cols="10" sm="5" md="4">
         <v-card elevation="4">
-          <v-card-text>
+          <v-card-text class="pb-0">
             <v-form v-model="valid">
               <v-text-field
-                v-model="formData.username"
+                v-model="formData.usernameEmail"
                 color="foa_button"
                 prepend-icon="mdi-account"
-                :rules="usernameRules"
-                label="Username"
-                required
+                :rules="required"
+                label="Username or Email"
+                :disabled="loading"
               />
               <v-text-field
                 v-model="formData.password"
                 color="foa_button"
-                :rules="passwordRules"
+                :rules="required"
                 prepend-icon="mdi-lock"
                 :append-icon="showPass ? 'mdi-eye' : 'mdi-eye-off'"
                 :type="showPass ? 'text' : 'password'"
                 label="Password"
-                required
+                :disabled="loading"
                 @keyup.enter="submit"
                 @click:append="showPass = !showPass"
               />
-              <div class="text-center">
-                <span style="cursor: pointer" class="foa_link--text text-decoration-underline" to="#" @click="sendReset"
-                  >Forgot your password?</span
-                >
-              </div>
             </v-form>
-            <v-alert v-if="error" class="mb-0" text type="error">{{ errorMsg }}</v-alert>
+            <v-alert v-if="error" class="my-2" text type="error">{{ errorMsg }}</v-alert>
           </v-card-text>
           <v-card-actions class="justify-center">
             <v-btn
@@ -47,7 +42,10 @@
               >Login</v-btn
             >
           </v-card-actions>
-          <v-card-text>
+          <v-card-text class="pt-2">
+            <div class="text-center">
+              <span class="foa_link--text text-decoration-underline" @click="sendReset">Forgot your password?</span>
+            </div>
             <div class="text-center">
               Don't have an account? <router-link to="/signup" class="foa_link--text">Sign up now!</router-link>
             </div>
@@ -67,10 +65,9 @@ export default {
   components: {},
   data: () => ({
     valid: false,
-    usernameRules: [(v) => !!v || 'Username is required'],
-    passwordRules: [(v) => !!v || 'Password is required'],
+    required: [(v) => !!v || 'This field is required'],
     formData: {
-      username: '',
+      usernameEmail: '',
       password: '',
     },
     error: false,
@@ -80,14 +77,26 @@ export default {
   }),
   methods: {
     ...mapActions(['loginUser', 'showSnackbar']),
+    isEmail(usernameEmail) {
+      return /.+@.+\..+/.test(usernameEmail);
+    },
     async submit() {
+      if (!this.valid) {
+        return;
+      }
       try {
         this.loading = true;
         this.error = false;
         this.errorMsg = '';
         await api.getCsrf();
-
-        const res = await this.loginUser(this.formData);
+        const userCredentials = {};
+        userCredentials.password = this.formData.password.trim();
+        if (this.isEmail(this.formData.usernameEmail)) {
+          userCredentials.email = this.formData.usernameEmail;
+        } else {
+          userCredentials.username = this.formData.usernameEmail;
+        }
+        const res = await this.loginUser(userCredentials);
         if (res.status === 200) {
           this.$vuetify.theme.dark = res.data.useDarkMode;
           localStorage.setItem('darkMode', this.$vuetify.theme.dark.toString());
@@ -107,14 +116,14 @@ export default {
       this.loading = true;
       this.error = false;
       this.errorMsg = '';
-      if (this.formData.username === '') {
+      if (this.formData.usernameEmail === '' || this.isEmail(this.formData.usernameEmail)) {
         this.loading = false;
         this.error = true;
-        this.errorMsg = 'Please supply a username to reset your password';
+        this.errorMsg = 'Please supply a username to reset your password.';
         return;
       }
       try {
-        api.sendResetCode(this.formData);
+        api.sendResetCode(this.formData.usernameEmail.trim());
         this.showSnackbar({ type: 'info', message: 'An email has been sent to your email on file.', timeout: 3000 });
       } catch (err) {
         this.error = true;

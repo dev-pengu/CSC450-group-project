@@ -29,7 +29,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-@CrossOrigin(origins = "http://localhost:8081")
 @RestController
 @RequestMapping("/api/v1/family")
 public class FamilyController {
@@ -54,10 +53,16 @@ public class FamilyController {
     return new ResponseEntity<FamilyDto>(createdFamily, HttpStatus.CREATED);
   }
 
-  @PostMapping("/get-family")
-  public ResponseEntity<FamilyDto> getFamily(@RequestBody FamilyDto familyRequest) {
-    FamilyDto family = familyService.getFamily(familyRequest);
+  @GetMapping()
+  public ResponseEntity<FamilyDto> getFamily(@RequestParam("id") Long familyId) {
+    FamilyDto family = familyService.getFamily(familyId);
     return new ResponseEntity<FamilyDto>(family, HttpStatus.OK);
+  }
+
+  @DeleteMapping("/leave")
+  public ResponseEntity<String> leaveFamily(@RequestParam("id") Long familyId) {
+    familyService.leaveFamily(familyId);
+    return new ResponseEntity<String>("Successfully left family", HttpStatus.OK);
   }
 
   @GetMapping("/get-family")
@@ -95,6 +100,12 @@ public class FamilyController {
   public ResponseEntity<FamilyDto> updateFamily(@RequestBody FamilyDto familyRequest) {
     FamilyDto family = familyService.updateFamily(familyRequest);
     return new ResponseEntity<FamilyDto>(family, HttpStatus.OK);
+  }
+
+  @DeleteMapping("/admin/removeMember")
+  public ResponseEntity<String> removeMember(@RequestParam("familyId") Long familyId, @RequestParam("userId") Long userId) {
+    familyService.removeMember(familyId, userId);
+    return new ResponseEntity<>("Member removed successfully.", HttpStatus.OK);
   }
 
   @DeleteMapping("/admin/delete")

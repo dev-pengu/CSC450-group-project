@@ -6,6 +6,8 @@ import com.familyorg.familyorganizationapp.domain.PollVote;
 public interface PollVoteRepositoryCustom {
   List<PollVote> getUnvotedPolls(Long userId);
 
+  List<PollVote> getVotesForDeletionByUserAndFamily(Long userId, Long familyId);
+
   void deleteAllByUserIdAndPoll(List<Long> userIds, Long pollId);
 
   void deleteByPollId(Long pollId);

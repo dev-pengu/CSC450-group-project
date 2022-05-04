@@ -354,37 +354,39 @@ public class ShoppingListServiceImpl implements ShoppingListService {
                     .collect(Collectors.toList()),
             request.getIdsByField(ShoppingListField.SHOPPING_LIST)));
 
-    // TODO: update this to use family service timezone getter method
-    TimeZone timezone = TimeZone.getTimeZone(requestingUser.getTimezone());
     response.setSearchFilters(getSearchFilters(lists));
     response.setLists(
         lists.stream()
             .map(
-                list ->
-                    new ShoppingListDtoBuilder()
-                        .withId(list.getId())
-                        .withDescription(list.getDescription())
-                        .withColor(list.getFamily().getEventColor())
-                        .setCreatedBy(UserDto.fromUserObj(list.getCreatedBy()))
-                        .withCreated(
-                            DateUtil.toTimezone(
-                                list.getCreatedDatetime(), TimeZone.getDefault(), timezone))
-                        .withFamilyId(list.getFamily().getId())
-                        .setDefault(list.getDefault())
-                        .setItems(
-                            list.getItems().stream()
-                                .map(
-                                    item ->
-                                        new ShoppingListItemDtoBuilder()
-                                            .withId(item.getId())
-                                            .withDescription(item.getDescription())
-                                            .withAmount(item.getAmount())
-                                            .withUnits(item.getUnit())
-                                            .withNotes(item.getNotes())
-                                            .setAddedBy(item.getAddedBy())
-                                            .build())
-                                .collect(Collectors.toList()))
-                        .build())
+                list -> {
+                  TimeZone timezone =
+                      familyService.getUserTimeZoneOrDefault(requestingUser, list.getFamily());
+
+                  return new ShoppingListDtoBuilder()
+                      .withId(list.getId())
+                      .withDescription(list.getDescription())
+                      .withColor(list.getFamily().getEventColor())
+                      .setCreatedBy(UserDto.fromUserObj(list.getCreatedBy()))
+                      .withCreated(
+                          DateUtil.toTimezone(
+                              list.getCreatedDatetime(), TimeZone.getDefault(), timezone))
+                      .withFamilyId(list.getFamily().getId())
+                      .setDefault(list.getDefault())
+                      .setItems(
+                          list.getItems().stream()
+                              .map(
+                                  item ->
+                                      new ShoppingListItemDtoBuilder()
+                                          .withId(item.getId())
+                                          .withDescription(item.getDescription())
+                                          .withAmount(item.getAmount())
+                                          .withUnits(item.getUnit())
+                                          .withNotes(item.getNotes())
+                                          .setAddedBy(item.getAddedBy())
+                                          .build())
+                              .collect(Collectors.toList()))
+                      .build();
+                })
             .collect(Collectors.toList()));
     return response;
   }
