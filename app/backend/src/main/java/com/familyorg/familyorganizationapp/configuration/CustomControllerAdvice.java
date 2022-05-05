@@ -1,5 +1,6 @@
 package com.familyorg.familyorganizationapp.configuration;
 
+import com.familyorg.familyorganizationapp.Exception.ApiExceptionCode;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import org.slf4j.Logger;
@@ -88,7 +89,8 @@ public class CustomControllerAdvice {
     if (((AuthorizationException) e).isRedirect()) {
       errorResponseBuilder.addRedirect("/login");
     }
-    return new ResponseEntity<>(errorResponseBuilder.build(), HttpStatus.UNAUTHORIZED);
+    return new ResponseEntity<>(errorResponseBuilder.build(), e.getApiCode().equals(
+      ApiExceptionCode.USER_NOT_LOGGED_IN) ? HttpStatus.FORBIDDEN : HttpStatus.UNAUTHORIZED);
   }
 
 

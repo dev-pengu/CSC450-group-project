@@ -1,8 +1,10 @@
 package com.familyorg.familyorganizationapp.controller;
 
+import com.familyorg.familyorganizationapp.DTO.EventRepetitionDto;
 import com.familyorg.familyorganizationapp.domain.search.SearchFilter;
 import java.util.List;
 import java.util.Optional;
+import org.apache.coyote.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,6 +72,12 @@ public class CalendarController {
   public ResponseEntity<String> updateEvent(@RequestBody CalendarEventDto request) {
     calendarService.updateEvent(request);
     return new ResponseEntity<>("Calendar event updated successfully.", HttpStatus.OK);
+  }
+
+  @PatchMapping("/event/schedule")
+  public ResponseEntity<String> updateRecurrenceSchedule(@RequestBody EventRepetitionDto request) {
+    calendarService.updateRecurringSchedule(request);
+    return new ResponseEntity<>("Schedule updated successfuly.", HttpStatus.OK);
   }
 
   @DeleteMapping()

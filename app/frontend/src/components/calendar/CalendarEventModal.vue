@@ -1,6 +1,6 @@
 <template>
   <div class="calendarEventModal d-inline-block">
-    <v-dialog v-model="confirmBreakRecurring">
+    <v-dialog v-model="confirmBreakRecurring" max-width="600">
       <v-card>
         <v-card-title>Confirm Update</v-card-title>
         <v-card-text
@@ -41,11 +41,6 @@
               v-model="eventData.description"
               label="Title"
               outlined
-              @change="
-                () => {
-                  if (!loading) eventCoreUpdated = true;
-                }
-              "
             ></v-text-field>
             <div class="d-flex justify-space-around align-center">
               <v-switch
@@ -53,22 +48,12 @@
                 inset
                 color="foa_button"
                 label="All Day"
-                @change="
-                  () => {
-                    if (!loading) eventCoreUpdated = true;
-                  }
-                "
               ></v-switch>
               <v-switch
                 v-model="eventData.isRepeating"
                 inset
                 color="foa_button"
                 label="Repeating"
-                @change="
-                  () => {
-                    if (!loading) eventCoreUpdated = true;
-                  }
-                "
               ></v-switch>
             </div>
             <v-sheet
@@ -87,7 +72,8 @@
                     type="number"
                     hint="interval"
                     persistent-hint
-                    @blur="scheduleUpdated = true"
+                    :readonly="!editSchedule && eventData.id !== 0"
+                    :disabled="!editSchedule && eventData.id !== 0"
                   ></v-text-field>
                 </v-col>
                 <v-col cols="6" sm="3">
@@ -99,7 +85,8 @@
                     item-text="display"
                     hint="frequency"
                     persistent-hint
-                    @blur="scheduleUpdated = true"
+                    :readonly="!editSchedule && eventData.id !== 0"
+                    :disabled="!editSchedule && eventData.id !== 0"
                   ></v-select>
                 </v-col>
                 <v-col cols="2" sm="1"> for </v-col>
@@ -110,18 +97,23 @@
                     type="number"
                     hint="times"
                     persistent-hint
-                    @blur="scheduleUpdated = true"
+                    :readonly="!editSchedule && eventData.id !== 0"
+                    :disabled="!editSchedule && eventData.id !== 0"
                   ></v-text-field>
                 </v-col>
                 <v-col cols="5" sm="2"> occurrences</v-col>
               </v-row>
-              <div v-if="eventData.repetitionSchedule.startDate" class="text-caption mb-2">
-                Starting {{ `${new Date(eventData.repetitionSchedule.startDate).toDateString()}` }}
+              <div v-if="eventData.id > 0" class="d-flex">
+                <div v-if="eventData.repetitionSchedule.startDate" class="text-caption mb-2">
+                  Starting {{ `${new Date(eventData.repetitionSchedule.startDate).toDateString()}` }}
+                </div>
+                <v-spacer></v-spacer>
+                <v-btn v-if="!editSchedule" icon small @click="editSchedule = true"><v-icon>mdi-pencil</v-icon></v-btn>
+                <div v-else>
+                  <v-btn :color="btnColor" icon small @click="updateRepetitionSchedule"><v-icon>mdi-content-save-outline</v-icon></v-btn>
+                  <v-btn color="error" icon small @click="editSchedule = false"><v-icon>mdi-cancel</v-icon></v-btn>
+                </div>
               </div>
-              <v-alert v-if="showScheduleMessage"
-                >You are changing the Series. Doing so will update any future events and any events no longer in the
-                series will be recreated.</v-alert
-              >
             </v-sheet>
             <v-row align="center" justify="center">
               <v-col cols="6">
@@ -143,11 +135,6 @@
                       readonly
                       v-bind="attrs"
                       v-on="on"
-                      @change="
-                        () => {
-                          if (!loading) eventCoreUpdated = true;
-                        }
-                      "
                     ></v-text-field>
                   </template>
                   <v-date-picker v-model="eventData.startDate" no-title scrollable>
@@ -177,11 +164,6 @@
                       readonly
                       v-bind="attrs"
                       v-on="on"
-                      @change="
-                        () => {
-                          if (!loading) eventCoreUpdated = true;
-                        }
-                      "
                     ></v-text-field>
                   </template>
                   <v-time-picker
@@ -213,11 +195,6 @@
                       readonly
                       v-bind="attrs"
                       v-on="on"
-                      @change="
-                        () => {
-                          if (!loading) eventCoreUpdated = true;
-                        }
-                      "
                     ></v-text-field>
                   </template>
                   <v-date-picker v-model="eventData.endDate" no-title scrollable>
@@ -247,11 +224,6 @@
                       readonly
                       v-bind="attrs"
                       v-on="on"
-                      @change="
-                        () => {
-                          if (!loading) eventCoreUpdated = true;
-                        }
-                      "
                     ></v-text-field>
                   </template>
                   <v-time-picker
@@ -270,11 +242,6 @@
               label="Family Event"
               hint="If yes, all members will be assigned"
               persistent-hint
-              @change="
-                () => {
-                  if (!loading) eventCoreUpdated = true;
-                }
-              "
             ></v-switch>
             <v-select
               v-if="!eventData.familyEvent"
@@ -285,11 +252,6 @@
               chips
               item-text="display"
               item-value="id"
-              @change="
-                () => {
-                  if (!loading) eventCoreUpdated = true;
-                }
-              "
             ></v-select>
             <v-textarea v-model="eventData.notes" class="mt-2" outlined label="Additional Notes"></v-textarea>
           </v-form>
@@ -348,6 +310,7 @@ export default {
           frequency: 'DAILY',
           count: 1,
           startDate: null,
+          owningEventId: null,
         },
         isRecurring: false,
         creator: '',
@@ -386,6 +349,7 @@ export default {
         frequency: 'DAILY',
         count: 1,
         startDate: null,
+        owningEventId: null,
       },
       isRecurring: false,
       creator: '',
@@ -408,8 +372,8 @@ export default {
     ],
     confirmBreakRecurring: false,
     scheduleUpdated: false,
-    showScheduleMessage: false,
     eventCoreUpdated: false,
+    editSchedule: false,
   }),
   computed: {
     ...mapGetters({ getFamily: 'getFamily' }),
@@ -475,20 +439,14 @@ export default {
         } finally {
           this.loading = false;
         }
-      } else if (this.scheduleUpdated && !this.showScheduleMessage) {
-        this.showScheduleMessage = true;
-      } else if (this.scheduleUpdated && this.showScheduleMessage) {
-        this.showScheduleMessage = false;
-        if (this.eventData.isRecurring && this.eventCoreUpdated) {
-          this.confirmBreakRecurring = true;
-        } else {
-          this.updateEvent();
-        }
+      } else if (this.eventData.isRecurring) {
+        this.confirmBreakRecurring = true;
       } else {
         this.updateEvent();
       }
     },
     async updateEvent() {
+      this.dialogOpen=false;
       const req = {
         id: this.eventData.isRecurring ? null : this.eventData.id,
         allDay: this.eventData.allDay,
@@ -508,12 +466,6 @@ export default {
           ? []
           : this.eventData.assignees.map((assignee) => ({ userId: assignee.id })),
       };
-      if (this.eventData.isRepeating) {
-        req.repetitionSchedule = {
-          ...this.eventData.repetitionSchedule,
-          id: this.eventData.repetitionSchedule.id === 0 ? null : this.eventData.repetitionSchedule.id,
-        };
-      }
       try {
         this.loading = true;
         const res = await api.updateCalendarEvent(req);
@@ -613,6 +565,41 @@ export default {
         this.loading = false;
       }
     },
+    async updateRepetitionSchedule() {
+      try {
+        this.loading = true;
+        const res = await api.updateSchedule(this.eventData.repetitionSchedule);
+        if (res.status === 200) {
+          this.showSnackbar({
+            type: 'success',
+            message: 'Event repetitions updated successfully.',
+            timeout: 3000,
+          });
+          this.editSchedule = false;
+        } else if (res.data.errorCode === 1007) {
+          this.showSnackbar({
+            type: 'error',
+            message: 'You do not have permission to edit this schedule.',
+            timeout: 3000,
+          });
+        } else {
+          this.showSnackbar({
+            type: 'error',
+            message: 'There was an issue updating the recurrences, if the issue persists please contact support.',
+            timeout: 3000,
+          });
+        }
+      } catch (err) {
+        console.log(err);
+        this.showSnackbar({
+          type: 'error',
+          message: 'There was an issue updating the recurrences, if the issue persists please contact support.',
+          timeout: 3000,
+        });
+      } finally {
+        this.loading = false;
+      }
+    }
   },
 };
 </script>

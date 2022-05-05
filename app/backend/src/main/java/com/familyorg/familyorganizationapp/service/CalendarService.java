@@ -4,6 +4,7 @@ import com.familyorg.familyorganizationapp.DTO.CalendarDto;
 import com.familyorg.familyorganizationapp.DTO.CalendarEventDto;
 import com.familyorg.familyorganizationapp.DTO.CalendarSearchRequestDto;
 import com.familyorg.familyorganizationapp.DTO.CalendarSearchResponseDto;
+import com.familyorg.familyorganizationapp.DTO.EventRepetitionDto;
 import com.familyorg.familyorganizationapp.domain.search.SearchFilter;
 import java.util.List;
 
@@ -35,5 +36,7 @@ public interface CalendarService {
   void addAssignee(CalendarEventDto request);
 
   void removeAssignee(CalendarEventDto request);
+
+  void updateRecurringSchedule(EventRepetitionDto request);
 
 }

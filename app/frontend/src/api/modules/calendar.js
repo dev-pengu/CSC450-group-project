@@ -60,4 +60,11 @@ export default {
       },
     });
   },
+  updateSchedule(req) {
+    return http.patch('/calendar/event/schedule', req, {
+      validateStatus(status) {
+        return status < 500;
+      },
+    });
+  }
 }

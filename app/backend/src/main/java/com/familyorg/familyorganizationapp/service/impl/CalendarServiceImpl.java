@@ -1,5 +1,6 @@
 package com.familyorg.familyorganizationapp.service.impl;
 
+import com.familyorg.familyorganizationapp.DTO.EventRepetitionDto;
 import com.familyorg.familyorganizationapp.Exception.ApiException;
 import com.familyorg.familyorganizationapp.domain.FamilyMembers;
 import java.sql.Timestamp;
@@ -251,26 +252,6 @@ public class CalendarServiceImpl implements CalendarService {
               ? TimeZone.getTimeZone(requestingUser.getTimezone())
               : TimeZone.getTimeZone(family.getTimezone());
 
-      // If there is a repetition schedule, we may need to update the recurring events
-      if (request.getRepetitionSchedule() != null) {
-        EventRepetitionSchedule newRepetitionSchedule =
-            new EventRepetitionSchedule(event, request.getRepetitionSchedule());
-        if (newRepetitionSchedule.getId() == event.getEventRepetitionSchedule().getId()) {
-          if (newRepetitionSchedule.dataFieldsEquals(event.getEventRepetitionSchedule())) {
-            // The repetition schedule isn't new and there has been a change, so just update the
-            // values, and recalc recurring events
-            scheduleRepository.save(newRepetitionSchedule);
-            event.setEventRepetitionSchedule(newRepetitionSchedule);
-            event.setRecurringEventInfo(updateFutureEvents(newRepetitionSchedule, event));
-          }
-        } else {
-          // The repetition schedule is new, so we need to save it to the db, and add recurring
-          // events
-          EventRepetitionSchedule savedSchedule = scheduleRepository.save(newRepetitionSchedule);
-          event.setEventRepetitionSchedule(savedSchedule);
-          event.setRecurringEventInfo(addRepeatingEvents(savedSchedule, event));
-        }
-      }
       // update the event fields
       if (event.isAllDay() != request.isAllDay()) {
         event.setAllDay(request.isAllDay());
@@ -396,7 +377,7 @@ public class CalendarServiceImpl implements CalendarService {
                     .withId(calendar.getId())
                     .withDescription(calendar.getDescription())
                     .withFamily(calendar.getFamily().getId())
-                  .setDefault(calendar.isDefault())
+                    .setDefault(calendar.isDefault())
                     .build())
         .collect(Collectors.toList());
   }
@@ -783,8 +764,8 @@ public class CalendarServiceImpl implements CalendarService {
     return recurringEvents;
   }
 
-  private List<RecurringCalendarEvent> updateFutureEvents(
-      EventRepetitionSchedule schedule, CalendarEvent parentEvent) {
+  private List<RecurringCalendarEvent> updateFutureEvents(CalendarEvent parentEvent) {
+    EventRepetitionSchedule schedule = parentEvent.getEventRepetitionSchedule();
     List<RecurringCalendarEvent> returnEvents = new ArrayList<>();
     List<RecurringCalendarEvent> events =
         recurringEventRepository.getOrderedEventsByOriginatingId(parentEvent.getId());
@@ -827,7 +808,11 @@ public class CalendarServiceImpl implements CalendarService {
         i = i - 1;
         continue;
       }
-      if (i > events.size()) {
+      if (runningStartDate.before(parentEvent.getEventRepetitionSchedule().getStartDate())) {
+        continue;
+      }
+      if (i >= events.size()) {
+
         RecurringCalendarEvent recurringEvent = new RecurringCalendarEvent();
         recurringEvent.setOriginatingEvent(parentEvent);
         recurringEvent.setStartDatetime(new Timestamp(runningStartDate.getTime()));
@@ -1072,6 +1057,57 @@ public class CalendarServiceImpl implements CalendarService {
           ApiExceptionCode.REQUIRED_PARAM_MISSING,
           "Either an event id or a recurring id must be supplied.");
     }
+  }
+
+  @Override
+  @Transactional
+  public void updateRecurringSchedule(EventRepetitionDto request) {
+    if (request.getOwningEventId() == null) {
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING, "Owning event id cannot be null.");
+    }
+    if (request.getId() == null) {
+      throw new BadRequestException(ApiExceptionCode.REQUIRED_PARAM_MISSING, "Id cannot be null.");
+    }
+    if (request.getInterval() == null) {
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING, "Interval cannot be null.");
+    }
+    if (request.getFrequency() == null) {
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING, "Frequency cannot be null.");
+    }
+    if (request.getCount() == null) {
+      throw new BadRequestException(
+          ApiExceptionCode.REQUIRED_PARAM_MISSING, "Count cannot be null.");
+    }
+    User requestingUser = userService.getRequestingUser();
+    Optional<CalendarEvent> event = eventRepository.findById(request.getOwningEventId());
+    if (event.isEmpty()) {
+      throw new ResourceNotFoundException(
+          ApiExceptionCode.EVENT_DOESNT_EXIST,
+          "Calendar event with id " + request.getOwningEventId() + " not found.");
+    }
+    boolean hasAppropriatePermissions =
+        familyService.verfiyMinimumRoleSecurity(
+            event.get().getCalendar().getFamily(), requestingUser, Role.ADMIN);
+    if (!hasAppropriatePermissions) {
+      hasAppropriatePermissions = event.get().getCreatedBy().getId().equals(requestingUser.getId());
+    }
+    if (!hasAppropriatePermissions) {
+      throw new AuthorizationException(
+          ApiExceptionCode.USER_PRIVILEGES_TOO_LOW, "User not authorized to complete this action.");
+    }
+    recurringEventRepository.deleteAll(event.get().getRecurringEventInfo());
+    event.get().getRecurringEventInfo().removeAll(event.get().getRecurringEventInfo());
+    event.get().getEventRepetitionSchedule().setInterval(request.getInterval());
+    event.get().getEventRepetitionSchedule().setFrequency(request.getFrequency());
+    event.get().getEventRepetitionSchedule().setCount(request.getCount());
+    event
+        .get()
+        .getRecurringEventInfo()
+        .addAll(addRepeatingEvents(event.get().getEventRepetitionSchedule(), event.get()));
+    eventRepository.save(event.get());
   }
 
   /**
