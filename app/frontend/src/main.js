@@ -28,13 +28,14 @@ router.beforeEach((to, from, next) => {
 
 http.interceptors.response.use((response) => {
   if (response.status === 403) {
+    store.dispatch('logoutUser');
     router.push('/login');
   }
   return response;
 }, (err) => {
   if (err) {
-    alert(err);
     if (err.response.status === 403) {
+      store.dispatch('logoutUser');
       router.push('/login');
     }
   }
@@ -43,13 +44,14 @@ http.interceptors.response.use((response) => {
 
 authHttp.interceptors.response.use((response) => {
   if (response.status === 403) {
+    store.dispatch('logoutUser');
     router.push('/login');
   }
   return response;
 }, (err) => {
   if (err) {
-    alert(err);
     if (err.response.status === 403) {
+      store.dispatch('logoutUser');
       router.push('/login');
     }
   }
