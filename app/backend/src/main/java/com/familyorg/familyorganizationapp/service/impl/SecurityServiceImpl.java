@@ -2,8 +2,7 @@ package com.familyorg.familyorganizationapp.service.impl;
 
 import com.familyorg.familyorganizationapp.Exception.ApiExceptionCode;
 import com.familyorg.familyorganizationapp.Exception.BadRequestException;
-import java.util.Objects;
-import javax.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
