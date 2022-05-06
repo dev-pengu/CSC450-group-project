@@ -177,7 +177,6 @@ export default {
           });
         }
       } catch (err) {
-        console.log(err);
         this.showSnackbar({
           type: 'error',
           message: 'There was a problem fetching your todos.',
