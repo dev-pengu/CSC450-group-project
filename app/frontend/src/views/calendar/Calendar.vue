@@ -359,6 +359,7 @@ export default {
           frequency: event.repetitionSchedule ? event.repetitionSchedule.frequency : 'DAILY',
           count: event.repetitionSchedule ? event.repetitionSchedule.count : 1,
           startDate: event.repetitionSchedule ? event.repetitionSchedule.startDate : null,
+          owningEventId: event.repetitionSchedule ? event.repetitionSchedule.owningEventId: null,
         },
         isRecurring: event.recurringEvent,
         creator: `${event.createdBy.firstName} ${event.createdBy.lastName}`,
