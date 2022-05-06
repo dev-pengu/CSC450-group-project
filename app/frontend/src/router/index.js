@@ -16,6 +16,8 @@ import Shopping from '../views/shopping-app/Shopping.vue';
 import ShoppingList from '../views/shopping-app/ShoppingList.vue';
 import Calendaring from '../views/calendar/Calendar.vue';
 import CalendarManager from '../views/profile/CalendarManager.vue';
+import TodoDashboard from '../views/todo-app/TodoDashboard.vue';
+import TodoList from '../views/todo-app/TodoList.vue';
 
 Vue.use(VueRouter);
 const routes = [
@@ -41,24 +43,24 @@ const routes = [
     name: 'Login',
     component: Login,
     meta: {
-      title: 'Login'
-    }
+      title: 'Login',
+    },
   },
   {
     path: '/signup',
     name: 'Sign Up',
     component: SignUp,
     meta: {
-      title: 'Sign Up'
-    }
+      title: 'Sign Up',
+    },
   },
   {
     path: '/passwordReset',
     name: 'Password Reset',
     component: PasswordReset,
     meta: {
-      title: 'Reset Password'
-    }
+      title: 'Reset Password',
+    },
   },
   {
     path: '/polls',
@@ -176,9 +178,34 @@ const routes = [
     },
   },
   {
+    path: '/todo',
+    redirect: '/todo/view',
+  },
+  {
+    path: '/todo/view',
+    name: 'Family Todo Lists',
+    component: TodoDashboard,
+    meta: {
+      requiresAuth: true,
+      title: 'Todo Lists',
+    },
+  },
+  {
+    path: '/todo/list',
+    name: 'Todo List',
+    component: TodoList,
+    meta: {
+      requiresAuth: true,
+      title: 'Todo List',
+    },
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'Not Found',
     component: NotFound,
+    meta: {
+      title: 'Not Found',
+    },
   },
 ];
 

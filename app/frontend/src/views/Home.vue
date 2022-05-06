@@ -71,7 +71,11 @@
                       :to="{ path: '/calendar/view', query: { familyId: family.id } }"
                       >Family Calendar</router-link
                     >
-                    <router-link class="d-block foa_link--text" to="/test">Family To Do List</router-link>
+                    <router-link
+                      class="d-block foa_link--text"
+                      :to="{ path: '/todo/view', query: { familyId: family.id, name: family.name } }"
+                      >Family To Do List</router-link
+                    >
                     <router-link
                       class="d-block foa_link--text"
                       :to="{ path: '/polls/view', query: { familyId: family.id, name: family.name } }"
@@ -93,7 +97,6 @@
         </v-sheet>
       </v-col>
       <v-col cols="12" sm="4" md="6">
-        <!-- TODO add polling widget -->
         <PollPreview></PollPreview>
       </v-col>
     </v-row>
@@ -102,17 +105,7 @@
         <CalendarPreview :start="calendarStart" :end="calendarEnd" :calendar-height="500"></CalendarPreview>
       </v-col>
       <v-col cols="12" sm="6">
-        <div class="text-h5 foa_text_header--text mb-3">
-          My To-Do List
-          <v-btn class="pb-1" icon :color="btnColor"><v-icon>mdi-plus-box</v-icon></v-btn>
-        </div>
-        <div v-for="(todo, i) in todos" :key="i" class="d-flex align-center">
-          <v-checkbox color="foa_button" :label="todo.title" hide-details>
-            <template #prepend>
-              <v-sheet height="24" width="8" :color="todo.familyColor"></v-sheet>
-            </template>
-          </v-checkbox>
-        </div>
+        <TodoPreview end="2022-05-08"></TodoPreview>
       </v-col>
     </v-row>
   </div>
@@ -124,6 +117,7 @@ import FamilyModal from '../components/FamilyModal.vue';
 import InviteModal from '../components/InviteUserModal.vue';
 import PollPreview from '../components/poll-app/PollPreview.vue';
 import CalendarPreview from '../components/calendar/CalendarPreview.vue';
+import TodoPreview from '../components/todo-app/TodoPreview.vue';
 import api from '../api';
 import { isAdmin } from '../util/RoleUtil';
 
@@ -134,16 +128,8 @@ export default {
     InviteModal,
     PollPreview,
     CalendarPreview,
+    TodoPreview,
   },
-  data: () => ({
-    // TODO: replace with real api calls
-    events: [],
-    todos: [
-      { title: 'Mow the lawn', familyColor: 'red' },
-      { title: 'File taxes', familyColor: 'orange' },
-      { title: 'Go to the store', familyColor: 'green' },
-    ],
-  }),
   computed: {
     ...mapGetters({ families: 'getFamilies', getFamily: 'getFamily', user: 'getUser' }),
     btnColor() {
@@ -157,6 +143,11 @@ export default {
       const date = new Date();
       date.setDate(date.getDate() + 1);
       return `${date.getFullYear()}-${`0${date.getMonth() + 1}`.slice(-2)}-${date.getDate()}`;
+    },
+    todoEnd() {
+      const date = new Date();
+      date.setDate(date.getDate() + 3);
+      return date.toISOString().substring(0, 10);
     },
   },
   created() {

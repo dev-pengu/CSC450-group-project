@@ -21,7 +21,7 @@
           <v-spacer></v-spacer>
           <v-dialog v-model="addEditDialogState" max-width="500px">
             <template #activator="{ on, attrs }">
-              <v-btn color="foa_button_dark" class="foa_button_text--text" v-bind="attrs" v-on="on"> New Item </v-btn>
+              <v-btn color="foa_button_dark" class="foa_button_text--text" v-bind="attrs" v-on="on">New Item</v-btn>
             </template>
             <v-card>
               <v-card-title class="text-h5 foa_text_header--text justify-center">

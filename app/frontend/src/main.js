@@ -23,38 +23,46 @@ router.beforeEach((to, from, next) => {
 
 router.beforeEach((to, from, next) => {
   document.title = to.meta ? `${to.meta.title} | Happy Home` : 'Happy Home';
-  next()
-})
-
-http.interceptors.response.use((response) => {
-  if (response.status === 403) {
-    router.push('/login');
-  }
-  return response;
-}, (err) => {
-  if (err) {
-    alert(err);
-    if (err.response.status === 403) {
-      router.push('/login');
-    }
-  }
-  return Promise.reject(err);
+  next();
 });
 
-authHttp.interceptors.response.use((response) => {
-  if (response.status === 403) {
-    router.push('/login');
-  }
-  return response;
-}, (err) => {
-  if (err) {
-    alert(err);
-    if (err.response.status === 403) {
+http.interceptors.response.use(
+  (response) => {
+    if (response.status === 403) {
       router.push('/login');
     }
+    return response;
+  },
+  (err) => {
+    if (err) {
+      // eslint-disable-next-line no-alert
+      alert(err);
+      if (err.response.status === 403) {
+        router.push('/login');
+      }
+    }
+    return Promise.reject(err);
   }
-  return Promise.reject(err);
-});
+);
+
+authHttp.interceptors.response.use(
+  (response) => {
+    if (response.status === 403) {
+      router.push('/login');
+    }
+    return response;
+  },
+  (err) => {
+    if (err) {
+      // eslint-disable-next-line no-alert
+      alert(err);
+      if (err.response.status === 403) {
+        router.push('/login');
+      }
+    }
+    return Promise.reject(err);
+  }
+);
 
 new Vue({
   store,
