@@ -1,8 +1,14 @@
 <template>
   <v-app-bar app clipped-left>
     <v-app-bar-nav-icon @click="toggleDrawerState"></v-app-bar-nav-icon>
-    <v-img v-if="$vuetify.theme.dark" max-height="60" max-width="60" contain src="@/assets/logo-dark.png"></v-img>
-    <v-img v-else max-height="60" max-width="60" contain src="@/assets/logo-light.png"></v-img>
+    <v-img
+      v-if="$vuetify.theme.dark"
+      max-height="60"
+      max-width="60"
+      contain
+      src="@/assets/logo-dark-no-text.png"
+    ></v-img>
+    <v-img v-else max-height="60" max-width="60" contain src="@/assets/logo-light-no-text.png"></v-img>
     <v-toolbar-title v-if="$vuetify.breakpoint.smAndUp">Happy Home</v-toolbar-title>
     <v-spacer></v-spacer>
     <v-btn icon :color="darkModeBtnColor" @click="toggleDarkMode">

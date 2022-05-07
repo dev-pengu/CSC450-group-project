@@ -10,7 +10,9 @@
     <v-list-item v-if="$vuetify.breakpoint.mdAndDown">
       <v-list-item-content>
         <v-img height="75%" contain src="@/assets/logo-light.png"></v-img>
-        <v-list-item-title class="text-center foa_nav_link--text font-weight-bold">Family Organization</v-list-item-title>
+        <v-list-item-title class="text-center foa_nav_link--text font-weight-bold">
+          Family Organization
+        </v-list-item-title>
       </v-list-item-content>
     </v-list-item>
     <v-list nav>
@@ -45,7 +47,7 @@ export default {
     navItems: [
       { title: 'Home', icon: 'mdi-home', route: '/dashboard' },
       { title: 'Calendar', icon: 'mdi-calendar', route: '/calendar/view' },
-      { title: 'To-Do', icon: 'mdi-check-circle-outline', route: '/todo' },
+      { title: 'To-Do', icon: 'mdi-check-circle-outline', route: '/todo/view' },
       { title: 'Shopping Lists', icon: 'mdi-cart', route: '/shopping/view' },
       { title: 'Family Polling', icon: 'mdi-chart-box', route: '/polls/view' },
       { title: 'Family Settings', icon: 'mdi-human-male-female-child', route: '/profile/families' },

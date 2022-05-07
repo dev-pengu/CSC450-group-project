@@ -23,40 +23,46 @@ router.beforeEach((to, from, next) => {
 
 router.beforeEach((to, from, next) => {
   document.title = to.meta ? `${to.meta.title} | Happy Home` : 'Happy Home';
-  next()
-})
+  next();
+});
 
-http.interceptors.response.use((response) => {
-  if (response.status === 403) {
-    store.dispatch('logoutUser');
-    router.push('/login');
-  }
-  return response;
-}, (err) => {
-  if (err) {
-    if (err.response.status === 403) {
+http.interceptors.response.use(
+  (response) => {
+    if (response.status === 403) {
       store.dispatch('logoutUser');
       router.push('/login');
     }
+    return response;
+  },
+  (err) => {
+    if (err) {
+      if (err.response.status === 403) {
+        store.dispatch('logoutUser');
+        router.push('/login');
+      }
+    }
+    return Promise.reject(err);
   }
-  return Promise.reject(err);
-});
+);
 
-authHttp.interceptors.response.use((response) => {
-  if (response.status === 403) {
-    store.dispatch('logoutUser');
-    router.push('/login');
-  }
-  return response;
-}, (err) => {
-  if (err) {
-    if (err.response.status === 403) {
+authHttp.interceptors.response.use(
+  (response) => {
+    if (response.status === 403) {
       store.dispatch('logoutUser');
       router.push('/login');
     }
+    return response;
+  },
+  (err) => {
+    if (err) {
+      if (err.response.status === 403) {
+        store.dispatch('logoutUser');
+        router.push('/login');
+      }
+    }
+    return Promise.reject(err);
   }
-  return Promise.reject(err);
-});
+);
 
 new Vue({
   store,
