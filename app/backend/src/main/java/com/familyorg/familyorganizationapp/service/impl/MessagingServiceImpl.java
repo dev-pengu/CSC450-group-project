@@ -163,7 +163,7 @@ public class MessagingServiceImpl implements MessagingService {
 
   @Override
   public String buildInviteContent(String inviteCode, String owner) {
-    String joinLink = "http://" + domain + "/family/join?code=" + inviteCode;
+    String joinLink = "https://" + domain + "/profile/families?code=" + inviteCode;
     String contents = getInviteTemplateContents();
     if (contents == null) {
       return null;
@@ -171,7 +171,7 @@ public class MessagingServiceImpl implements MessagingService {
     contents = contents.replace("|FAMILY-CODE|", inviteCode);
     contents = contents.replace("|JOIN-LINK|", joinLink);
     contents = contents.replace("|OWNER-NAME|", owner);
-    contents = contents.replace("|LOGO-LINK|", "http://" + domain + "/img/logo-light.png");
+    contents = contents.replace("|LOGO-LINK|", "https://" + domain + "/img/logo-light.png");
 
 
     return contents;
@@ -179,13 +179,13 @@ public class MessagingServiceImpl implements MessagingService {
 
   @Override
   public String buildPasswordResetContent(String resetCode) {
-    String resetLink = "http://" + domain + "/passwordReset?code=" + resetCode;
+    String resetLink = "https://" + domain + "/passwordReset?code=" + resetCode;
     String contents = getPasswordResetTemplateContents();
     if (contents == null) {
       return null;
     }
     contents = contents.replace("|RESET-LINK|", resetLink);
-    contents = contents.replace("|LOGO-LINK|", "http://" + domain + "/img/logo-light.png");
+    contents = contents.replace("|LOGO-LINK|", "https://" + domain + "/img/logo-light.png");
 
 
     return contents;
