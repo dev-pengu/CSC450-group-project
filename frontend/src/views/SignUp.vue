@@ -227,10 +227,15 @@ export default {
         if (res.status === 201) {
           const loginRes = await this.loginUser(this.formData);
           if (loginRes.status === 200) {
-            this.$router.push('/');
+            if (this.$route.query.code !== undefined && this.$route.query.code !== '') {
+              this.$router.push(`/profile/families?code=${this.$route.query.code.trim()}`)
+            } else {
+              this.$router.push('/');
+            }
+          } else if (this.$route.query.code !== undefined && this.$route.query.code !== '') {
+              this.$router.push(`/login?code=${this.$route.query.code}`);
           } else {
-            this.errorMsg = 'We ran into an error creating your user. Please try again in a few minutes.';
-            this.error = true;
+            this.$router.push('/login');
           }
         } else {
           this.errorMsg = 'We ran into an error creating your user. Please try again in a few minutes.';
