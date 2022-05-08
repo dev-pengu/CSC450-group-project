@@ -11,6 +11,7 @@ public enum ApiExceptionCode {
   USER_NOT_IN_FAMILY(1006),
   USER_PRIVILEGES_TOO_LOW(1007),
   ACTION_NOT_PERMITTED(1008),
+  BAD_CREDENTIALS(1009),
 
   // Request format related exceptions
   REQUIRED_PARAM_MISSING(2000),

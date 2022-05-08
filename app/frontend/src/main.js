@@ -9,7 +9,7 @@ Vue.config.productionTip = false;
 
 router.beforeEach((to, from, next) => {
   if (to.matched.some((record) => record.meta.requiresAuth)) {
-    if (!store.getters.isLoggedIn) {
+    if (!store.getters.isLoggedIn && from.path !== '/login') {
       next({
         path: '/login',
       });
@@ -28,7 +28,7 @@ router.beforeEach((to, from, next) => {
 
 http.interceptors.response.use(
   (response) => {
-    if (response.status === 403) {
+    if (response.status === 403 && router.currentRoute.path !== '/login') {
       store.dispatch('logoutUser');
       router.push('/login');
     }
@@ -36,7 +36,7 @@ http.interceptors.response.use(
   },
   (err) => {
     if (err) {
-      if (err.response.status === 403) {
+      if (err.response.status === 403 && router.currentRoute.path !== '/login') {
         store.dispatch('logoutUser');
         router.push('/login');
       }
@@ -47,7 +47,7 @@ http.interceptors.response.use(
 
 authHttp.interceptors.response.use(
   (response) => {
-    if (response.status === 403) {
+    if (response.status === 403 && router.currentRoute.path !== '/login') {
       store.dispatch('logoutUser');
       router.push('/login');
     }
@@ -55,7 +55,7 @@ authHttp.interceptors.response.use(
   },
   (err) => {
     if (err) {
-      if (err.response.status === 403) {
+      if (err.response.status === 403 && router.currentRoute.path !== '/login') {
         store.dispatch('logoutUser');
         router.push('/login');
       }
