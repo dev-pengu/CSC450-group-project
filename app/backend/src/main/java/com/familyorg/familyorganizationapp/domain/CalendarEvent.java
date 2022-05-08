@@ -39,13 +39,13 @@ public class CalendarEvent implements Serializable {
   @Column(name = "is_family_event", columnDefinition = "BOOLEAN")
   private Boolean familyEvent;
 
-  @Column(name = "start_datetime", columnDefinition = "TIMESTAMP")
+  @Column(name = "start_datetime", columnDefinition = "TIMESTAMP", nullable = false)
   private Timestamp startDatetime;
 
-  @Column(name = "end_datetime", columnDefinition = "TIMESTAMP")
+  @Column(name = "end_datetime", columnDefinition = "TIMESTAMP", nullable = false)
   private Timestamp endDatetime;
 
-  @Column(name = "description", columnDefinition = "VARCHAR(256)")
+  @Column(name = "description", columnDefinition = "VARCHAR(256)", nullable = false)
   private String description;
 
   @Column(name = "notes", columnDefinition = "TEXT")
@@ -54,14 +54,16 @@ public class CalendarEvent implements Serializable {
   @ManyToOne(fetch = FetchType.LAZY)
   private User createdBy;
 
-  @Column(name = "created_datetime", columnDefinition = "TIMESTAMP")
+  @Column(name = "created_datetime", columnDefinition = "TIMESTAMP", nullable = false)
   private Timestamp createdDatetime;
 
-  @Column(name = "timezone", columnDefinition = "VARCHAR(256)")
+  @Column(name = "timezone", columnDefinition = "VARCHAR(256)", nullable = false)
   private String timezone;
 
   @OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-  @JoinColumn(name = "event_repetition_id", referencedColumnName = "event_repetition_id",
+  @JoinColumn(
+      name = "event_repetition_id",
+      referencedColumnName = "event_repetition_id",
       columnDefinition = "BIGINT")
   private EventRepetitionSchedule eventRepetitionSchedule;
 
@@ -70,7 +72,9 @@ public class CalendarEvent implements Serializable {
 
   @JsonIgnore
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "calendar_id", referencedColumnName = "calendar_id",
+  @JoinColumn(
+      name = "calendar_id",
+      referencedColumnName = "calendar_id",
       columnDefinition = "BIGINT")
   private Calendar calendar;
 
@@ -85,24 +89,35 @@ public class CalendarEvent implements Serializable {
     super();
   }
 
-  public CalendarEvent(Long id, Boolean allDay, Boolean familyEvent, Timestamp startDatetime,
-      Timestamp endDatetime, String description, String notes, User createdBy,
-      Timestamp createdDatetime, EventRepetitionSchedule eventRepetitionSchedule,
-      List<RecurringCalendarEvent> recurringEventInfo, Calendar calendar, String timezone) {
-    super();
+  public CalendarEvent(
+      Long id,
+      Boolean allDay,
+      Boolean familyEvent,
+      Timestamp startDatetime,
+      Timestamp endDatetime,
+      String description,
+      String notes,
+      User createdBy,
+      Timestamp createdDatetime,
+      EventRepetitionSchedule eventRepetitionSchedule,
+      List<RecurringCalendarEvent> recurringEventInfo,
+      Calendar calendar,
+      String timezone) {
+    Objects.requireNonNull(description);
+    Objects.requireNonNull(timezone);
     this.id = id;
     this.allDay = allDay;
     this.familyEvent = familyEvent;
     this.startDatetime = startDatetime;
     this.endDatetime = endDatetime;
-    this.description = description;
-    this.notes = notes;
+    this.description = description.trim();
+    this.notes = notes == null ? null : notes.trim();
     this.createdBy = createdBy;
     this.createdDatetime = createdDatetime;
     this.eventRepetitionSchedule = eventRepetitionSchedule;
     this.recurringEventInfo = recurringEventInfo;
     this.calendar = calendar;
-    this.timezone = timezone;
+    this.timezone = timezone.trim();
   }
 
   public CalendarEvent(CalendarEvent other) {
@@ -166,7 +181,8 @@ public class CalendarEvent implements Serializable {
   }
 
   public void setDescription(String description) {
-    this.description = description;
+    Objects.requireNonNull(description);
+    this.description = description.trim();
   }
 
   public String getNotes() {
@@ -174,7 +190,7 @@ public class CalendarEvent implements Serializable {
   }
 
   public void setNotes(String notes) {
-    this.notes = notes;
+    this.notes = notes == null ? null : notes.trim();
   }
 
   public User getCreatedBy() {
@@ -222,7 +238,8 @@ public class CalendarEvent implements Serializable {
   }
 
   public void setTimezone(String timezone) {
-    this.timezone = timezone;
+    Objects.requireNonNull(timezone);
+    this.timezone = timezone.trim();
   }
 
   public Set<User> getAssignees() {
@@ -235,26 +252,35 @@ public class CalendarEvent implements Serializable {
 
   @Override
   public int hashCode() {
-    return Objects.hash(allDay, createdBy, createdDatetime, description, endDatetime,
-        eventRepetitionSchedule, familyEvent, id, notes, recurringEventInfo, startDatetime,
+    return Objects.hash(
+        allDay,
+        createdBy,
+        createdDatetime,
+        description,
+        endDatetime,
+        eventRepetitionSchedule,
+        familyEvent,
+        id,
+        notes,
+        recurringEventInfo,
+        startDatetime,
         timezone);
   }
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj)
-      return true;
-    if (obj == null)
-      return false;
-    if (getClass() != obj.getClass())
-      return false;
+    if (this == obj) return true;
+    if (obj == null) return false;
+    if (getClass() != obj.getClass()) return false;
     CalendarEvent other = (CalendarEvent) obj;
-    return Objects.equals(allDay, other.allDay) && Objects.equals(createdBy, other.createdBy)
+    return Objects.equals(allDay, other.allDay)
+        && Objects.equals(createdBy, other.createdBy)
         && Objects.equals(createdDatetime, other.createdDatetime)
         && Objects.equals(description, other.description)
         && Objects.equals(endDatetime, other.endDatetime)
         && Objects.equals(eventRepetitionSchedule, other.eventRepetitionSchedule)
-        && Objects.equals(familyEvent, other.familyEvent) && Objects.equals(id, other.id)
+        && Objects.equals(familyEvent, other.familyEvent)
+        && Objects.equals(id, other.id)
         && Objects.equals(notes, other.notes)
         && Objects.equals(recurringEventInfo, other.recurringEventInfo)
         && Objects.equals(startDatetime, other.startDatetime)
@@ -263,10 +289,30 @@ public class CalendarEvent implements Serializable {
 
   @Override
   public String toString() {
-    return "CalendarEvent [id=" + id + ", allDay=" + allDay + ", familyEvent=" + familyEvent
-        + ", startDatetime=" + startDatetime + ", endDatetime=" + endDatetime + ", description="
-        + description + ", notes=" + notes + ", createdBy=" + createdBy + ", createdDatetime="
-        + createdDatetime + ", eventRepetitionSchedule=" + eventRepetitionSchedule
-        + ", recurringEventInfo=" + recurringEventInfo + ", timezone=" + timezone + "]";
+    return "CalendarEvent [id="
+        + id
+        + ", allDay="
+        + allDay
+        + ", familyEvent="
+        + familyEvent
+        + ", startDatetime="
+        + startDatetime
+        + ", endDatetime="
+        + endDatetime
+        + ", description="
+        + description
+        + ", notes="
+        + notes
+        + ", createdBy="
+        + createdBy
+        + ", createdDatetime="
+        + createdDatetime
+        + ", eventRepetitionSchedule="
+        + eventRepetitionSchedule
+        + ", recurringEventInfo="
+        + recurringEventInfo
+        + ", timezone="
+        + timezone
+        + "]";
   }
 }

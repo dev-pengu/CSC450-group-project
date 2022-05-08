@@ -56,7 +56,7 @@ public class InviteServiceImplTest {
   static MemberInvite INVITE_1 = new MemberInvite(FAMILY_1, TEST_USER_2.getEmail());
   static MemberInvite INVITE_2 = new MemberInvite(FAMILY_1, "usernotindb@test.com", Role.ADULT);
   static MemberInvite INVITE_3 =
-      new MemberInvite(new Family(2l, "Test", null, null, null, null), TEST_USER_2.getEmail());
+      new MemberInvite(new Family(2l, "Test", "ff0000", "america/chicago", null, null), TEST_USER_2.getEmail());
   static List<FamilyMembers> familyOneMembers;
   static Map<String, User> usersByEmail = new HashMap<>();
   static Map<String, User> usersByUsername = new HashMap<>();

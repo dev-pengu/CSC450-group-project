@@ -4,15 +4,15 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 public class PollOptionDto {
-  private Long id;
-  private String value;
+  private final Long id;
+  private final String value;
   @JsonInclude(Include.NON_NULL)
-  private Integer votes;
+  private final Integer votes;
 
   public PollOptionDto(Long id, String value, Integer votes) {
     super();
     this.id = id;
-    this.value = value;
+    this.value = value == null ? null : value.trim();
     this.votes = votes;
   }
 

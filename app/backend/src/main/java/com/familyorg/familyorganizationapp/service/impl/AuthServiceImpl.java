@@ -37,7 +37,7 @@ public class AuthServiceImpl implements AuthService {
 
   @Override
   public UserDetails loadUserByUsername(String username) throws UserNotFoundException {
-    User user = userRepository.findByUsername(username);
+    User user = userRepository.findByUsernameIgnoreCase(username);
     if (user == null) {
       throw new UserNotFoundException(ApiExceptionCode.USER_DOESNT_EXIST, "Username not found");
     }
@@ -69,7 +69,7 @@ public class AuthServiceImpl implements AuthService {
   @Override
   public boolean hasAuthenticatedForSensitiveActions(String username) {
     Objects.requireNonNull(username);
-    User user = userRepository.findByUsername(username);
+    User user = userRepository.findByUsernameIgnoreCase(username);
     Calendar cal = Calendar.getInstance();
     cal.setTime(Date.from(Instant.now()));
     cal.add(Calendar.MINUTE, -15);

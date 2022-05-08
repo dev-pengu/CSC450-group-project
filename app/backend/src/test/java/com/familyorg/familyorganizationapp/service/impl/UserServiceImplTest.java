@@ -91,7 +91,7 @@ public class UserServiceImplTest {
         return false;
       }
     });
-    when(userRepository.findByUsername(TEST_USER_1.getUsername())).thenReturn(TEST_USER_1);
+    when(userRepository.findByUsernameIgnoreCase(TEST_USER_1.getUsername())).thenReturn(TEST_USER_1);
 
     /* When */
     UserDto response = userService.getUserData();
@@ -140,7 +140,7 @@ public class UserServiceImplTest {
         return false;
       }
     });
-    when(userRepository.findByUsername(TEST_USER_1.getUsername())).thenReturn(TEST_USER_1);
+    when(userRepository.findByUsernameIgnoreCase(TEST_USER_1.getUsername())).thenReturn(TEST_USER_1);
 
     /* When */
     assertThrows(AuthorizationException.class, () -> {
@@ -187,7 +187,7 @@ public class UserServiceImplTest {
         return false;
       }
     });
-    when(userRepository.findByUsername(TEST_USER_1.getUsername())).thenReturn(null);
+    when(userRepository.findByUsernameIgnoreCase(TEST_USER_1.getUsername())).thenReturn(null);
 
     /* Then */
     assertThrows(UserNotFoundException.class, () -> {
@@ -236,7 +236,7 @@ public class UserServiceImplTest {
     });
 
     when(authService.hasAuthenticatedForSensitiveActions(any(String.class))).thenReturn(true);
-    when(userRepository.findByUsername(TEST_USER_1.getUsername())).thenReturn(TEST_USER_1);
+    when(userRepository.findByUsernameIgnoreCase(TEST_USER_1.getUsername())).thenReturn(TEST_USER_1);
     doNothing().when(userRepository).delete(TEST_USER_1);
 
     /* When */
@@ -285,7 +285,7 @@ public class UserServiceImplTest {
         return false;
       }
     });
-    when(userRepository.findByUsername(TEST_USER_1.getUsername())).thenReturn(TEST_USER_1);
+    when(userRepository.findByUsernameIgnoreCase(TEST_USER_1.getUsername())).thenReturn(TEST_USER_1);
     doNothing().when(userRepository).delete(TEST_USER_1);
 
     /* When */
@@ -333,7 +333,7 @@ public class UserServiceImplTest {
         return false;
       }
     });
-    when(userRepository.findByUsername(TEST_USER_1.getUsername())).thenReturn(TEST_USER_1);
+    when(userRepository.findByUsernameIgnoreCase(TEST_USER_1.getUsername())).thenReturn(TEST_USER_1);
     doNothing().when(userRepository).delete(TEST_USER_1);
 
     /* When */
@@ -381,7 +381,7 @@ public class UserServiceImplTest {
         return false;
       }
     });
-    when(userRepository.findByUsername(TEST_USER_1.getUsername())).thenReturn(null);
+    when(userRepository.findByUsernameIgnoreCase(TEST_USER_1.getUsername())).thenReturn(null);
     doNothing().when(userRepository).delete(TEST_USER_1);
 
     /* When */

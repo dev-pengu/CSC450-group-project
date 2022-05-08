@@ -3,6 +3,7 @@ package com.familyorg.familyorganizationapp.domain;
 import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
 import javax.persistence.CascadeType;
@@ -45,6 +46,7 @@ public class User implements Serializable {
 
   @Column(name = "timezone", columnDefinition = "VARCHAR(256)", nullable = true)
   private String timezone;
+
   @Column(name = "dark_mode", columnDefinition = "BOOLEAN DEFAULT FALSE")
   private Boolean darkMode;
 
@@ -52,7 +54,10 @@ public class User implements Serializable {
   private Timestamp lastLoggedIn;
 
   @JsonIgnore
-  @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, orphanRemoval = true,
+  @OneToMany(
+      mappedBy = "user",
+      fetch = FetchType.LAZY,
+      orphanRemoval = true,
       cascade = CascadeType.ALL)
   private Set<FamilyMembers> families;
 
@@ -63,42 +68,74 @@ public class User implements Serializable {
   @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, orphanRemoval = true)
   Set<PasswordResetCode> resetCodes;
 
-
   public User() {}
 
-
-  public User(Long id, String firstName, String lastName, String username, String password,
-      String email, Set<FamilyMembers> families) {
+  public User(
+      Long id,
+      String firstName,
+      String lastName,
+      String username,
+      String password,
+      String email,
+      Set<FamilyMembers> families) {
     this(id, firstName, lastName, username, password, email, null, families);
   }
 
-  public User(Long id, String firstName, String lastName, String username, String password,
-      String email, String timezone, Set<FamilyMembers> families) {
+  public User(
+      Long id,
+      String firstName,
+      String lastName,
+      String username,
+      String password,
+      String email,
+      String timezone,
+      Set<FamilyMembers> families) {
+    Objects.requireNonNull(firstName);
+    Objects.requireNonNull(lastName);
+    Objects.requireNonNull(username);
+    Objects.requireNonNull(password);
+    Objects.requireNonNull(email);
     this.id = id;
-    this.firstName = firstName;
-    this.lastName = lastName;
-    this.username = username;
-    this.password = password;
-    this.email = email;
+    this.firstName = firstName.trim();
+    this.lastName = lastName.trim();
+    this.username = username.trim().toLowerCase();
+    this.password = password.trim();
+    this.email = email.trim().toLowerCase();
     this.families = families;
-    this.timezone = timezone;
+    this.timezone = timezone == null ? null : timezone.trim();
     this.darkMode = false;
   }
 
-  public User(String firstName, String lastName, String username, String password, String email,
+  public User(
+      String firstName,
+      String lastName,
+      String username,
+      String password,
+      String email,
       Set<FamilyMembers> families) {
     this(firstName, lastName, username, password, email, null, families);
   }
 
-  public User(String firstName, String lastName, String username, String password, String email,
-      String timezone, Set<FamilyMembers> families) {
-    this.firstName = firstName;
-    this.lastName = lastName;
-    this.username = username;
-    this.password = password;
-    this.email = email;
+  public User(
+      String firstName,
+      String lastName,
+      String username,
+      String password,
+      String email,
+      String timezone,
+      Set<FamilyMembers> families) {
+    Objects.requireNonNull(firstName);
+    Objects.requireNonNull(lastName);
+    Objects.requireNonNull(username);
+    Objects.requireNonNull(password);
+    Objects.requireNonNull(email);
+    this.firstName = firstName.trim();
+    this.lastName = lastName.trim();
+    this.username = username.trim().toLowerCase();
+    this.password = password.trim();
+    this.email = email.trim().toLowerCase();
     this.families = families;
-    this.timezone = timezone;
+    this.timezone = timezone == null ? null : timezone.trim();
     this.darkMode = false;
   }
 
@@ -115,7 +152,8 @@ public class User implements Serializable {
   }
 
   public void setFirstName(String firstName) {
-    this.firstName = firstName;
+    Objects.requireNonNull(firstName);
+    this.firstName = firstName.trim();
   }
 
   public String getLastName() {
@@ -123,7 +161,8 @@ public class User implements Serializable {
   }
 
   public void setLastName(String lastName) {
-    this.lastName = lastName;
+    Objects.requireNonNull(lastName);
+    this.lastName = lastName.trim();
   }
 
   public String getUsername() {
@@ -131,7 +170,8 @@ public class User implements Serializable {
   }
 
   public void setUsername(String username) {
-    this.username = username;
+    Objects.requireNonNull(username);
+    this.username = username.trim().toLowerCase();
   }
 
   public String getPassword() {
@@ -139,7 +179,8 @@ public class User implements Serializable {
   }
 
   public void setPassword(String password) {
-    this.password = password;
+    Objects.requireNonNull(password);
+    this.password = password.trim();
   }
 
   public String getEmail() {
@@ -147,7 +188,8 @@ public class User implements Serializable {
   }
 
   public void setEmail(String email) {
-    this.email = email;
+    Objects.requireNonNull(email);
+    this.email = email.trim().toLowerCase();
   }
 
   public Set<FamilyMembers> getFamilies() {
@@ -182,7 +224,6 @@ public class User implements Serializable {
     return lastLoggedIn;
   }
 
-
   public void setLastLoggedIn(Timestamp lastLoggedIn) {
     this.lastLoggedIn = lastLoggedIn;
   }
@@ -191,12 +232,13 @@ public class User implements Serializable {
     return events;
   }
 
-
   public void setEvents(Set<CalendarEvent> events) {
     this.events = events;
   }
 
-  public Set<PasswordResetCode> getResetCodes() {return resetCodes;}
+  public Set<PasswordResetCode> getResetCodes() {
+    return resetCodes;
+  }
 
   public void setResetCodes(Set<PasswordResetCode> resetCodes) {
     this.resetCodes = resetCodes;
@@ -204,8 +246,19 @@ public class User implements Serializable {
 
   @Override
   public String toString() {
-    return "User [id=" + id + ", firstName=" + firstName + ", lastName=" + lastName + ", username="
-        + username + ", email=" + email + ", timezone=" + timezone + "]";
+    return "User [id="
+        + id
+        + ", firstName="
+        + firstName
+        + ", lastName="
+        + lastName
+        + ", username="
+        + username
+        + ", email="
+        + email
+        + ", timezone="
+        + timezone
+        + "]";
   }
 
   @Override
@@ -215,26 +268,27 @@ public class User implements Serializable {
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj)
-      return true;
-    if (obj == null)
-      return false;
-    if (getClass() != obj.getClass())
-      return false;
+    if (this == obj) return true;
+    if (obj == null) return false;
+    if (getClass() != obj.getClass()) return false;
     User other = (User) obj;
-    return Objects.equals(email, other.email) && Objects.equals(firstName, other.firstName)
-        && Objects.equals(id, other.id) && Objects.equals(lastName, other.lastName)
-        && Objects.equals(password, other.password) && Objects.equals(username, other.username);
+    return Objects.equals(email, other.email)
+        && Objects.equals(firstName, other.firstName)
+        && Objects.equals(id, other.id)
+        && Objects.equals(lastName, other.lastName)
+        && Objects.equals(password, other.password)
+        && Objects.equals(username, other.username);
   }
 
   public boolean isValid() {
-    if (firstName == null || lastName == null || username == null || email == null
+    if (firstName == null
+        || lastName == null
+        || username == null
+        || email == null
         || password == null) {
       return false;
     }
 
     return true;
   }
-
-
 }

@@ -12,27 +12,37 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 public class FamilyDto {
-  private Long id;
-  private String name;
-  private String eventColor;
-  private String timezone;
-  private String inviteCode;
-  private Set<FamilyMemberDto> members;
-  private FamilyMemberDto owner;
-  private UserDto requestingUser;
-  @JsonInclude(Include.NON_NULL)
-  private List<Role> availableRoles;
-  private FamilyMemberDto memberData;
+  private final Long id;
+  private final String name;
+  private final String eventColor;
+  private final String timezone;
+  private final String inviteCode;
+  private final Set<FamilyMemberDto> members;
+  private final FamilyMemberDto owner;
+  private final UserDto requestingUser;
 
-  public FamilyDto(Long id, String name, String eventColor, String timezone, String inviteCode,
-      FamilyMemberDto owner, Set<FamilyMemberDto> members, UserDto requestingUser,
-      List<Role> availableRoles, FamilyMemberDto memberData) {
+  @JsonInclude(Include.NON_NULL)
+  private final List<Role> availableRoles;
+
+  private final FamilyMemberDto memberData;
+
+  public FamilyDto(
+      Long id,
+      String name,
+      String eventColor,
+      String timezone,
+      String inviteCode,
+      FamilyMemberDto owner,
+      Set<FamilyMemberDto> members,
+      UserDto requestingUser,
+      List<Role> availableRoles,
+      FamilyMemberDto memberData) {
     super();
     this.id = id;
-    this.name = name;
-    this.eventColor = eventColor;
-    this.timezone = timezone;
-    this.inviteCode = inviteCode;
+    this.name = name == null ? null : name.trim();
+    this.eventColor = eventColor == null ? null : eventColor.trim();
+    this.timezone = timezone == null ? null : timezone.trim();
+    this.inviteCode = inviteCode == null ? null : inviteCode.trim();
     this.members = members;
     this.owner = owner;
     this.requestingUser = requestingUser;
@@ -85,31 +95,42 @@ public class FamilyDto {
         .withId(family.getId())
         .withEventColor(family.getEventColor())
         .withMembers(
-            family.getMembers()
-                .stream()
-                .map(familyMember -> {
-                  FamilyMemberDto memberDto = FamilyMemberDto.fromFamilyMemberObj(familyMember);
-                  return memberDto;
-                })
+            family.getMembers().stream()
+                .map(
+                    familyMember -> {
+                      FamilyMemberDto memberDto = FamilyMemberDto.fromFamilyMemberObj(familyMember);
+                      return memberDto;
+                    })
                 .collect(Collectors.toSet()))
         .withName(family.getName())
         .withTimezone(family.getTimezone())
         // TODO: remove requesting user, they can get that data from the memberData.user
         .withRequestingUser(UserDto.fromUserObj(requestingUser))
         .withInviteCode(family.getInviteCodeObj().getInviteCodeString())
-        .withMemberData(FamilyMemberDto.fromFamilyMemberObj(family.getMembers()
-            .stream()
-            .filter(member -> member.getUser().getId().equals(requestingUser.getId()))
-            .findFirst()
-            .get()))
+        .withMemberData(
+            FamilyMemberDto.fromFamilyMemberObj(
+                family.getMembers().stream()
+                    .filter(member -> member.getUser().getId().equals(requestingUser.getId()))
+                    .findFirst()
+                    .get()))
         .build();
   }
 
   @Override
   public String toString() {
-    return "FamilyDto [id=" + id + ", name=" + name + ", eventColor=" + eventColor + ", timezone="
+    return "FamilyDto [id="
+        + id
+        + ", name="
+        + name
+        + ", eventColor="
+        + eventColor
+        + ", timezone="
         + timezone
-        + ", inviteCode=" + inviteCode + ", members=" + members + "]";
+        + ", inviteCode="
+        + inviteCode
+        + ", members="
+        + members
+        + "]";
   }
 
   @Override
@@ -119,18 +140,16 @@ public class FamilyDto {
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj)
-      return true;
-    if (obj == null)
-      return false;
-    if (getClass() != obj.getClass())
-      return false;
+    if (this == obj) return true;
+    if (obj == null) return false;
+    if (getClass() != obj.getClass()) return false;
     FamilyDto other = (FamilyDto) obj;
-    return Objects.equals(eventColor, other.eventColor) && Objects.equals(id, other.id)
-        && Objects.equals(inviteCode, other.inviteCode) && Objects.equals(members, other.members)
-        && Objects.equals(name, other.name) && Objects.equals(timezone, other.timezone)
+    return Objects.equals(eventColor, other.eventColor)
+        && Objects.equals(id, other.id)
+        && Objects.equals(inviteCode, other.inviteCode)
+        && Objects.equals(members, other.members)
+        && Objects.equals(name, other.name)
+        && Objects.equals(timezone, other.timezone)
         && Objects.equals(requestingUser, other.requestingUser);
   }
-
-
 }

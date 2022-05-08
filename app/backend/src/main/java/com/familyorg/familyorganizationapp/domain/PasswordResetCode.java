@@ -25,10 +25,14 @@ public class PasswordResetCode implements Serializable {
 
   @JsonIgnore
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "user_id", referencedColumnName = "user_id", columnDefinition = "BIGINT")
+  @JoinColumn(
+      name = "user_id",
+      referencedColumnName = "user_id",
+      columnDefinition = "BIGINT",
+      nullable = false)
   private User user;
 
-  @Column(name = "reset_code", columnDefinition = "VARCHAR(36)")
+  @Column(name = "reset_code", columnDefinition = "VARCHAR(36)", nullable = false)
   private String resetCode;
 
   @Column(name = "created", columnDefinition = "TIMESTAMP")

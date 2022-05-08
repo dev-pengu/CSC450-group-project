@@ -31,7 +31,7 @@ public class ToDoList implements Serializable {
   @Column(name = "todo_list_id", columnDefinition = "BIGSERIAL")
   private Long id;
 
-  @Column(name = "description", columnDefinition = "VARCHAR(50)")
+  @Column(name = "description", columnDefinition = "VARCHAR(50)", nullable = false)
   private String description;
 
   @Column(name = "is_default", columnDefinition = "BOOLEAN")
@@ -75,7 +75,8 @@ public class ToDoList implements Serializable {
   }
 
   public void setDescription(String description) {
-    this.description = description;
+    Objects.requireNonNull(description);
+    this.description = description.trim();
   }
 
   public Boolean isDefault() {

@@ -32,7 +32,7 @@ public class ToDoTask implements Serializable {
   @Column(name = "completed_datetime", columnDefinition = "TIMESTAMP")
   private Timestamp completedDatetime;
 
-  @Column(name = "description", columnDefinition = "VARCHAR(50)")
+  @Column(name = "description", columnDefinition = "VARCHAR(50)", nullable = false)
   private String description;
 
   @Column(name = "notes", columnDefinition = "TEXT")
@@ -84,7 +84,8 @@ public class ToDoTask implements Serializable {
   }
 
   public void setDescription(String description) {
-    this.description = description;
+    Objects.requireNonNull(description);
+    this.description = description.trim();
   }
 
   public String getNotes() {
@@ -92,7 +93,7 @@ public class ToDoTask implements Serializable {
   }
 
   public void setNotes(String notes) {
-    this.notes = notes;
+    this.notes = notes == null ? null : notes.trim();
   }
 
   public Timestamp getCreatedDatetime() {
@@ -141,14 +142,7 @@ public class ToDoTask implements Serializable {
   @Override
   public int hashCode() {
     return Objects.hash(
-        id,
-        dueDate,
-        completedDatetime,
-        description,
-        notes,
-        createdDatetime,
-        addedBy,
-        list.getId());
+        id, dueDate, completedDatetime, description, notes, createdDatetime, addedBy, list.getId());
   }
 
   @Override

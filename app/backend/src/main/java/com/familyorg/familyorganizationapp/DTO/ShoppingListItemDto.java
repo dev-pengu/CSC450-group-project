@@ -5,15 +5,15 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import java.util.Objects;
 
 public class ShoppingListItemDto {
-  private Long id;
-  private String description;
-  private Integer amount;
-  private String unit;
-  private String notes;
-  private UserDto addedBy;
+  private final Long id;
+  private final String description;
+  private final Integer amount;
+  private final String unit;
+  private final String notes;
+  private final UserDto addedBy;
 
   @JsonInclude(Include.NON_NULL)
-  private Long listId;
+  private final Long listId;
 
   public ShoppingListItemDto(
       Long id,
@@ -24,10 +24,10 @@ public class ShoppingListItemDto {
       Long listId,
       UserDto addedBy) {
     this.id = id;
-    this.description = description;
+    this.description = description == null ? null : description.trim();
     this.amount = amount;
-    this.unit = unit;
-    this.notes = notes;
+    this.unit = unit == null ? null : unit.trim();
+    this.notes = notes == notes ? null : notes.trim();
     this.listId = listId;
     this.addedBy = addedBy;
   }

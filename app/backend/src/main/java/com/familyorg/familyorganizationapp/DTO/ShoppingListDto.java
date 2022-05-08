@@ -4,14 +4,14 @@ import java.util.List;
 import java.util.Objects;
 
 public class ShoppingListDto {
-  private Long id;
-  private String description;
-  private String created;
-  private Boolean isDefault;
-  private Long familyId;
-  private UserDto createdBy;
-  private List<ShoppingListItemDto> items;
-  private String color;
+  private final Long id;
+  private final String description;
+  private final String created;
+  private final Boolean isDefault;
+  private final Long familyId;
+  private final UserDto createdBy;
+  private final List<ShoppingListItemDto> items;
+  private final String color;
 
   public ShoppingListDto(
       Long id,
@@ -23,13 +23,13 @@ public class ShoppingListDto {
       List<ShoppingListItemDto> items,
       String color) {
     this.id = id;
-    this.description = description;
+    this.description = description == null ? null : description.trim();
     this.created = created;
     this.isDefault = isDefault;
     this.familyId = familyId;
     this.createdBy = createdBy;
     this.items = items;
-    this.color = color;
+    this.color = color == null ? null : color.trim();
   }
 
   public Long getId() {

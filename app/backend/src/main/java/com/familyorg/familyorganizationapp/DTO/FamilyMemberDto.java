@@ -8,16 +8,18 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 public class FamilyMemberDto {
-  private String eventColor;
-  private UserDto user;
+  private final String eventColor;
+  private final UserDto user;
+
   @JsonInclude(Include.NON_NULL)
-  private Long familyId;
-  private Role role;
+  private final Long familyId;
+
+  private final Role role;
 
   public FamilyMemberDto(UserDto user, String eventColor, Long familyId, Role role) {
     super();
     this.user = user;
-    this.eventColor = eventColor;
+    this.eventColor = eventColor == null ? null : eventColor.trim();
     this.familyId = familyId;
     this.role = role;
   }
@@ -50,8 +52,15 @@ public class FamilyMemberDto {
 
   @Override
   public String toString() {
-    return "FamilyMemberDto [eventColor=" + eventColor + ", user=" + user
-        + ", familyId=" + familyId + ", role=" + role + "]";
+    return "FamilyMemberDto [eventColor="
+        + eventColor
+        + ", user="
+        + user
+        + ", familyId="
+        + familyId
+        + ", role="
+        + role
+        + "]";
   }
 
   @Override
@@ -61,15 +70,14 @@ public class FamilyMemberDto {
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj)
-      return true;
-    if (obj == null)
-      return false;
-    if (getClass() != obj.getClass())
-      return false;
+    if (this == obj) return true;
+    if (obj == null) return false;
+    if (getClass() != obj.getClass()) return false;
     FamilyMemberDto other = (FamilyMemberDto) obj;
-    return Objects.equals(user, other.user) && Objects.equals(eventColor, other.eventColor)
-        && Objects.equals(familyId, other.familyId) && Objects.equals(role, other.role);
+    return Objects.equals(user, other.user)
+        && Objects.equals(eventColor, other.eventColor)
+        && Objects.equals(familyId, other.familyId)
+        && Objects.equals(role, other.role);
   }
 
   public static FamilyMemberDto fromFamilyMemberObj(FamilyMembers familyMember) {
@@ -79,5 +87,4 @@ public class FamilyMemberDto {
         familyMember.getFamily().getId(),
         familyMember.getRole());
   }
-
 }

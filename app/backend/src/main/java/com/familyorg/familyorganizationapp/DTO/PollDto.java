@@ -6,42 +6,57 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 public class PollDto {
-  private Long id;
-  private Long familyId;
-  private UserDto createdBy;
-  private String createdDateTime;
-  private String description;
-  private String notes;
-  private String closedDateTime;
-  private Boolean closed;
-  @JsonInclude(Include.NON_NULL)
-  private Boolean omitCreator;
-  private List<PollOptionDto> options;
-  @JsonInclude(Include.NON_EMPTY)
-  private List<UserDto> respondents;
-  @JsonInclude(Include.NON_NULL)
-  private Long vote;
-  @JsonInclude(Include.NON_NULL)
-  private String familyName;
+  private final Long id;
+  private final Long familyId;
+  private final UserDto createdBy;
+  private final String createdDateTime;
+  private final String description;
+  private final String notes;
+  private final String closedDateTime;
+  private final Boolean closed;
 
-  public PollDto(Long id, Long familyId, UserDto createdBy, String createdDateTime,
-      String description, String notes, String closedDateTime, Boolean isClosed,
-      List<PollOptionDto> options, List<UserDto> respondents, Boolean omitCreator, Long vote,
+  @JsonInclude(Include.NON_NULL)
+  private final Boolean omitCreator;
+
+  private final List<PollOptionDto> options;
+
+  @JsonInclude(Include.NON_EMPTY)
+  private final List<UserDto> respondents;
+
+  @JsonInclude(Include.NON_NULL)
+  private final Long vote;
+
+  @JsonInclude(Include.NON_NULL)
+  private final String familyName;
+
+  public PollDto(
+      Long id,
+      Long familyId,
+      UserDto createdBy,
+      String createdDateTime,
+      String description,
+      String notes,
+      String closedDateTime,
+      Boolean isClosed,
+      List<PollOptionDto> options,
+      List<UserDto> respondents,
+      Boolean omitCreator,
+      Long vote,
       String familyName) {
     super();
     this.id = id;
     this.familyId = familyId;
     this.createdBy = createdBy;
     this.createdDateTime = createdDateTime;
-    this.description = description;
-    this.notes = notes;
+    this.description = description == null ? null : description.trim();
+    this.notes = notes == null ? null : notes.trim();
     this.closedDateTime = closedDateTime;
     this.closed = isClosed;
     this.options = options == null ? new ArrayList<>() : options;
     this.respondents = respondents == null ? new ArrayList<>() : respondents;
     this.omitCreator = omitCreator;
     this.vote = vote;
-    this.familyName = familyName;
+    this.familyName = familyName == null ? null : familyName.trim();
   }
 
   public Long getId() {
@@ -98,9 +113,24 @@ public class PollDto {
 
   @Override
   public String toString() {
-    return "PollDto [id=" + id + ", familyId=" + familyId + ", createdBy=" + createdBy
-        + ", createdDateTime=" + createdDateTime + ", description=" + description + ", notes="
-        + notes + ", closedDateTime=" + closedDateTime + ", isClosed=" + closed + ", options="
-        + options + "]";
+    return "PollDto [id="
+        + id
+        + ", familyId="
+        + familyId
+        + ", createdBy="
+        + createdBy
+        + ", createdDateTime="
+        + createdDateTime
+        + ", description="
+        + description
+        + ", notes="
+        + notes
+        + ", closedDateTime="
+        + closedDateTime
+        + ", isClosed="
+        + closed
+        + ", options="
+        + options
+        + "]";
   }
 }

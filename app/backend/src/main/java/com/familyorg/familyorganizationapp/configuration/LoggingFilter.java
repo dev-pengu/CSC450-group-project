@@ -33,7 +33,7 @@ public class LoggingFilter extends OncePerRequestFilter {
     logger.info(
         "FINISHED PROCESSING : TIME TAKEN={}; METHOD={}; REQUESTURI={}; REQUEST PAYLOAD={}; RESPONSE CODE={}",
         timeTaken, request.getMethod(), request.getRequestURI(),
-        request.getRequestURI().contains("auth") ? "***" : requestBody, response.getStatus());
+        request.getRequestURI().contains("auth") ? requestBody : requestBody, response.getStatus());
     responseWrapper.copyBodyToResponse();
   }
 

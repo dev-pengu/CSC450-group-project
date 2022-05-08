@@ -1,9 +1,9 @@
 package com.familyorg.familyorganizationapp.DTO;
 
 public class VoteDto {
-  private Long pollId;
-  private UserDto user;
-  private PollOptionDto choice;
+  private final Long pollId;
+  private final UserDto user;
+  private final PollOptionDto choice;
 
   public VoteDto(Long pollId, UserDto user, PollOptionDto choice) {
     super();

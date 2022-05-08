@@ -59,7 +59,8 @@ public class ShoppingListItem implements Serializable {
   }
 
   public void setDescription(String description) {
-    this.description = description;
+    Objects.requireNonNull(description);
+    this.description = description.trim();
   }
 
   public Integer getAmount() {
@@ -75,7 +76,7 @@ public class ShoppingListItem implements Serializable {
   }
 
   public void setUnit(String unit) {
-    this.unit = unit;
+    this.unit = unit == null ? null : unit.trim();
   }
 
   public String getNotes() {
@@ -83,7 +84,7 @@ public class ShoppingListItem implements Serializable {
   }
 
   public void setNotes(String notes) {
-    this.notes = notes;
+    this.notes = notes == null ? null : notes.trim();
   }
 
   public ShoppingList getList() {

@@ -34,7 +34,12 @@ public class InviteCode implements Serializable {
   }
 
   public static InviteCode parseFromCodeString(String codeString) {
-    String[] parts = codeString.split("-", 2);
+    Objects.requireNonNull(codeString);
+    if (codeString.isBlank()) {
+      throw new IllegalStateException("codeString passed did not contain enough parts");
+    }
+
+    String[] parts = codeString.trim().split("-", 2);
     if (parts.length < 2 || parts[1].length() < 36) {
       throw new IllegalStateException("codeString passed did not contain enough parts");
     }
@@ -63,10 +68,8 @@ public class InviteCode implements Serializable {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o)
-      return true;
-    if (o == null || getClass() != o.getClass())
-      return false;
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
     InviteCode that = (InviteCode) o;
     return persistent == that.persistent && Objects.equals(code, that.code);
   }
