@@ -71,6 +71,7 @@
                     dense
                     type="number"
                     hint="interval"
+                    :min="1"
                     persistent-hint
                     :readonly="!editSchedule && eventData.id !== 0"
                     :disabled="!editSchedule && eventData.id !== 0"
@@ -96,6 +97,7 @@
                     dense
                     type="number"
                     hint="times"
+                    :min="1"
                     persistent-hint
                     :readonly="!editSchedule && eventData.id !== 0"
                     :disabled="!editSchedule && eventData.id !== 0"
@@ -175,7 +177,7 @@
                 </v-menu>
               </v-col>
             </v-row>
-            <v-row align="center" justify="center">
+            <v-row v-if="!eventData.allDay" align="center" justify="center">
               <v-col cols="6">
                 <v-menu
                   ref="endMenu"
@@ -204,7 +206,7 @@
                   </v-date-picker>
                 </v-menu>
               </v-col>
-              <v-col v-if="!eventData.allDay" cols="6">
+              <v-col cols="6">
                 <v-menu
                   ref="endTimeMenu"
                   v-model="endTimeMenu"
@@ -405,7 +407,7 @@ export default {
             ? `${this.eventData.startDate} 00:00`
             : `${this.eventData.startDate} ${this.eventData.startTime}`,
           endDate: this.eventData.allDay
-            ? `${this.eventData.endDate} 00:00`
+            ? `${this.eventData.startDate} 00:00`
             : `${this.eventData.endDate} ${this.eventData.endTime}`,
           description: this.eventData.description,
           notes: this.eventData.notes,
@@ -446,7 +448,8 @@ export default {
       }
     },
     async updateEvent() {
-      this.dialogOpen=false;
+      this.dialogOpen = false;
+      this.confirmBreakRecurring = false;
       const req = {
         id: this.eventData.isRecurring ? null : this.eventData.id,
         allDay: this.eventData.allDay,
@@ -455,7 +458,7 @@ export default {
           ? `${this.eventData.startDate} 00:00`
           : `${this.eventData.startDate} ${this.eventData.startTime}`,
         endDate: this.eventData.allDay
-          ? `${this.eventData.endDate} 00:00`
+          ? `${this.eventData.startDate} 00:00`
           : `${this.eventData.endDate} ${this.eventData.endTime}`,
         description: this.eventData.description,
         notes: this.eventData.notes,
@@ -464,7 +467,7 @@ export default {
         recurringId: this.eventData.isRecurring ? this.eventData.id : null,
         assignees: this.eventData.familyEvent
           ? []
-          : this.eventData.assignees.map((assignee) => ({ userId: assignee.id })),
+          : this.eventData.assignees.map((assignee) => ({ userId: assignee })),
       };
       try {
         this.loading = true;
@@ -590,7 +593,6 @@ export default {
           });
         }
       } catch (err) {
-        console.log(err);
         this.showSnackbar({
           type: 'error',
           message: 'There was an issue updating the recurrences, if the issue persists please contact support.',

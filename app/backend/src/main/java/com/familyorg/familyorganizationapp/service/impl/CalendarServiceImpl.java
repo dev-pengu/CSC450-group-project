@@ -1,5 +1,6 @@
 package com.familyorg.familyorganizationapp.service.impl;
 
+import com.familyorg.familyorganizationapp.DTO.ColorDto;
 import com.familyorg.familyorganizationapp.DTO.EventRepetitionDto;
 import com.familyorg.familyorganizationapp.Exception.ApiException;
 import com.familyorg.familyorganizationapp.domain.FamilyMembers;
@@ -14,6 +15,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TimeZone;
@@ -271,11 +273,28 @@ public class CalendarServiceImpl implements CalendarService {
         event.setStartDatetime(DateUtil.parseTimestamp(request.getStartDate()));
       }
 
-      if (event.getNotes() != request.getNotes()) {
+      if (!Objects.equals(event.getNotes(), request.getNotes())) {
         event.setNotes(request.getNotes());
       }
-      if (timezone.getID() != event.getTimezone()) {
+      if (!Objects.equals(timezone.getID(), event.getTimezone())) {
         event.setTimezone(timezone.getID());
+      }
+      if (!request.isFamilyEvent()) {
+        if (request.getAssignees() != null) {
+          List<Long> requestAssignees =
+              request.getAssignees().stream().map(ColorDto::getUserId).toList();
+          event.getAssignees().removeIf(assignee -> !requestAssignees.contains(assignee.getId()));
+          for (Long userId : requestAssignees) {
+            if (event.getAssignees().stream().map(User::getId).noneMatch(userId::equals)) {
+              User user = userService.getUserById(userId);
+              if (event.getCalendar().getFamily().isMember(user)) {
+                event.getAssignees().add(user);
+              }
+            }
+          }
+        }
+      } else {
+        event.getAssignees().clear();
       }
       // save the event
       eventRepository.save(event);
@@ -850,7 +869,22 @@ public class CalendarServiceImpl implements CalendarService {
     event.setTimezone(timezone.getID());
     event.setFamilyEvent(request.isFamilyEvent());
     event.setNotes(request.getNotes());
-    event.setAssignees(new HashSet<>(recurringEvent.getOriginatingEvent().getAssignees()));
+    if (!request.isFamilyEvent()) {
+      event.setAssignees(new HashSet<>(recurringEvent.getOriginatingEvent().getAssignees()));
+      if (request.getAssignees() != null) {
+        List<Long> requestAssignees =
+            request.getAssignees().stream().map(ColorDto::getUserId).toList();
+        event.getAssignees().removeIf(assignee -> !requestAssignees.contains(assignee.getId()));
+        for (Long userId : requestAssignees) {
+          if (event.getAssignees().stream().map(User::getId).noneMatch(userId::equals)) {
+            User user = userService.getUserById(userId);
+            if (event.getCalendar().getFamily().isMember(user)) {
+              event.getAssignees().add(user);
+            }
+          }
+        }
+      }
+    }
     return eventRepository.save(event);
   }
 

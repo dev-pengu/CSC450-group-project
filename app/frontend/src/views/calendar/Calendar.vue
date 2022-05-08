@@ -152,8 +152,6 @@
         @click:date="goToDate"
         @click:event="handleEventClick"
         @click:more="goToDate"
-        @click:time="handleTimeClick"
-        @click:interval="handleIntervalClick"
       >
         <template #day-body="{ date, week }">
           <div class="v-current-time" :class="{ first: date === week[0].date }" :style="{ top: nowY }"></div>
@@ -359,7 +357,7 @@ export default {
           frequency: event.repetitionSchedule ? event.repetitionSchedule.frequency : 'DAILY',
           count: event.repetitionSchedule ? event.repetitionSchedule.count : 1,
           startDate: event.repetitionSchedule ? event.repetitionSchedule.startDate : null,
-          owningEventId: event.repetitionSchedule ? event.repetitionSchedule.owningEventId: null,
+          owningEventId: event.repetitionSchedule ? event.repetitionSchedule.owningEventId : null,
         },
         isRecurring: event.recurringEvent,
         creator: `${event.createdBy.firstName} ${event.createdBy.lastName}`,
@@ -370,17 +368,10 @@ export default {
       this.$refs.eventModal.dialogOpen = true;
       this.$refs.eventModal.loading = false;
     },
-    handleTimeClick(day) {
-      console.log(day);
-    },
-    handleIntervalClick(day) {
-      console.log(day);
-    },
     goToToday() {
       this.value = '';
       this.type = 'day';
       this.scrollToTime();
-      console.log(this.cal.times.now);
     },
     removeFilter(filterSet, i) {
       this.activeFilters[filterSet].splice(i, 1);
