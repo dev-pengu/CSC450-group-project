@@ -103,9 +103,19 @@ public class FamilyController {
   }
 
   @DeleteMapping("/admin/removeMember")
-  public ResponseEntity<String> removeMember(@RequestParam("familyId") Long familyId, @RequestParam("userId") Long userId) {
+  public ResponseEntity<String> removeMember(
+      @RequestParam("familyId") Long familyId, @RequestParam("userId") Long userId) {
     familyService.removeMember(familyId, userId);
     return new ResponseEntity<>("Member removed successfully.", HttpStatus.OK);
+  }
+
+  @DeleteMapping("/admin/removeMembers")
+  public ResponseEntity<String> removeMembers(
+      @RequestParam("familyId") Long familyId, @RequestParam("userIds") List<Long> userIds) {
+    for (Long id : userIds) {
+      familyService.removeMember(familyId, id);
+    }
+    return new ResponseEntity<>("Members removed successfully.", HttpStatus.OK);
   }
 
   @DeleteMapping("/admin/delete")
