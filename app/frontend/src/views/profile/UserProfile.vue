@@ -101,12 +101,6 @@ export default {
     timezones: [],
     settings: {},
   }),
-  watch: {
-    // eslint-disable-next-line func-names
-    'settings.useDarkMode': function (newValue) {
-      this.$vuetify.theme.dark = newValue;
-    },
-  },
   async created() {
     const res = await api.getTimezones();
     this.timezones = res.data;
@@ -115,7 +109,6 @@ export default {
   async mounted() {
     this.fetchSettings();
   },
-
   methods: {
     ...mapActions(['showSnackbar']),
     async save() {
@@ -130,6 +123,8 @@ export default {
         if (res.status === 200) {
           this.showSnackbar({ type: 'success', message: 'Your preferences were saved successfully!', timeout: 3000 });
           this.fetchSettings();
+          this.$vuetify.theme.dark = this.settings.useDarkMode;
+          localStorage.setItem('darkMode', this.$vuetify.theme.dark.toString());
         } else {
           this.showSnackbar({
             type: 'error',
@@ -158,8 +153,6 @@ export default {
             color: `#${colorObj.color}`,
           }));
           this.settings = settings;
-          this.$vuetify.theme.dark = settings.useDarkMode;
-          localStorage.setItem('darkMode', this.$vuetify.theme.dark.toString());
         } else {
           this.showSnackbar({
             type: 'error',
