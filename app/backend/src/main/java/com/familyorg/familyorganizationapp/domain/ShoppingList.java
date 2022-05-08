@@ -61,7 +61,8 @@ public class ShoppingList implements Serializable {
   }
 
   public void setDescription(String description) {
-    this.description = description;
+    Objects.requireNonNull(description);
+    this.description = description.trim();
   }
 
   public Timestamp getCreatedDatetime() {

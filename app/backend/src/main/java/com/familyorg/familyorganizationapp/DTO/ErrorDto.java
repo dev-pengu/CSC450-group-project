@@ -3,10 +3,10 @@ package com.familyorg.familyorganizationapp.DTO;
 import java.util.Objects;
 
 public class ErrorDto {
-  private String message;
-  private int errorCode;
-  private boolean redirect;
-  private String redirectUrl;
+  private final String message;
+  private final int errorCode;
+  private final boolean redirect;
+  private final String redirectUrl;
 
   public ErrorDto(String message, int errorCode, boolean redirect, String redirectUrl) {
     this.message = message;

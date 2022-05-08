@@ -6,20 +6,27 @@ import java.util.List;
 import java.util.Objects;
 
 public class CalendarDto {
-  private Long id;
-  private String description;
-  private Boolean defaultCal;
-  private Long familyId;
-  @JsonInclude(Include.NON_EMPTY)
-  private List<CalendarEventDto> events;
-  @JsonInclude(Include.NON_NULL)
-  private String color;
+  private final Long id;
+  private final String description;
+  private final Boolean defaultCal;
+  private final Long familyId;
 
-  public CalendarDto(Long id, String description, Boolean isDefault, Long familyId,
-      List<CalendarEventDto> events, String color) {
+  @JsonInclude(Include.NON_EMPTY)
+  private final List<CalendarEventDto> events;
+
+  @JsonInclude(Include.NON_NULL)
+  private final String color;
+
+  public CalendarDto(
+      Long id,
+      String description,
+      Boolean isDefault,
+      Long familyId,
+      List<CalendarEventDto> events,
+      String color) {
     super();
     this.id = id;
-    this.description = description;
+    this.description = description == null ? null : description.trim();
     this.defaultCal = isDefault;
     this.familyId = familyId;
     this.events = events;
@@ -50,7 +57,6 @@ public class CalendarDto {
     return color;
   }
 
-
   @Override
   public int hashCode() {
     return Objects.hash(events, familyId, id, defaultCal, description, color);
@@ -58,15 +64,13 @@ public class CalendarDto {
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj)
-      return true;
-    if (obj == null)
-      return false;
-    if (getClass() != obj.getClass())
-      return false;
+    if (this == obj) return true;
+    if (obj == null) return false;
+    if (getClass() != obj.getClass()) return false;
     CalendarDto other = (CalendarDto) obj;
     return Objects.equals(events, other.events)
-        && Objects.equals(familyId, other.familyId) && Objects.equals(id, other.id)
+        && Objects.equals(familyId, other.familyId)
+        && Objects.equals(id, other.id)
         && Objects.equals(defaultCal, other.defaultCal)
         && Objects.equals(description, other.description)
         && Objects.equals(color, other.color);
@@ -74,7 +78,18 @@ public class CalendarDto {
 
   @Override
   public String toString() {
-    return "CalendarDto [id=" + id + ", description=" + description + ", isDefault=" + defaultCal
-        + ", familyId=" + familyId + ", events=" + events + ", color=" + color + "]";
+    return "CalendarDto [id="
+        + id
+        + ", description="
+        + description
+        + ", isDefault="
+        + defaultCal
+        + ", familyId="
+        + familyId
+        + ", events="
+        + events
+        + ", color="
+        + color
+        + "]";
   }
 }

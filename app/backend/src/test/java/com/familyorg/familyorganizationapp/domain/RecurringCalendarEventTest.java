@@ -49,11 +49,36 @@ public class RecurringCalendarEventTest {
     System.out.println("Running [RecurringCalendarEventTest] testCreate...");
     /* Given */
     session.beginTransaction();
+    User user = new User("Test", "User", "testuser", "password", "testuser@test.com", null);
+    Family family = new Family("Test Name", "000000", "America/Chicago", null, null);
+    Calendar calendar = new Calendar(family, "Test Description");
+    Long userId = (Long) session.save(user);
+    Long familId = (Long) session.save(family);
+    assertTrue(userId > 0);
+    assertTrue(familId > 0);
+    Long calendarId = (Long) session.save(calendar);
+    assertTrue(calendarId > 0);
+
+    CalendarEvent calendarEvent = new CalendarEvent();
+    calendarEvent.setAllDay(false);
+    calendarEvent.setFamilyEvent(true);
+    calendarEvent.setStartDatetime(Timestamp.from(Instant.now()));
+    calendarEvent.setEndDatetime(Timestamp.from(Instant.now()));
+    calendarEvent.setDescription("Test description");
+    calendarEvent.setNotes("Test notes");
+    calendarEvent.setCreatedBy(user);
+    calendarEvent.setCreatedDatetime(Timestamp.from(Instant.now()));
+    calendarEvent.setCalendar(calendar);
+    calendarEvent.setTimezone("America/Chicago");
+    Long eventId = (Long) session.save(calendarEvent);
+    assertTrue(eventId > 0);
+
     RecurringCalendarEvent recurringEvent = new RecurringCalendarEvent();
     originalStartDatetime = Timestamp.from(Instant.now());
     originalEndDatetime = Timestamp.from(Instant.now());
     recurringEvent.setStartDatetime(originalStartDatetime);
     recurringEvent.setEndDatetime(originalEndDatetime);
+    recurringEvent.setOriginatingEvent(calendarEvent);
 
     /* When */
     Long id = (Long) session.save(recurringEvent);
@@ -82,11 +107,10 @@ public class RecurringCalendarEventTest {
   public void testUpdate() {
     System.out.println("Running [RecurringCalendarEventTest] testUpdate...");
     /* Given */
-    Long id = 1l;
-    RecurringCalendarEvent recurringEvent = new RecurringCalendarEvent();
+    Long id = 1L;
+    RecurringCalendarEvent recurringEvent = session.find(RecurringCalendarEvent.class, id);
     recurringEvent.setStartDatetime(Timestamp.from(Instant.now()));
     recurringEvent.setEndDatetime(Timestamp.from(Instant.now()));
-    recurringEvent.setId(id);
 
     /* When */
     session.beginTransaction();

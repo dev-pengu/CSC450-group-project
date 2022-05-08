@@ -97,10 +97,12 @@ public class Family implements Serializable {
       String timezone,
       String inviteCode,
       Set<FamilyMembers> members) {
+    Objects.requireNonNull(name);
+    Objects.requireNonNull(timezone);
     this.id = id;
-    this.name = name;
+    this.name = name.trim();
     this.eventColor = eventColor;
-    this.timezone = timezone;
+    this.timezone = timezone.trim();
     this.inviteCode = inviteCode;
     this.members = members;
   }
@@ -111,10 +113,11 @@ public class Family implements Serializable {
       String timezone,
       String inviteCode,
       Set<FamilyMembers> members) {
-    super();
-    this.name = name;
+    Objects.requireNonNull(name);
+    Objects.requireNonNull(timezone);
+    this.name = name.trim();
     this.eventColor = eventColor;
-    this.timezone = timezone;
+    this.timezone = timezone.trim();
     this.inviteCode = inviteCode;
     this.members = members;
   }
@@ -132,7 +135,8 @@ public class Family implements Serializable {
   }
 
   public void setName(String name) {
-    this.name = name;
+    Objects.requireNonNull(name);
+    this.name = name.trim();
   }
 
   public String getEventColor() {
@@ -148,7 +152,8 @@ public class Family implements Serializable {
   }
 
   public void setTimezone(String timezone) {
-    this.timezone = timezone;
+    Objects.requireNonNull(timezone);
+    this.timezone = timezone.trim();
   }
 
   public String getInviteCode() {
@@ -234,13 +239,17 @@ public class Family implements Serializable {
     this.shoppingLists.add(list);
   }
 
-  public Set<Poll> getPolls() {return  polls;}
+  public Set<Poll> getPolls() {
+    return polls;
+  }
 
   public void setPoll(Set<Poll> polls) {
     this.polls = polls;
   }
 
-  public Set<MemberInvite> getInvites() {return invites;}
+  public Set<MemberInvite> getInvites() {
+    return invites;
+  }
 
   public void setInvites(Set<MemberInvite> invites) {
     this.invites = invites;

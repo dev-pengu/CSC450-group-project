@@ -1,4 +1,4 @@
-import { authHttp } from "./clients"
+import { authHttp } from './clients';
 
 export default {
   getCsrf() {
@@ -29,6 +29,7 @@ export default {
       lastName: formData.lastName,
       email: formData.email,
       password: formData.password,
+      timezone: formData.timezone,
     });
   },
   sendResetCode(username) {
@@ -55,4 +56,4 @@ export default {
       params: { email },
     });
   },
-}
+};

@@ -4,14 +4,14 @@ import java.util.List;
 import java.util.Objects;
 
 public class ToDoListDto {
-  private Long id;
-  private String description;
-  private Boolean isDefault;
-  private Long familyId;
-  private List<ToDoTaskDto> tasks;
-  private UserDto createdBy;
-  private String created;
-  private String color;
+  private final Long id;
+  private final String description;
+  private final Boolean isDefault;
+  private final Long familyId;
+  private final List<ToDoTaskDto> tasks;
+  private final UserDto createdBy;
+  private final String created;
+  private final String color;
 
   public ToDoListDto(
       Long id,
@@ -23,13 +23,13 @@ public class ToDoListDto {
       String created,
       String color) {
     this.id = id;
-    this.description = description;
+    this.description = description == null ? null : description.trim();
     this.isDefault = isDefault;
     this.familyId = familyId;
     this.tasks = tasks;
     this.createdBy = createdBy;
     this.created = created;
-    this.color = color;
+    this.color = color == null ? null : color.trim();
   }
 
   public Long getId() {

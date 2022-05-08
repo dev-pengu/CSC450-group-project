@@ -27,20 +27,23 @@ public class RecurringCalendarEvent implements Serializable {
 
   @JsonIgnore
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "calendar_event_id", referencedColumnName = "calendar_event_id",
-      columnDefinition = "BIGINT")
+  @JoinColumn(
+      name = "calendar_event_id",
+      referencedColumnName = "calendar_event_id",
+      columnDefinition = "BIGINT",
+      nullable = false)
   private CalendarEvent originatingEvent;
 
-  @Column(name = "start_datetime", columnDefinition = "TIMESTAMP")
+  @Column(name = "start_datetime", columnDefinition = "TIMESTAMP", nullable = false)
   private Timestamp startDatetime;
 
-  @Column(name = "end_datetime", columnDefinition = "TIMESTAMP")
+  @Column(name = "end_datetime", columnDefinition = "TIMESTAMP", nullable = false)
   private Timestamp endDatetime;
 
   public RecurringCalendarEvent() {}
 
-  public RecurringCalendarEvent(Long id, CalendarEvent originatingEvent, Timestamp startDatetime,
-      Timestamp endDatetime) {
+  public RecurringCalendarEvent(
+      Long id, CalendarEvent originatingEvent, Timestamp startDatetime, Timestamp endDatetime) {
     super();
     this.id = id;
     this.originatingEvent = originatingEvent;
@@ -87,23 +90,25 @@ public class RecurringCalendarEvent implements Serializable {
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj)
-      return true;
-    if (obj == null)
-      return false;
-    if (getClass() != obj.getClass())
-      return false;
+    if (this == obj) return true;
+    if (obj == null) return false;
+    if (getClass() != obj.getClass()) return false;
     RecurringCalendarEvent other = (RecurringCalendarEvent) obj;
-    return Objects.equals(endDatetime, other.endDatetime) && Objects.equals(id, other.id)
+    return Objects.equals(endDatetime, other.endDatetime)
+        && Objects.equals(id, other.id)
         && Objects.equals(startDatetime, other.startDatetime);
   }
 
   @Override
   public String toString() {
-    return "RecurringCalendarEvent [id=" + id + ", originatingEvent=" + originatingEvent.getId()
-        + ", startDatetime=" + startDatetime + ", endDatetime=" + endDatetime + "]";
+    return "RecurringCalendarEvent [id="
+        + id
+        + ", originatingEvent="
+        + originatingEvent.getId()
+        + ", startDatetime="
+        + startDatetime
+        + ", endDatetime="
+        + endDatetime
+        + "]";
   }
-
-
-
 }

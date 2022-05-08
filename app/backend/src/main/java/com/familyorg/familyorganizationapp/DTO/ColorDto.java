@@ -5,23 +5,27 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 public class ColorDto {
   @JsonInclude(Include.NON_NULL)
-  private Long familyId;
+  private final Long familyId;
+
   @JsonInclude(Include.NON_NULL)
-  private Long userId;
+  private final Long userId;
+
   @JsonInclude(Include.NON_NULL)
-  private String user;
+  private final String user;
+
   @JsonInclude(Include.NON_NULL)
-  private String family;
+  private final String family;
+
   @JsonInclude(Include.NON_NULL)
-  private String color;
+  private final String color;
 
   public ColorDto(Long familyId, Long userId, String user, String family, String color) {
     super();
     this.familyId = familyId;
     this.userId = userId;
-    this.user = user;
-    this.family = family;
-    this.color = color;
+    this.user = user == null ? null : user.trim();
+    this.family = family == null ? null : family.trim();
+    this.color = color == null ? null : color.trim();
   }
 
   public Long getFamilyId() {
@@ -46,9 +50,16 @@ public class ColorDto {
 
   @Override
   public String toString() {
-    return "ColorDto [familyId=" + familyId + ", userId=" + userId + ", user=" + user + ", family="
-        + family + ", color=" + color + "]";
+    return "ColorDto [familyId="
+        + familyId
+        + ", userId="
+        + userId
+        + ", user="
+        + user
+        + ", family="
+        + family
+        + ", color="
+        + color
+        + "]";
   }
-
-
 }

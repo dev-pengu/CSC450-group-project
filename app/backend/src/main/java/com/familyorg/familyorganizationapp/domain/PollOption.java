@@ -50,7 +50,8 @@ public class PollOption implements Serializable {
   }
 
   public void setValue(String value) {
-    this.value = value;
+    Objects.requireNonNull(value);
+    this.value = value.trim();
   }
 
   public List<PollVote> getVotes() {
@@ -83,12 +84,9 @@ public class PollOption implements Serializable {
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj)
-      return true;
-    if (obj == null)
-      return false;
-    if (getClass() != obj.getClass())
-      return false;
+    if (this == obj) return true;
+    if (obj == null) return false;
+    if (getClass() != obj.getClass()) return false;
     PollOption other = (PollOption) obj;
     return Objects.equals(id, other.id) && Objects.equals(value, other.value);
   }
@@ -97,5 +95,4 @@ public class PollOption implements Serializable {
   public String toString() {
     return "PollOption [id=" + id + ", value=" + value + ", votes=" + votes + "]";
   }
-
 }

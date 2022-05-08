@@ -63,7 +63,9 @@ public class CalendarEventTest {
     calendarEvent.setDescription("Test description");
     calendarEvent.setNotes("Test notes");
     calendarEvent.setCreatedBy(user);
+    calendarEvent.setCreatedDatetime(Timestamp.from(Instant.now()));
     calendarEvent.setCalendar(calendar);
+    calendarEvent.setTimezone("America/Chicago");
 
     /* When */
     Long id = (Long) session.save(calendarEvent);
@@ -92,17 +94,10 @@ public class CalendarEventTest {
   public void testUpdate() {
     System.out.println("Running [CalendarEventTest] testUpdate...");
     /* Given */
-    Long id = 1l;
-    CalendarEvent calendarEvent = new CalendarEvent();
+    Long id = 1L;
+    CalendarEvent calendarEvent = session.find(CalendarEvent.class, id);
     calendarEvent.setAllDay(true);
-    calendarEvent.setFamilyEvent(true);
-    calendarEvent.setStartDatetime(Timestamp.from(Instant.now()));
-    calendarEvent.setEndDatetime(Timestamp.from(Instant.now()));
-    calendarEvent.setDescription("Test description");
-    calendarEvent.setNotes("Test notes");
-    calendarEvent.setCreatedBy(session.find(User.class, 1l));
-    calendarEvent.setCalendar(session.find(Calendar.class, 1l));
-    calendarEvent.setId(id);
+
 
     /* When */
     session.beginTransaction();

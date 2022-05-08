@@ -72,11 +72,11 @@ public class UserServiceImpl implements UserService {
           ApiExceptionCode.PASSWORD_MINIMUM_REQUIREMENTS_NOT_MET,
           "Password does not meet minimum requirements");
     }
-    User existingUser = userRepository.findByUsername(user.getUsername());
+    User existingUser = userRepository.findByUsernameIgnoreCase(user.getUsername());
     if (existingUser != null) {
       throw new ExistingUserException(ApiExceptionCode.USERNAME_IN_USE, "Username already in use.");
     }
-    existingUser = userRepository.findByEmail(user.getEmail());
+    existingUser = userRepository.findByEmailIgnoreCase(user.getEmail());
     if (existingUser != null) {
       throw new ExistingUserException(ApiExceptionCode.EMAIL_IN_USE, "Email already in use.");
     }
@@ -209,13 +209,13 @@ public class UserServiceImpl implements UserService {
   @Override
   public User getUserByUsername(String username) {
     Objects.requireNonNull(username);
-    return userRepository.findByUsername(username);
+    return userRepository.findByUsernameIgnoreCase(username.trim());
   }
 
   @Override
   public User getUserByEmail(String email) {
     Objects.requireNonNull(email);
-    return userRepository.findByEmail(email);
+    return userRepository.findByEmailIgnoreCase(email.trim());
   }
 
   @Override

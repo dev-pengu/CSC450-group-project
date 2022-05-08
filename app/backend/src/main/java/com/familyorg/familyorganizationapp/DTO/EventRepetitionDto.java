@@ -5,12 +5,12 @@ import java.util.Objects;
 import com.familyorg.familyorganizationapp.domain.CalendarRepetitionFrequency;
 
 public class EventRepetitionDto {
-  private Long id;
-  private CalendarRepetitionFrequency frequency;
-  private Integer interval;
-  private Integer count;
-  private Date startDate;
-  private Long owningEventId;
+  private final Long id;
+  private final CalendarRepetitionFrequency frequency;
+  private final Integer interval;
+  private final Integer count;
+  private final Date startDate;
+  private final Long owningEventId;
 
   public EventRepetitionDto(Long id, CalendarRepetitionFrequency frequency, Integer interval,
       Integer count, Date startDate, Long owningEventId) {

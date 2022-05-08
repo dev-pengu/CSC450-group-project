@@ -31,13 +31,12 @@ public class Calendar implements Serializable {
   @Column(name = "is_default", columnDefinition = "BOOLEAN")
   private Boolean isDefault;
 
-  @Column(name = "description", columnDefinition = "VARCHAR(70)")
+  @Column(name = "description", columnDefinition = "VARCHAR(70)", nullable = false)
   private String description;
 
   @JsonIgnore
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "family_id", referencedColumnName = "family_id",
-      columnDefinition = "BIGINT")
+  @JoinColumn(name = "family_id", referencedColumnName = "family_id", columnDefinition = "BIGINT")
   private Family family;
 
   @OneToMany(mappedBy = "calendar", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
@@ -46,22 +45,22 @@ public class Calendar implements Serializable {
   public Calendar() {}
 
   public Calendar(Family family, String description) {
-    this.family = family;
-    this.description = description;
-    this.isDefault = true;
+    this(family, description, true);
   }
 
   public Calendar(Family family, String description, boolean isDefault) {
+    Objects.requireNonNull(family);
+    Objects.requireNonNull(description);
     this.family = family;
-    this.description = description;
+    this.description = description.trim();
     this.isDefault = isDefault;
   }
 
-  public Calendar(Long id, String description, boolean isDefault, Family family,
-      List<CalendarEvent> events) {
-    super();
+  public Calendar(
+      Long id, String description, boolean isDefault, Family family, List<CalendarEvent> events) {
+    Objects.requireNonNull(description);
     this.id = id;
-    this.description = description;
+    this.description = description.trim();
     this.isDefault = isDefault;
     this.family = family;
     this.events = events;
@@ -80,7 +79,8 @@ public class Calendar implements Serializable {
   }
 
   public void setDescription(String description) {
-    this.description = description;
+    Objects.requireNonNull(description);
+    this.description = description.trim();
   }
 
   public boolean isDefault() {
@@ -114,22 +114,25 @@ public class Calendar implements Serializable {
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj)
-      return true;
-    if (obj == null)
-      return false;
-    if (getClass() != obj.getClass())
-      return false;
+    if (this == obj) return true;
+    if (obj == null) return false;
+    if (getClass() != obj.getClass()) return false;
     Calendar other = (Calendar) obj;
-    return Objects.equals(id, other.id) && isDefault == other.isDefault
+    return Objects.equals(id, other.id)
+        && isDefault == other.isDefault
         && Objects.equals(description, other.description);
   }
 
   @Override
   public String toString() {
-    return "Calendar [id=" + id + ", description=" + description + ", isDefault=" + isDefault
-        + ", events=" + events + "]";
+    return "Calendar [id="
+        + id
+        + ", description="
+        + description
+        + ", isDefault="
+        + isDefault
+        + ", events="
+        + events
+        + "]";
   }
-
-
 }

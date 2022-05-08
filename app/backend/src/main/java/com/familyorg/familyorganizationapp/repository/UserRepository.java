@@ -7,7 +7,7 @@ import com.familyorg.familyorganizationapp.repository.custom.UserRepositoryCusto
 
 
 public interface UserRepository extends CrudRepository<User, Long>, UserRepositoryCustom {
-  User findByUsername(@Param("username") String username);
+  User findByUsernameIgnoreCase(@Param("username") String username);
 
-  User findByEmail(@Param("email") String email);
+  User findByEmailIgnoreCase(@Param("email") String email);
 }

@@ -1,19 +1,19 @@
 package com.familyorg.familyorganizationapp.DTO;
 
-
 import com.familyorg.familyorganizationapp.domain.Role;
 
 import java.util.Objects;
 
 public class MemberInviteDto {
-  private Long familyId;
-  private String recipientEmail;
-  private Role initialRole;
-  private boolean persistent;
+  private final Long familyId;
+  private final String recipientEmail;
+  private final Role initialRole;
+  private final boolean persistent;
 
-  public MemberInviteDto(Long familyId, String recipientEmail, Role initialRole, boolean persistent) {
+  public MemberInviteDto(
+      Long familyId, String recipientEmail, Role initialRole, boolean persistent) {
     this.familyId = familyId;
-    this.recipientEmail = recipientEmail;
+    this.recipientEmail = recipientEmail == null ? null : recipientEmail.trim();
     this.initialRole = initialRole;
     this.persistent = persistent;
   }
@@ -30,17 +30,19 @@ public class MemberInviteDto {
     return initialRole;
   }
 
-  public boolean isPersistent() { return persistent; }
+  public boolean isPersistent() {
+    return persistent;
+  }
 
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     MemberInviteDto that = (MemberInviteDto) o;
-    return persistent == that.persistent &&
-        familyId.equals(that.familyId) &&
-        Objects.equals(recipientEmail, that.recipientEmail) &&
-        initialRole == that.initialRole;
+    return persistent == that.persistent
+        && familyId.equals(that.familyId)
+        && Objects.equals(recipientEmail, that.recipientEmail)
+        && initialRole == that.initialRole;
   }
 
   @Override
@@ -50,11 +52,16 @@ public class MemberInviteDto {
 
   @Override
   public String toString() {
-    return "MemberInviteDto{" +
-        "familyId=" + familyId +
-        ", recipientEmail='" + recipientEmail + '\'' +
-        ", initialRole=" + initialRole +
-        ", isPersistent=" + persistent +
-        '}';
+    return "MemberInviteDto{"
+        + "familyId="
+        + familyId
+        + ", recipientEmail='"
+        + recipientEmail
+        + '\''
+        + ", initialRole="
+        + initialRole
+        + ", isPersistent="
+        + persistent
+        + '}';
   }
 }

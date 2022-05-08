@@ -7,41 +7,60 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 public class CalendarEventDto {
-  private Long id;
+  private final Long id;
   private Boolean allDay = false;
   private Boolean familyEvent = false;
+
   @JsonInclude(Include.NON_NULL)
-  private String color;
-  private String startDate;
-  private String endDate;
-  private EventRepetitionDto repetitionSchedule;
-  private String description;
-  private String notes;
-  private UserDto createdBy;
-  private Date created;
-  private Long calendarId;
+  private final String color;
+
+  private final String startDate;
+  private final String endDate;
+  private final EventRepetitionDto repetitionSchedule;
+  private final String description;
+  private final String notes;
+  private final UserDto createdBy;
+  private final Date created;
+  private final Long calendarId;
   private Boolean recurringEvent = false;
-  private Long recurringId;
+  private final Long recurringId;
+
   @JsonInclude(Include.NON_NULL)
   private Boolean detachEvent = false;
-  private Boolean userCanEdit;
-  @JsonInclude(Include.NON_EMPTY)
-  private Set<ColorDto> assignees;
 
-  public CalendarEventDto(Long id, Boolean isAllDay, Boolean familyEvent, String color,
-      String startDate, String endDate, EventRepetitionDto repetitionSchedule, String description,
-      String notes, UserDto createdBy, Date created, Long calendarId, Boolean isRecurringEvent,
-      Long recurringId, Boolean userCanEdit, Set<ColorDto> assignees, Boolean detachEvent) {
+  private final Boolean userCanEdit;
+
+  @JsonInclude(Include.NON_EMPTY)
+  private final Set<ColorDto> assignees;
+
+  public CalendarEventDto(
+      Long id,
+      Boolean isAllDay,
+      Boolean familyEvent,
+      String color,
+      String startDate,
+      String endDate,
+      EventRepetitionDto repetitionSchedule,
+      String description,
+      String notes,
+      UserDto createdBy,
+      Date created,
+      Long calendarId,
+      Boolean isRecurringEvent,
+      Long recurringId,
+      Boolean userCanEdit,
+      Set<ColorDto> assignees,
+      Boolean detachEvent) {
     super();
     this.id = id;
     this.allDay = isAllDay;
     this.familyEvent = familyEvent;
-    this.color = color;
+    this.color = color == null ? null : color.trim();
     this.startDate = startDate;
     this.endDate = endDate;
     this.repetitionSchedule = repetitionSchedule;
-    this.description = description;
-    this.notes = notes;
+    this.description = description == null ? null : description.trim();
+    this.notes = notes == null ? null : notes.trim();
     this.createdBy = createdBy;
     this.created = created;
     this.calendarId = calendarId;
@@ -52,19 +71,13 @@ public class CalendarEventDto {
     this.detachEvent = detachEvent;
   }
 
-
-
   public Long getId() {
     return id;
   }
 
-
-
   public Boolean isAllDay() {
     return allDay;
   }
-
-
 
   public Boolean isFamilyEvent() {
     return familyEvent;
@@ -74,49 +87,33 @@ public class CalendarEventDto {
     return color;
   }
 
-
-
   public String getStartDate() {
     return startDate;
   }
-
-
 
   public String getEndDate() {
     return endDate;
   }
 
-
-
   public EventRepetitionDto getRepetitionSchedule() {
     return repetitionSchedule;
   }
-
-
 
   public String getDescription() {
     return description;
   }
 
-
-
   public String getNotes() {
     return notes;
   }
-
-
 
   public UserDto getCreatedBy() {
     return createdBy;
   }
 
-
-
   public Date getCreated() {
     return created;
   }
-
-
 
   public Long getCalendarId() {
     return calendarId;
@@ -144,24 +141,37 @@ public class CalendarEventDto {
 
   @Override
   public int hashCode() {
-    return Objects.hash(color, created, createdBy, description, endDate, id, allDay, notes,
-        repetitionSchedule, startDate, calendarId, familyEvent, recurringEvent, recurringId,
+    return Objects.hash(
+        color,
+        created,
+        createdBy,
+        description,
+        endDate,
+        id,
+        allDay,
+        notes,
+        repetitionSchedule,
+        startDate,
+        calendarId,
+        familyEvent,
+        recurringEvent,
+        recurringId,
         userCanEdit);
   }
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj)
-      return true;
-    if (obj == null)
-      return false;
-    if (getClass() != obj.getClass())
-      return false;
+    if (this == obj) return true;
+    if (obj == null) return false;
+    if (getClass() != obj.getClass()) return false;
     CalendarEventDto other = (CalendarEventDto) obj;
-    return Objects.equals(color, other.color) && Objects.equals(created, other.created)
+    return Objects.equals(color, other.color)
+        && Objects.equals(created, other.created)
         && Objects.equals(createdBy, other.createdBy)
-        && Objects.equals(description, other.description) && Objects.equals(endDate, other.endDate)
-        && Objects.equals(id, other.id) && Objects.equals(allDay, other.allDay)
+        && Objects.equals(description, other.description)
+        && Objects.equals(endDate, other.endDate)
+        && Objects.equals(id, other.id)
+        && Objects.equals(allDay, other.allDay)
         && Objects.equals(notes, other.notes)
         && Objects.equals(repetitionSchedule, other.repetitionSchedule)
         && Objects.equals(startDate, other.startDate)
@@ -174,11 +184,40 @@ public class CalendarEventDto {
 
   @Override
   public String toString() {
-    return "CalendarEventDto [id=" + id + ", isAllDay=" + allDay + ", isFamilyEvent=" + familyEvent
-        + ", color=" + color + ", startDate=" + startDate + ", endDate=" + endDate
-        + ", repetitionSchedule=" + repetitionSchedule + ", description=" + description + ", notes="
-        + notes + ", createdBy=" + createdBy + ", created=" + created + ", calendarId=" + calendarId
-        + ", isRecurringEvent=" + recurringEvent + ", recurringId=" + recurringId + ", userCanEdit="
-        + userCanEdit + ", detachEvent=" + detachEvent + ", assignees" + assignees + "]";
+    return "CalendarEventDto [id="
+        + id
+        + ", isAllDay="
+        + allDay
+        + ", isFamilyEvent="
+        + familyEvent
+        + ", color="
+        + color
+        + ", startDate="
+        + startDate
+        + ", endDate="
+        + endDate
+        + ", repetitionSchedule="
+        + repetitionSchedule
+        + ", description="
+        + description
+        + ", notes="
+        + notes
+        + ", createdBy="
+        + createdBy
+        + ", created="
+        + created
+        + ", calendarId="
+        + calendarId
+        + ", isRecurringEvent="
+        + recurringEvent
+        + ", recurringId="
+        + recurringId
+        + ", userCanEdit="
+        + userCanEdit
+        + ", detachEvent="
+        + detachEvent
+        + ", assignees"
+        + assignees
+        + "]";
   }
 }

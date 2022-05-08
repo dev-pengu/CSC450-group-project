@@ -30,8 +30,7 @@ public class MemberInvite implements Serializable {
   @JsonIgnore
   @Id
   @ManyToOne(fetch = FetchType.EAGER)
-  @JoinColumn(name = "family_id", referencedColumnName = "family_id",
-      columnDefinition = "BIGINT")
+  @JoinColumn(name = "family_id", referencedColumnName = "family_id", columnDefinition = "BIGINT")
   private Family family;
 
   @Id
@@ -58,10 +57,11 @@ public class MemberInvite implements Serializable {
     this(family, userEmail, role, created, null);
   }
 
-  public MemberInvite(Family family, String userEmail, Role role, Timestamp created,
-      String inviteCode) {
+  public MemberInvite(
+      Family family, String userEmail, Role role, Timestamp created, String inviteCode) {
+    Objects.requireNonNull(userEmail);
     this.family = family;
-    this.userEmail = userEmail;
+    this.userEmail = userEmail.trim();
     this.role = role != null ? role : Role.lowestLevelRole();
     this.createdAt = created != null ? created : Timestamp.valueOf(LocalDateTime.now());
     if (this.inviteCode != null) {
@@ -107,7 +107,8 @@ public class MemberInvite implements Serializable {
   }
 
   public void setUserEmail(String userEmail) {
-    this.userEmail = userEmail;
+    Objects.requireNonNull(userEmail);
+    this.userEmail = userEmail.trim();
   }
 
   public Role getRole() {
@@ -122,20 +123,17 @@ public class MemberInvite implements Serializable {
     return createdAt;
   }
 
-
-
   public void setCreatedAt(Timestamp createdAt) {
     this.createdAt = createdAt;
   }
 
   @Override
   public boolean equals(Object o) {
-    if (this == o)
-      return true;
-    if (o == null || getClass() != o.getClass())
-      return false;
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
     MemberInvite that = (MemberInvite) o;
-    return inviteCode.equals(that.inviteCode) && family.getId().equals(that.family.getId())
+    return inviteCode.equals(that.inviteCode)
+        && family.getId().equals(that.family.getId())
         && userEmail.equals(that.userEmail);
   }
 
@@ -146,7 +144,18 @@ public class MemberInvite implements Serializable {
 
   @Override
   public String toString() {
-    return "MemberInvite{" + "inviteCode='" + inviteCode + '\'' + ", familyId=" + family.getId()
-        + ", userEmail='" + userEmail + '\'' + ", role='" + role + '\'' + '}';
+    return "MemberInvite{"
+        + "inviteCode='"
+        + inviteCode
+        + '\''
+        + ", familyId="
+        + family.getId()
+        + ", userEmail='"
+        + userEmail
+        + '\''
+        + ", role='"
+        + role
+        + '\''
+        + '}';
   }
 }

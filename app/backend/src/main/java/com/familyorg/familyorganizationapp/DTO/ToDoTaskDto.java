@@ -6,17 +6,17 @@ import java.util.Date;
 import java.util.Objects;
 
 public class ToDoTaskDto {
-  private Long id;
-  private String description;
-  private String notes;
-  private Boolean completed;
-  private Date dueDate;
-  private Date completedDateTime;
-  private UserDto addedBy;
-  private String created;
+  private final Long id;
+  private final String description;
+  private final String notes;
+  private final Boolean completed;
+  private final Date dueDate;
+  private final Date completedDateTime;
+  private final UserDto addedBy;
+  private final String created;
 
   @JsonInclude(Include.NON_NULL)
-  private Long listId;
+  private final Long listId;
 
   public ToDoTaskDto(
       Long id,
@@ -29,8 +29,8 @@ public class ToDoTaskDto {
       String created,
       Long listId) {
     this.id = id;
-    this.description = description;
-    this.notes = notes;
+    this.description = description == null ? null : description.trim();
+    this.notes = notes == null ? null : notes.trim();
     this.completed = completed;
     this.dueDate = dueDate;
     this.completedDateTime = completedDateTime;

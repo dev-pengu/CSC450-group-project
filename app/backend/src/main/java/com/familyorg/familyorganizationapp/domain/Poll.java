@@ -32,8 +32,7 @@ public class Poll implements Serializable {
 
   @JsonIgnore
   @ManyToOne(fetch = FetchType.EAGER)
-  @JoinColumn(name = "family_id", referencedColumnName = "family_id",
-      columnDefinition = "BIGINT")
+  @JoinColumn(name = "family_id", referencedColumnName = "family_id", columnDefinition = "BIGINT")
   private Family family;
 
   @Column(name = "description", columnDefinition = "VARCHAR(256)", nullable = false)
@@ -85,7 +84,8 @@ public class Poll implements Serializable {
   }
 
   public void setDescription(String description) {
-    this.description = description;
+    Objects.requireNonNull(description);
+    this.description = description.trim();
   }
 
   public String getNotes() {
@@ -93,7 +93,7 @@ public class Poll implements Serializable {
   }
 
   public void setNotes(String notes) {
-    this.notes = notes;
+    this.notes = notes == null ? null : notes.trim();
   }
 
   public Timestamp getCreatedDatetime() {
@@ -158,24 +158,33 @@ public class Poll implements Serializable {
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj)
-      return true;
-    if (obj == null)
-      return false;
-    if (getClass() != obj.getClass())
-      return false;
+    if (this == obj) return true;
+    if (obj == null) return false;
+    if (getClass() != obj.getClass()) return false;
     Poll other = (Poll) obj;
     return Objects.equals(closeDateTime, other.closeDateTime)
         && Objects.equals(createdDatetime, other.createdDatetime)
-        && Objects.equals(description, other.description) && Objects.equals(id, other.id)
+        && Objects.equals(description, other.description)
+        && Objects.equals(id, other.id)
         && Objects.equals(notes, other.notes);
   }
 
   @Override
   public String toString() {
-    return "Poll [id=" + id + ", description=" + description + ", notes=" + notes
-        + ", createdDatetime=" + createdDatetime + ", closeDateTime=" + closeDateTime + ", options="
-        + options + ",timezone=" + timezone + "]";
+    return "Poll [id="
+        + id
+        + ", description="
+        + description
+        + ", notes="
+        + notes
+        + ", createdDatetime="
+        + createdDatetime
+        + ", closeDateTime="
+        + closeDateTime
+        + ", options="
+        + options
+        + ",timezone="
+        + timezone
+        + "]";
   }
-
 }
