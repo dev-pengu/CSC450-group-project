@@ -382,7 +382,7 @@ public class PollServiceImpl implements PollService {
     System.out.println(pollOpt.get().getCloseDateTime());
     System.out.println(Date.from(Instant.now()));
     boolean closed = pollOpt.get().getCloseDateTime().compareTo(Date.from(Instant.now())) < 0;
-    if (!allVotesIn || !closed) {
+    if (!allVotesIn && !closed) {
       throw new BadRequestException(
           ApiExceptionCode.ILLEGAL_ACTION_REQUESTED,
           "Results cannot be viewed for a poll still in progress.");

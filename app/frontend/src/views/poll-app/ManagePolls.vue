@@ -5,22 +5,6 @@
         <PollNav />
       </v-col>
       <v-col cols="12" sm="8" md="9">
-        <v-toolbar class="mb-2 mt-xs-4" color="foa_content_bg" dark flat>
-          <v-toolbar-title class="foa_nav_link--text">Poll Management</v-toolbar-title>
-          <v-spacer></v-spacer>
-          <v-btn icon color="foa_button_dark" :disabled="loading" :loading="loading" @click="fetchPolls"
-            ><v-icon>mdi-cached</v-icon></v-btn
-          >
-          <v-text-field
-            v-model="search"
-            color="foa_button"
-            append-icon="mdi-magnify"
-            label="Search"
-            single-line
-            hide-details
-            light
-          ></v-text-field>
-        </v-toolbar>
         <v-dialog v-model="updateDialog" max-width="500px">
           <v-card>
             <v-card-title>
@@ -148,45 +132,109 @@
             </v-card-actions>
           </v-card>
         </v-dialog>
-        <v-data-table
-          :headers="tableHeaders"
+        <v-data-iterator
           :items="polls"
-          :items-per-page="8"
-          :expanded="expanded"
           item-key="id"
-          class="elevation-1"
-          :footer-props="{
-            showFirstLastPage: true,
-            firstIcon: 'mdi-chevron-left',
-            lastIcon: 'mdi-chevron-right',
-            prevIcon: 'mdi-minus',
-            nextIcon: 'mdi-plus',
-          }"
-          single-expand
-          show-expand
+          :items-per-page.sync="itemsPerPage"
+          :page.sync="page"
+          :loading="loading"
+          no-data-text="You don't have any polls. Create one for your family!"
+          hide-default-footer
           :search="search"
         >
-          <template #item.actions="{ item }">
-            <v-icon small class="mr-2" @click="editItem(item)">mdi-pencil</v-icon>
-            <v-icon small @click="deleteItem(item)">mdi-delete</v-icon>
+          <template #header>
+            <div class="foa_text_header--text text-h4 mb-3 d-inline-flex align-center">
+              <span>Manage Polls</span>
+              <PollDialog class="mr-2" :success-callback="fetchPolls" type="create"></PollDialog>
+            </div>
+            <v-toolbar class="mb-4" color="foa_nav_bg">
+              <v-text-field
+                v-model="search"
+                clearable
+                flat
+                solo
+                color="foa_button"
+                append-icon="mdi-magnify"
+                label="Search"
+                hide-details
+              ></v-text-field>
+              <v-btn icon color="foa_button_dark" :disabled="loading" :loading="loading" @click="fetchPolls"
+                ><v-icon>mdi-cached</v-icon></v-btn
+              >
+            </v-toolbar>
           </template>
-          <template #expanded-item="{ headers, item }">
-            <td :colspan="headers.length">Notes: {{ item.notes }}</td>
+          <template #default="props">
+            <v-list>
+              <v-list-item v-for="poll in props.items" :key="poll.id">
+                <v-list-item-content>
+                  <v-list-item-title v-text="poll.description"> </v-list-item-title>
+                  <v-list-item-subtitle class="text-caption"
+                    >Created by: {{ `${poll.createdBy.firstName} ${poll.createdBy.lastName}` }}</v-list-item-subtitle
+                  >
+                  <v-list-item-subtitle class="text-caption">
+                    Family: {{ getFamily(poll.familyId).name }}
+                  </v-list-item-subtitle>
+                </v-list-item-content>
+                <v-list-item-action>
+                  <div class="d-flex">
+                    <v-btn small :color="btnColor" icon class="mr-2" @click="editItem(poll)">
+                      <v-icon>mdi-pencil</v-icon>
+                    </v-btn>
+                    <v-btn small color="error" icon @click="deleteItem(poll)">
+                      <v-icon>mdi-delete</v-icon>
+                    </v-btn>
+                  </div>
+                </v-list-item-action>
+              </v-list-item>
+            </v-list>
           </template>
-        </v-data-table>
+          <template #footer>
+            <v-row class="mt-4 mx-1" align="center" justify="center">
+              <span class="grey--text text-caption">Items per page</span>
+              <v-menu offset-y>
+                <template #activator="{ on, attrs }">
+                  <v-btn dark text color="primary" class="ml-2" v-bind="attrs" v-on="on">
+                    {{ itemsPerPage }}
+                    <v-icon>mdi-chevron-down</v-icon>
+                  </v-btn>
+                </template>
+                <v-list>
+                  <v-list-item
+                    v-for="(number, index) in itemsPerPageArray"
+                    :key="index"
+                    @click="updateItemsPerPage(number)"
+                  >
+                    <v-list-item-title>{{ number }}</v-list-item-title>
+                  </v-list-item>
+                </v-list>
+              </v-menu>
+              <v-spacer></v-spacer>
+              <span class="mr-4 grey--text text-caption">Page {{ page }} of {{ numberOfPages }}</span>
+              <v-btn fab dark x-small :color="btnColor" class="mr-1" @click="formerPage"
+                ><v-icon>mdi-chevron-left</v-icon></v-btn
+              >
+              <v-btn fab dark x-small :color="btnColor" class="ml-1" @click="nextPage"
+                ><v-icon>mdi-chevron-right</v-icon></v-btn
+              >
+            </v-row>
+          </template>
+        </v-data-iterator>
       </v-col>
     </v-row>
   </div>
 </template>
 
 <script>
+import { mapGetters } from 'vuex';
 import api from '../../api';
 import PollNav from '../../components/poll-app/PollNav.vue';
+import PollDialog from '../../components/poll-app/PollDialog.vue';
 
 export default {
   name: 'PollManager',
   components: {
     PollNav,
+    PollDialog,
   },
   data: () => ({
     valid: true,
@@ -255,7 +303,19 @@ export default {
     errorMsg: '',
     expanded: [],
     search: '',
+    itemsPerPage: 4,
+    itemsPerPageArray: [4, 8, 12],
+    page: 1,
   }),
+  computed: {
+    ...mapGetters({ getFamily: 'getFamily' }),
+    numberOfPages() {
+      return Math.ceil(this.polls.length / this.itemsPerPage);
+    },
+    btnColor() {
+      return this.$vuetify.theme.dark ? 'foa_button' : 'foa_button_dark';
+    },
+  },
   watch: {
     updateDialog(val) {
       if (!val) this.close();
@@ -329,6 +389,15 @@ export default {
         this.editedIndex = -1;
         this.editedItem = { ...this.defaultItem };
       });
+    },
+    nextPage() {
+      if (this.page + 1 <= this.numberOfPages) this.page += 1;
+    },
+    formerPage() {
+      if (this.page - 1 >= 1) this.page -= 1;
+    },
+    updateItemsPerPage(number) {
+      this.itemsPerPage = number;
     },
     async save() {
       this.loading = true;

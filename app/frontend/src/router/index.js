@@ -6,7 +6,6 @@ import SignUp from '../views/SignUp.vue';
 import NotFound from '../views/NotFound.vue';
 import PasswordReset from '../views/PasswordReset.vue';
 import Polling from '../views/poll-app/Polling.vue';
-import CreatePoll from '../views/poll-app/CreatePoll.vue';
 import PollManager from '../views/poll-app/ManagePolls.vue';
 import ResultViewer from '../views/poll-app/ResultViewer.vue';
 import ProfileSettings from '../views/profile/UserProfile.vue';
@@ -73,15 +72,6 @@ const routes = [
     meta: {
       requiresAuth: true,
       title: 'Polls',
-    },
-  },
-  {
-    path: '/polls/create',
-    name: 'Create a Poll',
-    component: CreatePoll,
-    meta: {
-      requiresAuth: true,
-      title: 'Create Poll',
     },
   },
   {

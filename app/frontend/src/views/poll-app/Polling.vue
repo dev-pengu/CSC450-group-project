@@ -142,44 +142,38 @@
           :items-per-page.sync="itemsPerPage"
           :page.sync="page"
           :loading="loading"
-          :no-data-text="`You dont have any polls. Create one for your family!`"
+          :no-data-text="`You don't have any polls. Create one for your family!`"
           hide-default-footer
           :search="searchStr"
         >
           <template #header>
-            <v-toolbar class="mb-2 mt-xs-4" color="foa_content_bg" dark flat>
-              <v-toolbar-title class="foa_nav_link--text">Polls</v-toolbar-title>
-              <v-spacer></v-spacer>
+            <div class="foa_text_header--text text-h4 mb-3 d-inline-flex align-center">
+              <span>Polls</span>
+              <PollDialog class="mr-2" :success-callback="search" type="create"></PollDialog>
+            </div>
+            <v-toolbar class="mb-4" color="foa_nav_bg">
               <v-text-field
                 v-model="searchStr"
+                clearable
+                flat
+                solo
                 color="foa_button"
                 append-icon="mdi-magnify"
                 label="Search"
-                single-line
                 hide-details
-                light
               ></v-text-field>
               <v-btn icon color="foa_button_dark" :disabled="loading" :loading="loading" @click="search"
                 ><v-icon>mdi-cached</v-icon>
               </v-btn>
               <v-btn
-                v-if="$vuetify.breakpoint.mdAndDown"
                 icon
-                color="foa_button"
+                :color="filterBtnColor"
                 :disabled="loading"
                 :loading="loading"
                 @click.stop="filterBarOpen = !filterBarOpen"
               >
                 <v-icon>mdi-filter</v-icon>
               </v-btn>
-              <v-btn
-                v-else
-                class="foa_button_text--text d-inline-block"
-                color="foa_button"
-                elevation="2"
-                @click.stop="filterBarOpen = !filterBarOpen"
-                >Filters</v-btn
-              >
             </v-toolbar>
           </template>
           <template #default="props">
@@ -229,12 +223,14 @@
 import api from '../../api';
 import PollCard from '../../components/poll-app/PollCard.vue';
 import PollNav from '../../components/poll-app/PollNav.vue';
+import PollDialog from '../../components/poll-app/PollDialog.vue';
 
 export default {
   name: 'Polling',
   components: {
     PollCard,
     PollNav,
+    PollDialog,
   },
   data: () => ({
     searchFilters: {
@@ -258,13 +254,17 @@ export default {
     polls: [],
     itemsPerPage: 4,
     page: 1,
-    autoSearch: false,
+    autoSearch: true,
     itemsPerPageArray: [4, 8, 12],
     searchStr: '',
+    filtersActive: false,
   }),
   computed: {
     numberOfPages() {
       return Math.ceil(this.polls.length / this.itemsPerPage);
+    },
+    filterBtnColor() {
+      return this.filtersActive ? 'foa_button_dark' : '';
     },
   },
   watch: {
@@ -278,6 +278,7 @@ export default {
     if (this.$route.query.familyId !== undefined) {
       if (this.activeFilters.FAMILY !== undefined) {
         this.activeFilters.FAMILY.push({ id: +this.$route.query.familyId, display: this.$route.query.name });
+        this.filtersActive = true;
       }
     }
     this.search();
@@ -298,12 +299,18 @@ export default {
     },
     removeFilter(filterSet, i) {
       this.activeFilters[filterSet].splice(i, 1);
+      if (this.activeFilters.POLL.length === 0 && this.activeFilters.FAMILY.length === 0) {
+        this.filtersActive = false;
+      }
       if (this.autoSearch) {
         this.search();
       }
     },
     addFilter(filterSet, filter) {
       this.activeFilters[filterSet].push(filter);
+      if (!this.filtersActive) {
+        this.filtersActive = true;
+      }
       if (this.autoSearch) {
         this.search();
       }
@@ -315,6 +322,7 @@ export default {
       this.unvoted = false;
       this.startDate = null;
       this.endDate = null;
+      this.filtersActive = false;
       this.search();
     },
     nextPage() {

@@ -68,17 +68,25 @@ export default {
       ],
     },
     chartOptions: {
-      indexAxis: 'y',
+      indexAxis: 'x',
       responsive: true,
       plugins: {
         title: {
           display: true,
           text: instance.pollDescription,
         },
+        legend: {
+          display: false,
+        },
       },
       scales: {
         x: {
           beginAtZero: true,
+        },
+        y: {
+          ticks: {
+            stepSize: 1,
+          },
         },
       },
     },
