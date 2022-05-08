@@ -3,7 +3,7 @@
     <v-img v-if="$vuetify.theme.dark" height="250" contain src="@/assets/logo-dark.png"></v-img>
     <v-img v-else height="250" contain src="@/assets/logo-light.png"></v-img>
     <v-row justify="center">
-      <v-col cols="10" md="7">
+      <v-col cols="12" sm="10" md="7">
         <v-stepper v-model="currentStep" alt-labels>
           <v-stepper-header>
             <v-stepper-step color="foa_button" step="1" :complete="currentStep > 1">Personal Info</v-stepper-step>
@@ -60,10 +60,11 @@
                 </v-card-text>
                 <v-card-actions>
                   <v-spacer></v-spacer>
-                  <v-btn class="foa_button_text--text px-5" color="foa_button" elevation="2" to="/login">
+                  <v-btn small class="foa_button_text--text px-5" color="foa_button" elevation="2" to="/login">
                     Back to Login
                   </v-btn>
                   <v-btn
+                    small
                     class="foa_button_text--text px-5"
                     color="foa_button"
                     elevation="2"
@@ -131,10 +132,11 @@
                     <v-icon>mdi-arrow-left</v-icon>
                   </v-btn>
                   <v-spacer></v-spacer>
-                  <v-btn class="foa_button_text--text px-3" color="foa_button" elevation="2" to="/login">
+                  <v-btn small class="foa_button_text--text px-3" color="foa_button" elevation="2" to="/login">
                     Back to Login
                   </v-btn>
                   <v-btn
+                    small
                     class="foa_button_text--text px-3"
                     color="foa_button"
                     elevation="2"
@@ -227,10 +229,15 @@ export default {
         if (res.status === 201) {
           const loginRes = await this.loginUser(this.formData);
           if (loginRes.status === 200) {
-            this.$router.push('/');
+            if (this.$route.query.code !== undefined && this.$route.query.code !== '') {
+              this.$router.push(`/profile/families?code=${this.$route.query.code.trim()}`)
+            } else {
+              this.$router.push('/');
+            }
+          } else if (this.$route.query.code !== undefined && this.$route.query.code !== '') {
+            this.$router.push(`/login?code=${this.$route.query.code}`);
           } else {
-            this.errorMsg = 'We ran into an error creating your user. Please try again in a few minutes.';
-            this.error = true;
+            this.$router.push('/login');
           }
         } else {
           this.errorMsg = 'We ran into an error creating your user. Please try again in a few minutes.';

@@ -47,7 +47,7 @@
               <span class="foa_link--text text-decoration-underline" @click="sendReset">Forgot your password?</span>
             </div>
             <div class="text-center">
-              Don't have an account? <router-link to="/signup" class="foa_link--text">Sign up now!</router-link>
+              Don't have an account? <router-link :to="{ path: '/signup', query: { code: $route.query.code } }" class="foa_link--text">Sign up now!</router-link>
             </div>
           </v-card-text>
         </v-card>
@@ -100,7 +100,11 @@ export default {
         if (res.status === 200) {
           this.$vuetify.theme.dark = res.data.useDarkMode;
           localStorage.setItem('darkMode', this.$vuetify.theme.dark.toString());
-          this.$router.push('/');
+          if (this.$route.query.code !== undefined && this.$route.query.code !== '') {
+            this.$router.push(`/profile/families?code=${this.$route.query.code.trim()}`)
+          } else {
+            this.$router.push('/');
+          }
         } else {
           this.error = true;
           this.errorMsg = 'Your username or password was incorrect.';

@@ -164,7 +164,7 @@ public class InviteServiceImpl implements InviteService {
         throw new ResourceNotFoundException(
             ApiExceptionCode.INVITE_CODE_DOESNT_EXIST, "Invalid invite code");
       }
-      if (!memberInvite.getUserEmail().equals(requestingUser.getEmail())) {
+      if (!memberInvite.getUserEmail().equalsIgnoreCase(requestingUser.getEmail())) {
         throw new AuthorizationException(
             ApiExceptionCode.ILLEGAL_ACTION_REQUESTED,
             "You are not authorized to use this invite code",
