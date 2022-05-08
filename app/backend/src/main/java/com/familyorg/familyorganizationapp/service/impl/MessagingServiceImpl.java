@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.Objects;
 import javax.mail.MessagingException;
@@ -12,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.task.TaskExecutor;
@@ -19,6 +21,8 @@ import org.springframework.mail.MailParseException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StreamUtils;
+
 import com.familyorg.familyorganizationapp.service.MessagingService;
 
 @Service
@@ -54,21 +58,11 @@ public class MessagingServiceImpl implements MessagingService {
     if (inviteTemplateContents != null) {
       return inviteTemplateContents;
     }
-    Resource fileResource = resourceLoader.getResource("classpath:email_templates/invite-template/index.html");
-    try (FileReader fileReader =
-        new FileReader(Paths.get(fileResource.getURI()).toString())) {
-      try (BufferedReader bufferedReader = new BufferedReader(fileReader)) {
-        StringBuilder content = new StringBuilder(20000);
-        String s;
-        while ((s = bufferedReader.readLine()) != null) {
-          content.append(s);
-        }
-        inviteTemplateContents = content.toString();
-      }
+    try {
+      final byte[] bytes = StreamUtils.copyToByteArray(
+        new ClassPathResource("/email_templates/invite-template/index.html").getInputStream());
+      inviteTemplateContents = new String(bytes, StandardCharsets.UTF_8);
       return inviteTemplateContents;
-    } catch (FileNotFoundException e) {
-      logger.error(e.getMessage(), e);
-      return null;
     } catch (IOException e) {
       logger.error(e.getMessage(), e);
       return null;
@@ -79,21 +73,11 @@ public class MessagingServiceImpl implements MessagingService {
     if (passwordResetTemplateContents != null) {
       return passwordResetTemplateContents;
     }
-    Resource fileResource = resourceLoader.getResource("classpath:email_templates/password-reset-template/index.html");
-    try (FileReader fileReader =
-        new FileReader(Paths.get(fileResource.getURI()).toString())) {
-      try (BufferedReader bufferedReader = new BufferedReader(fileReader)) {
-        StringBuilder content = new StringBuilder(18000);
-        String s;
-        while ((s = bufferedReader.readLine()) != null) {
-          content.append(s);
-        }
-        passwordResetTemplateContents = content.toString();
-      }
+    try {
+      final byte[] bytes = StreamUtils.copyToByteArray(
+        new ClassPathResource("/email_templates/password-reset-template/index.html").getInputStream());
+        passwordResetTemplateContents = new String(bytes, StandardCharsets.UTF_8);
       return passwordResetTemplateContents;
-    } catch (FileNotFoundException e) {
-      logger.error(e.getMessage(), e);
-      return null;
     } catch (IOException e) {
       logger.error(e.getMessage(), e);
       return null;
@@ -129,17 +113,19 @@ public class MessagingServiceImpl implements MessagingService {
       final String subject,
       final boolean isHtml)
       throws Exception {
-    taskExecutor.execute(
-        new Runnable() {
-          @Override
-          public void run() {
-            try {
-              sendMailSimple(text, from, to, subject, isHtml);
-            } catch (Exception e) {
-              logger.error("Failed to send email to: " + to + " reason: " + e.getMessage());
+    if (Boolean.parseBoolean(env.getProperty("messaging.use.smtp", "false"))) {
+      taskExecutor.execute(
+          new Runnable() {
+            @Override
+            public void run() {
+              try {
+                sendMailSimple(text, from, to, subject, isHtml);
+              } catch (Exception e) {
+                logger.error("Failed to send email to: " + to + " reason: " + e.getMessage());
+              }
             }
-          }
-        });
+          });
+      }
   }
 
   private void sendMailSimple(String text, String from, String to, String subject, boolean isHtml)
@@ -163,7 +149,7 @@ public class MessagingServiceImpl implements MessagingService {
 
   @Override
   public String buildInviteContent(String inviteCode, String owner) {
-    String joinLink = "https://" + domain + "/profile/families?code=" + inviteCode;
+    String joinLink = "https://" + domain + "/login?code=" + inviteCode;
     String contents = getInviteTemplateContents();
     if (contents == null) {
       return null;
