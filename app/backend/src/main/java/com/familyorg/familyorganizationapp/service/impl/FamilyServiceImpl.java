@@ -396,7 +396,7 @@ public class FamilyServiceImpl implements FamilyService {
           ApiExceptionCode.FAMILY_DOESNT_EXIST, "Family with id " + familyId + " not found.");
     }
     boolean hasAppropriatePermissions =
-        verfiyMinimumRoleSecurity(family.get(), requestingUser, Role.ADMIN);
+        verfiyMinimumRoleSecurity(family.get(), requestingUser, Role.CHILD);
     if (!hasAppropriatePermissions) {
       throw new AuthorizationException(
           ApiExceptionCode.USER_PRIVILEGES_TOO_LOW, "User not authorized to complete this action.");
