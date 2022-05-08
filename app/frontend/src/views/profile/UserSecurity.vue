@@ -67,6 +67,8 @@
               label="Old Password"
               color="foa_button"
               prepend-icon="mdi-lock"
+              counter="32"
+              max-length="32"
               :append-icon="show1 ? 'mdi-eye' : 'mdi-eye-off'"
               :type="show1 ? 'text' : 'password'"
               :rules="[(v) => !!v || 'Password is required']"
@@ -82,7 +84,6 @@
               label="New Password"
               counter="32"
               max-length="32"
-              required
               :rules="[checkPassword, (v) => !!v || 'Password is required']"
               @click:append="show2 = !show2"
             />
@@ -103,7 +104,8 @@
               :append-icon="show3 ? 'mdi-eye' : 'mdi-eye-off'"
               :type="show3 ? 'text' : 'password'"
               label="Confirm Password"
-              required
+              counter="32"
+              max-length="32"
               :rules="[comparePasswords, (v) => !!v || 'Password is required']"
               :error-messages="confirmPwdError"
               @click:append="show3 = !show3"
