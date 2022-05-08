@@ -172,7 +172,6 @@ export default {
           );
           this.events = e;
         } else {
-          console.log('in the else');
           this.events = [];
           this.showSnackbar({
             type: 'error',
@@ -180,8 +179,6 @@ export default {
           });
         }
       } catch (err) {
-        console.log(err);
-        console.log('in the catch');
         this.events = [];
         this.showSnackbar({
           type: 'error',
