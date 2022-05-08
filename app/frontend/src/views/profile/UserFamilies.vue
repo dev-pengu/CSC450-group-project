@@ -357,10 +357,12 @@ export default {
     async submitJoinFamily() {
       try {
         this.loading = true;
+        this.joinError = false;
         this.joinFamilyReq.personalEventColor = this.$refs.joinPersonalColorPicker.color;
         const res = await api.joinFamily(this.joinFamilyReq);
         if (res.status === 200) {
           this.fetchFamilies();
+          this.$refs.joinForm.reset();
           this.showSnackbar({ type: 'success', message: 'You have successfully joined a family!' });
         } else if (res.data.errorCode === 3001) {
           this.joinError = true;
