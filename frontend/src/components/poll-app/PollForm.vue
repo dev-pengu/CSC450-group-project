@@ -168,8 +168,8 @@ export default {
           description: this.formData.description,
           notes: this.formData.notes,
           closedDateTime: `${this.formData.closedDate} 23:59`,
-          options: this.formData.responseOptions.map((option) => ({ value: option })),
-          respondents: this.formData.respondents.map((respondent) => ({ id: respondent })),
+          options: this.formData.responseOptions.map((option) => ({ id: option.id, value: option.value || option })),
+          respondents: this.formData.respondents.map((respondent) => ({ id: respondent.id || respondent })),
         };
 
         const res = await api.createPoll(req);

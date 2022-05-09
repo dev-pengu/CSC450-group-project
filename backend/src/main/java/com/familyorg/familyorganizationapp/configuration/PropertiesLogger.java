@@ -47,7 +47,7 @@ public class PropertiesLogger {
                 log.info(
                     "{}={}",
                     propertyName,
-                    propertyName.contains("password") ? "*" : env.getProperty(propertyName));
+                    propertyName.contains("password") || propertyName.equalsIgnoreCase("spring.datasource.url") ? "*" : env.getProperty(propertyName));
               } catch (Exception e) {
                 log.warn("{} -> {}", propertyName, e.getMessage());
               }

@@ -97,11 +97,11 @@
                       v-text="todo.description"
                     ></div>
                     <div
-                      v-if="!todo.completed && todo.dueDate"
+                      v-if="!todo.completed && todo.dueDateObj"
                       class="ml-4 text-caption"
-                      :class="{ 'red--text': new Date(todo.dueDate) < new Date() }"
+                      :class="{ 'red--text': todo.dueDateObj < new Date() }"
                     >
-                      Due {{ new Date(todo.dueDate).toLocaleDateString('en-US') }}
+                      Due {{ todo.dueDateObj.toLocaleDateString('en-US') }}
                     </div>
                   </template>
                 </v-checkbox>
@@ -245,7 +245,18 @@ export default {
         if (res.status === 200) {
           this.list = res.data;
           this.todos = res.data.tasks;
-          this.todos.sort((a, b) => a.completed - b.completed || new Date(a.dueDate) - new Date(b.dueDate));
+          this.todos = this.todos.map(t => {
+            let dueDate = null;
+            if (t.dueDate) {
+              const dateParts = t.dueDate.split('-');
+              dueDate = new Date();
+              dueDate.setFullYear(dateParts[0]);
+              dueDate.setMonth(dateParts[1] - 1);
+              dueDate.setDate(dateParts[2]);
+            }
+            return {...t, dueDateObj: dueDate};
+          });
+          this.todos.sort((a, b) => a.completed - b.completed || a.dueDateObj - b.dueDateObj);
           this.defaultItem.listId = res.data.id;
           this.editedItem = { ...this.defaultItem };
           this.adult = isAdult(this.getFamily(this.list.familyId).memberData.role);
