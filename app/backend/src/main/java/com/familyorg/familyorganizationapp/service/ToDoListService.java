@@ -4,6 +4,7 @@ import com.familyorg.familyorganizationapp.DTO.ToDoListDto;
 import com.familyorg.familyorganizationapp.DTO.ToDoListSearchRequestDto;
 import com.familyorg.familyorganizationapp.DTO.ToDoListSearchResponseDto;
 import com.familyorg.familyorganizationapp.DTO.ToDoTaskDto;
+import java.util.List;
 
 public interface ToDoListService {
 
@@ -28,5 +29,7 @@ public interface ToDoListService {
   void deleteTask(Long id);
 
   ToDoListSearchResponseDto search(ToDoListSearchRequestDto request);
+
+  List<ToDoListDto> getLists(Long familyId);
 
 }

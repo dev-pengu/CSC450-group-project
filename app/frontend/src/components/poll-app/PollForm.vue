@@ -1,6 +1,6 @@
 <template>
   <div class="pollForm">
-    <v-form ref="form" v-model="valid" lazy-validation :disabled="loading">
+    <v-form ref="form" v-model="valid" :disabled="loading">
       <v-select
         v-model="formData.familyId"
         :items="families"
@@ -69,28 +69,9 @@
         class="mb-5"
       >
       </v-combobox>
-      <div class="d-flex justify-center mt-4">
-        <v-btn
-          class="foa_button_text--text mr-4"
-          color="error"
-          elevation="2"
-          width="50%"
-          max-width="150px"
-          :disabled="loading"
-          @click="reset"
-          >Reset</v-btn
-        >
-        <v-btn
-          class="foa_button_text--text"
-          color="foa_button"
-          elevation="2"
-          width="50%"
-          max-width="150px"
-          :loading="loading"
-          :disabled="loading"
-          @click="submit"
-          >Submit</v-btn
-        >
+      <div class="d-flex justify-end mt-4">
+        <v-btn class="mr-4" color="error" text :disabled="loading" @click="reset">Reset</v-btn>
+        <v-btn color="foa_button" text :loading="loading" :disabled="!valid || loading" @click="submit">Submit</v-btn>
       </div>
     </v-form>
   </div>
@@ -116,7 +97,7 @@ export default {
     },
   },
   data: (instance) => ({
-    valid: true,
+    valid: false,
     families: [],
     members: [],
     descriptionRules: [

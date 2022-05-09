@@ -68,4 +68,12 @@ export default {
       },
     });
   },
+  getToDoLists(familyId) {
+    return http.get('/todo/lists', {
+      params: { familyId },
+      validateStatus(status) {
+        return status < 500;
+      },
+    });
+  },
 };

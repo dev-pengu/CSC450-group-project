@@ -1,12 +1,12 @@
 <template>
   <div>
-    <div class="text-h5 foa_text_header--text mb-3">
-      My Calendar
+    <v-toolbar class="mb-3">
+      <span class="text-h5 foa_text_header--text">My Calendar</span>
       <CalendarEventModal ref="eventModal" open-icon="mdi-plus-box" :on-events-change="getCalendarData" />
-      <v-btn class="ml-2" icon :disabled="loading" :loading="loading" @click="getCalendarData"
-        ><v-icon>mdi-cached</v-icon>
-      </v-btn>
-    </div>
+      <v-spacer></v-spacer>
+      <v-btn icon :disabled="loading" :loading="loading" @click="getCalendarData"><v-icon>mdi-cached</v-icon></v-btn>
+      <v-btn icon :disabled="loading" to="/calendar/view"><v-icon>mdi-share</v-icon></v-btn>
+    </v-toolbar>
     <v-sheet :height="calendarHeight">
       <v-calendar
         ref="calendar"
@@ -116,7 +116,7 @@ export default {
           frequency: event.repetitionSchedule ? event.repetitionSchedule.frequency : 'DAILY',
           count: event.repetitionSchedule ? event.repetitionSchedule.count : 1,
           startDate: event.repetitionSchedule ? event.repetitionSchedule.startDate : null,
-          owningEventId: event.repetitionSchedule ? event.repetitionSchedule.owningEventId: null,
+          owningEventId: event.repetitionSchedule ? event.repetitionSchedule.owningEventId : null,
         },
         isRecurring: event.recurringEvent,
         creator: `${event.createdBy.firstName} ${event.createdBy.lastName}`,

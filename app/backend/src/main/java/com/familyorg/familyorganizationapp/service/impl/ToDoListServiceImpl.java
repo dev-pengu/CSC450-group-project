@@ -18,6 +18,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.TimeZone;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -41,6 +43,7 @@ import com.familyorg.familyorganizationapp.service.UserService;
 
 @Service
 public class ToDoListServiceImpl implements ToDoListService {
+  private Logger logger = LoggerFactory.getLogger(ToDoListServiceImpl.class);
 
   ToDoListRepository toDoListRepository;
   ToDoTaskRepository toDoTaskRepository;
@@ -301,7 +304,8 @@ public class ToDoListServiceImpl implements ToDoListService {
     task.setList(list.get());
     task.setCreatedDatetime(Timestamp.from(Instant.now()));
     task.setAddedBy(requestingUser);
-    task.setDueDate(request.getDueDate() == null ? null : new java.sql.Date(request.getDueDate().getTime()));
+    task.setDueDate(
+        request.getDueDate() == null ? null : new java.sql.Date(request.getDueDate().getTime()));
     toDoTaskRepository.save(task);
   }
 
@@ -338,7 +342,11 @@ public class ToDoListServiceImpl implements ToDoListService {
       task.get().setDescription(request.getDescription());
     }
     task.get().setNotes(request.getNotes());
-    task.get().setDueDate(request.getDueDate() == null ? null : new java.sql.Date(request.getDueDate().getTime()));
+    task.get()
+        .setDueDate(
+            request.getDueDate() == null
+                ? null
+                : new java.sql.Date(request.getDueDate().getTime()));
     if (request.isCompleted() && request.getCompletedDateTime() == null) {
       task.get().setCompletedDatetime(Timestamp.from(Instant.now()));
     }
@@ -426,8 +434,7 @@ public class ToDoListServiceImpl implements ToDoListService {
                               list.getCreatedDatetime(), TimeZone.getDefault(), timezone))
                       .setFamilyId(list.getFamily().getId())
                       .setTasks(
-                          tasksByList
-                              .getOrDefault(list.getId(), Collections.emptyList()).stream()
+                          tasksByList.getOrDefault(list.getId(), Collections.emptyList()).stream()
                               .map(
                                   item ->
                                       new ToDoTaskDtoBuilder()
@@ -450,6 +457,28 @@ public class ToDoListServiceImpl implements ToDoListService {
                 })
             .collect(Collectors.toList()));
     return response;
+  }
+
+  @Override
+  public List<ToDoListDto> getLists(Long familyId) {
+    User requestingUser = userService.getRequestingUser();
+    List<Long> permittedFamilyIds = familyService.getFamilyIdsByUser(requestingUser.getUsername());
+    if (familyId != null && permittedFamilyIds.contains(familyId)) {
+      permittedFamilyIds = Collections.singletonList(familyId);
+    }
+    List<ToDoList> lists =
+        toDoListRepository.getFilteredLists(permittedFamilyIds, Collections.emptyList());
+    logger.info(lists.toString());
+    return lists.stream()
+        .map(
+            list ->
+                new ToDoListDtoBuilder()
+                    .setId(list.getId())
+                    .setDescription(list.getDescription())
+                    .setIsDefault(list.isDefault())
+                    .setFamilyId(list.getFamily().getId())
+                    .build())
+        .collect(Collectors.toList());
   }
 
   private void createDefaultToDoList(Family family) {

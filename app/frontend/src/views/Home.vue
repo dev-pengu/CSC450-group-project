@@ -105,7 +105,7 @@
         <CalendarPreview :start="calendarStart" :end="calendarEnd" :calendar-height="500"></CalendarPreview>
       </v-col>
       <v-col cols="12" sm="6">
-        <TodoPreview end="2022-05-08"></TodoPreview>
+        <TodoPreview :end="calendarEnd"></TodoPreview>
       </v-col>
     </v-row>
   </div>
@@ -137,12 +137,12 @@ export default {
     },
     calendarStart() {
       const date = new Date();
-      return `${date.getFullYear()}-${`0${date.getMonth() + 1}`.slice(-2)}-${date.getDate()}`;
+      return `${date.getFullYear()}-${`0${date.getMonth() + 1}`.slice(-2)}-${`0${date.getDate()}`.slice(-2)}`;
     },
     calendarEnd() {
       const date = new Date();
       date.setDate(date.getDate() + 1);
-      return `${date.getFullYear()}-${`0${date.getMonth() + 1}`.slice(-2)}-${date.getDate()}`;
+      return `${date.getFullYear()}-${`0${date.getMonth() + 1}`.slice(-2)}-${`0${date.getDate()}`.slice(-2)}`;
     },
     todoEnd() {
       const date = new Date();

@@ -2,6 +2,7 @@ package com.familyorg.familyorganizationapp.controller;
 
 import com.familyorg.familyorganizationapp.DTO.ToDoListSearchRequestDto;
 import com.familyorg.familyorganizationapp.DTO.ToDoListSearchResponseDto;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +28,13 @@ public class ToDoListController {
   @Autowired
   public ToDoListController(ToDoListService toDoListService) {
     this.toDoListService = toDoListService;
+  }
+
+  @GetMapping("/lists")
+  public ResponseEntity<List<ToDoListDto>> getLists(
+      @RequestParam(name = "familyId", required = false) Long familyId) {
+    List<ToDoListDto> lists = toDoListService.getLists(familyId);
+    return new ResponseEntity<>(lists, HttpStatus.OK);
   }
 
   @PostMapping()

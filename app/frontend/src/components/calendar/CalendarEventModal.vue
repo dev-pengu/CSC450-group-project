@@ -26,7 +26,7 @@
           <v-btn class="mr-5" color="error" icon @click="closeDialog"><v-icon>mdi-close</v-icon></v-btn>
         </div>
         <v-card-text>
-          <v-form :readonly="!eventData.canEdit">
+          <v-form v-model="valid" :readonly="!eventData.canEdit">
             <div v-if="eventData.id !== 0" class="text-caption mb-2">Created by: {{ eventData.creator }}</div>
             <v-select
               v-if="eventData.id === 0"
@@ -34,27 +34,14 @@
               outlined
               label="Calendar"
               :items="calendars"
+              :rules="required"
               item-value="id"
               item-text="display"
             ></v-select>
-            <v-text-field
-              v-model="eventData.description"
-              label="Title"
-              outlined
-            ></v-text-field>
+            <v-text-field v-model="eventData.description" label="Title" outlined :rules="required"></v-text-field>
             <div class="d-flex justify-space-around align-center">
-              <v-switch
-                v-model="eventData.allDay"
-                inset
-                color="foa_button"
-                label="All Day"
-              ></v-switch>
-              <v-switch
-                v-model="eventData.isRepeating"
-                inset
-                color="foa_button"
-                label="Repeating"
-              ></v-switch>
+              <v-switch v-model="eventData.allDay" inset color="foa_button" label="All Day"></v-switch>
+              <v-switch v-model="eventData.isRepeating" inset color="foa_button" label="Repeating"></v-switch>
             </div>
             <v-sheet
               v-if="eventData.isRepeating"
@@ -112,7 +99,9 @@
                 <v-spacer></v-spacer>
                 <v-btn v-if="!editSchedule" icon small @click="editSchedule = true"><v-icon>mdi-pencil</v-icon></v-btn>
                 <div v-else>
-                  <v-btn :color="btnColor" icon small @click="updateRepetitionSchedule"><v-icon>mdi-content-save-outline</v-icon></v-btn>
+                  <v-btn :color="btnColor" icon small @click="updateRepetitionSchedule"
+                    ><v-icon>mdi-content-save-outline</v-icon></v-btn
+                  >
                   <v-btn color="error" icon small @click="editSchedule = false"><v-icon>mdi-cancel</v-icon></v-btn>
                 </div>
               </div>
@@ -135,6 +124,7 @@
                       label="Start"
                       prepend-icon="mdi-calendar"
                       readonly
+                      :rules="required"
                       v-bind="attrs"
                       v-on="on"
                     ></v-text-field>
@@ -164,6 +154,7 @@
                       v-model="eventData.startTime"
                       prepend-icon="mdi-clock-time-four-outline"
                       readonly
+                      :rules="endRules"
                       v-bind="attrs"
                       v-on="on"
                     ></v-text-field>
@@ -195,6 +186,7 @@
                       label="End"
                       prepend-icon="mdi-calendar"
                       readonly
+                      :rules="endRules"
                       v-bind="attrs"
                       v-on="on"
                     ></v-text-field>
@@ -226,6 +218,7 @@
                       readonly
                       v-bind="attrs"
                       v-on="on"
+                      :rules="endRules"
                     ></v-text-field>
                   </template>
                   <v-time-picker
@@ -263,19 +256,19 @@
           <v-btn
             v-if="eventData.id !== 0 && eventData.canEdit"
             class="d-inline-block"
-            elevation="2"
+            text
             color="error"
             :disabled="loading"
             @click="deleteEvent"
             >Delete</v-btn
           >
-          <v-btn class="d-inline-block" elevation="2" :disabled="loading" @click="closeDialog">Cancel</v-btn>
+          <v-btn class="d-inline-block" color="foa_button" text :disabled="loading" @click="closeDialog">Cancel</v-btn>
           <v-btn
             v-if="eventData.canEdit"
             class="foa_button_text--text d-inline-block"
             :color="btnColor"
-            elevation="2"
-            :disabled="loading"
+            text
+            :disabled="!valid || loading"
             @click="submit"
             >{{ eventData.id !== 0 ? 'Update' : 'Add' }}</v-btn
           >
@@ -376,6 +369,8 @@ export default {
     scheduleUpdated: false,
     eventCoreUpdated: false,
     editSchedule: false,
+    required: [(v) => !!v || 'This field is required'],
+    endRules: [(v) => (!!v && !this.eventData.allDay) || 'This field is required'],
   }),
   computed: {
     ...mapGetters({ getFamily: 'getFamily' }),
@@ -465,9 +460,7 @@ export default {
         calendarId: this.eventData.calendarId,
         recurringEvent: this.eventData.isRecurring,
         recurringId: this.eventData.isRecurring ? this.eventData.id : null,
-        assignees: this.eventData.familyEvent
-          ? []
-          : this.eventData.assignees.map((assignee) => ({ userId: assignee })),
+        assignees: this.eventData.familyEvent ? [] : this.eventData.assignees.map((assignee) => ({ userId: assignee })),
       };
       try {
         this.loading = true;
@@ -601,7 +594,7 @@ export default {
       } finally {
         this.loading = false;
       }
-    }
+    },
   },
 };
 </script>

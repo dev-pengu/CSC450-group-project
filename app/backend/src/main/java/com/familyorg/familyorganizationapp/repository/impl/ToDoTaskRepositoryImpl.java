@@ -28,11 +28,11 @@ public class ToDoTaskRepositoryImpl extends QuerydslRepositorySupport
     JPQLQuery<ToDoTask> query = from(taskTable).where(taskTable.list.id.in(listIds));
 
     if (start != null && end != null) {
-      query.where(taskTable.dueDate.between(start, end));
+      query.where(taskTable.dueDate.between(start, end).or(taskTable.dueDate.isNull()));
     } else if (start != null) {
-      query.where(taskTable.dueDate.goe(start));
+      query.where(taskTable.dueDate.goe(start).or(taskTable.dueDate.isNull()));
     } else if (end != null) {
-      query.where(taskTable.dueDate.loe(end));
+      query.where(taskTable.dueDate.loe(end).or(taskTable.dueDate.isNull()));
     }
 
     if (completed != null && completed) {
