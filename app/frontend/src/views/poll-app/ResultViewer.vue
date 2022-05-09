@@ -1,6 +1,6 @@
 <template>
   <div class="resultViewer">
-    <v-dialog v-model="showChart" persistent>
+    <v-dialog v-model="showChart" persistent max-width="600">
       <v-card>
         <v-card-title>
           <span class="pt-0 justify-center foa_text_header--text">Results</span>
