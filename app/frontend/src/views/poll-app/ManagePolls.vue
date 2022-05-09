@@ -251,6 +251,8 @@ export default {
     ],
     loading: false,
     dateModal: false,
+    error: false,
+    errorMsg: '',
     expanded: [],
     search: '',
   }),
@@ -281,7 +283,8 @@ export default {
       })
       .catch((err) => {
         console.log(err);
-        // TODO: handle error
+        this.error = true;
+        this.errorMsg = 'We ran into an error with the Poll. Please try again in a few minutes.';
         this.families = [];
       });
   },
@@ -307,7 +310,8 @@ export default {
         this.fetchPolls();
         this.closeDelete();
       } else {
-        // TODO: handle error
+        this.error = true;
+        this.errorMsg = 'We ran into an issue deleting the poll. Please try again in a few minutes.';
       }
 
       this.loading = false;
@@ -342,7 +346,8 @@ export default {
         this.fetchPolls();
         this.close();
       } else {
-        // TODO: handle errors
+        this.error = true;
+        this.errorMsg = 'We ran into an issue updating the poll. Please try again in a few minutes.';
       }
       this.loading = false;
     },
@@ -366,7 +371,8 @@ export default {
         })
         .catch((err) => {
           console.log(err);
-          // TODO: handle error
+          this.error = true;
+          this.errorMsg = 'We ran into an issue locating the poll. Please try again in a few minutes.';
           this.polls = [];
         });
     },
