@@ -19,6 +19,9 @@ export default {
       state.loggedIn = false;
       state.user = null;
     },
+    UPDATE_USER(state, payload) {
+      state.user = payload;
+    },
   },
   actions: {
     async loginUser({ commit }, userCredentials) {
