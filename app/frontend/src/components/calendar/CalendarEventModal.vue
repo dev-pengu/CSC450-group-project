@@ -217,8 +217,8 @@
                       prepend-icon="mdi-clock-time-four-outline"
                       readonly
                       v-bind="attrs"
-                      v-on="on"
                       :rules="endRules"
+                      v-on="on"
                     ></v-text-field>
                   </template>
                   <v-time-picker

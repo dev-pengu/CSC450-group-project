@@ -140,10 +140,10 @@
                     </v-list-item-content>
                   </v-list-item>
                   <v-list-item>
-                    <v-list-item-content :class="{ 'foa_button--text': sortBy === 'todos' }">
+                    <v-list-item-content :class="{ 'foa_button--text': sortBy === 'tasks' }">
                       Todos:
                     </v-list-item-content>
-                    <v-list-item-content class="align-end" :class="{ 'foa_button--text': sortBy === 'todos' }">
+                    <v-list-item-content class="align-end" :class="{ 'foa_button--text': sortBy === 'tasks' }">
                       {{ list.tasks.length }}
                     </v-list-item-content>
                   </v-list-item>
@@ -335,6 +335,10 @@ export default {
         const res = await api.searchTodoLists(request);
         if (res.status === 200) {
           this.todoLists = res.data.lists;
+          this.todoLists.forEach((list) => {
+            // eslint-disable-next-line no-param-reassign
+            list.tasks = list.tasks.filter((todo) => !todo.completed);
+          });
         } else {
           this.showSnackbar({
             type: 'error',

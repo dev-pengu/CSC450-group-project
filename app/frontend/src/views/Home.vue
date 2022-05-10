@@ -63,9 +63,7 @@
                       :family-id="family.id"
                       :family-name="family.name"
                     />
-                    <router-link v-if="isAdmin(family.memberData.role)" class="d-block foa_link--text" to="/test"
-                      >Manage Members</router-link
-                    >
+                    <ManageMembersModal v-if="isAdmin(family.memberData.role)" :family="family" />
                     <router-link
                       class="d-block foa_link--text"
                       :to="{ path: '/calendar/view', query: { familyId: family.id } }"
@@ -86,7 +84,10 @@
                       :to="{ path: '/shopping/view', query: { familyId: family.id, name: family.name } }"
                       >Family Shopping List</router-link
                     >
-                    <router-link v-if="isAdmin(family.memberData.role)" class="d-block foa_link--text" to="/test"
+                    <router-link
+                      v-if="isAdmin(family.memberData.role)"
+                      class="d-block foa_link--text"
+                      to="/profile/families"
                       >Family Settings</router-link
                     >
                   </div>
@@ -105,7 +106,7 @@
         <CalendarPreview :start="calendarStart" :end="calendarEnd" :calendar-height="500"></CalendarPreview>
       </v-col>
       <v-col cols="12" sm="6">
-        <TodoPreview :end="calendarEnd"></TodoPreview>
+        <TodoPreview :end="todoEnd"></TodoPreview>
       </v-col>
     </v-row>
   </div>
@@ -115,6 +116,7 @@
 import { mapActions, mapGetters } from 'vuex';
 import FamilyModal from '../components/FamilyModal.vue';
 import InviteModal from '../components/InviteUserModal.vue';
+import ManageMembersModal from '../components/ManageMembersModal.vue';
 import PollPreview from '../components/poll-app/PollPreview.vue';
 import CalendarPreview from '../components/calendar/CalendarPreview.vue';
 import TodoPreview from '../components/todo-app/TodoPreview.vue';
@@ -126,6 +128,7 @@ export default {
   components: {
     FamilyModal,
     InviteModal,
+    ManageMembersModal,
     PollPreview,
     CalendarPreview,
     TodoPreview,

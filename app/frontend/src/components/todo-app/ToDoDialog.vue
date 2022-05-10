@@ -63,13 +63,14 @@
                       prepend-icon="mdi-calendar"
                       readonly
                       v-bind="attrs"
+                      color="foa_button"
                       v-on="on"
                     ></v-text-field>
                   </template>
-                  <v-date-picker v-model="internalTodo.dueDate" scrollable>
+                  <v-date-picker v-model="internalTodo.dueDate" color="foa_button" scrollable>
                     <v-spacer></v-spacer>
-                    <v-btn text color="primary" @click="dateModal = false"> Cancel </v-btn>
-                    <v-btn text color="primary" @click="$refs.dateDialog.save(internalTodo.dueDate)"> OK </v-btn>
+                    <v-btn text color="foa_button" @click="dateModal = false"> Cancel </v-btn>
+                    <v-btn text color="foa_button" @click="$refs.dateDialog.save(internalTodo.dueDate)"> OK </v-btn>
                   </v-date-picker>
                 </v-dialog>
               </v-col>

@@ -467,7 +467,7 @@ public class FamilyServiceImpl implements FamilyService {
         throw new AuthorizationException(
             ApiExceptionCode.USER_NOT_IN_FAMILY, "User is not a member of the requested family.");
       }
-      if (verfiyMinimumRoleSecurity(memberRecord.get().getFamily(), requestingUser, Role.ADMIN)) {
+      if (!verfiyMinimumRoleSecurity(memberRecord.get().getFamily(), requestingUser, Role.ADMIN)) {
         throw new AuthorizationException(
             ApiExceptionCode.ACTION_NOT_PERMITTED,
             "User does not have permissions to remove a member from the specified family.");

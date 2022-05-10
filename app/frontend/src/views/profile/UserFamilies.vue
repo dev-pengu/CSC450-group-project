@@ -57,7 +57,7 @@
         </v-dialog>
         <v-dialog v-model="transferDialog" max-width="500px" @click:outside="closeTransferDialog">
           <v-card>
-            <v-card-title class="pt-0 justify-center foa_text_header--text pt-4 pb-4">
+            <v-card-title class="justify-center foa_text_header--text pt-4 pb-4">
               Ownership Transfer
               <v-spacer></v-spacer>
               <v-btn class="pr-0" icon @click="closeTransferDialog"><v-icon>mdi-close</v-icon></v-btn>
@@ -578,7 +578,7 @@ export default {
             message: 'Family has been deleted successfully!',
             timeout: 3000,
           });
-        } else if (res.status === 1001) {
+        } else if (res.data.errorCode === 1007) {
           this.closeLeaveDelete();
           this.showSnackbar({
             type: 'warn',

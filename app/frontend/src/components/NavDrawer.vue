@@ -47,7 +47,7 @@ export default {
     navItems: [
       { title: 'Home', icon: 'mdi-home', route: '/dashboard' },
       { title: 'Calendar', icon: 'mdi-calendar', route: '/calendar/view' },
-      { title: 'To-Do', icon: 'mdi-check-circle-outline', route: '/todo/view' },
+      { title: 'To-Do Lists', icon: 'mdi-check-circle-outline', route: '/todo/view' },
       { title: 'Shopping Lists', icon: 'mdi-cart', route: '/shopping/view' },
       { title: 'Family Polling', icon: 'mdi-chart-box', route: '/polls/view' },
       { title: 'Family Settings', icon: 'mdi-human-male-female-child', route: '/profile/families' },
