@@ -30,7 +30,7 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex';
+import { mapGetters, mapActions } from 'vuex';
 import api from '../../api';
 
 export default {
@@ -57,6 +57,7 @@ export default {
     ...mapGetters({ user: 'getUser' }),
   },
   methods: {
+    ...mapActions(['showSnackbar']),
     async vote() {
       try {
         this.loading = true;
@@ -69,13 +70,26 @@ export default {
 
         const res = await api.votePoll(formData);
         if (res.status === 200) {
+          this.showSnackbar({
+            type: 'success',
+            message: 'Vote processed successfully. You may update your vote until the poll closes.',
+            timeout: 3000,
+          });
           this.successCallback();
-          // TODO: display message saying vote was received
         } else {
+          this.showSnackbar({
+            type: 'error',
+            message: 'We ran into an issue processing your vote. Please try again in a few minutes.',
+            timeout: 3000,
+          });
           this.failureCallback();
-          // TODO: handle errors and display message
         }
       } catch (err) {
+        this.showSnackbar({
+          type: 'error',
+          message: 'We ran into an issue processing your vote. Please try again in a few minutes.',
+          timeout: 3000,
+        });
         this.failureCallback();
       } finally {
         this.loading = false;

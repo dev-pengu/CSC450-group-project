@@ -225,7 +225,7 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex';
+import { mapGetters, mapActions } from 'vuex';
 import api from '../../api';
 import PollNav from '../../components/poll-app/PollNav.vue';
 import PollDialog from '../../components/poll-app/PollDialog.vue';
@@ -349,13 +349,14 @@ export default {
       });
   },
   methods: {
+    ...mapActions(['showSnackbar']),
     async editItem(item) {
       this.editedIndex = this.polls.indexOf(item);
       this.editedItem = { ...item };
       const [closedDate] = this.editedItem.closedDateTime.split(' ');
       this.editedItem.closedDateTime = closedDate;
       this.editedItem.respondents = this.editedItem.respondents.map((respondent) => respondent.id);
-      await this.getMembers();
+      this.getMembers();
       this.updateDialog = true;
     },
     deleteItem(item) {
@@ -364,17 +365,33 @@ export default {
       this.deleteDialog = true;
     },
     async deleteItemConfirm() {
-      this.loading = true;
-      const res = await api.deletePoll(this.editedItem.id);
-      if (res.status === 200) {
-        this.fetchPolls();
-        this.closeDelete();
-      } else {
-        this.error = true;
-        this.errorMsg = 'We ran into an issue deleting the poll. Please try again in a few minutes.';
+      try {
+        this.loading = true;
+        const res = await api.deletePoll(this.editedItem.id);
+        if (res.status === 200) {
+          this.fetchPolls();
+          this.closeDelete();
+          this.showSnackbar({
+            type: 'success',
+            message: 'The poll has been deleted successfully.',
+            timeout: 3000,
+          });
+        } else {
+          this.showSnackbar({
+            type: 'error',
+            message: 'We ran into an issue deleting the poll. Please try again in a few minutes.',
+            timeout: 3000,
+          });
+        }
+      } catch (err) {
+        this.showSnackbar({
+          type: 'error',
+          message: 'We ran into an issue deleting the poll. Please try again in a few minutes.',
+          timeout: 3000,
+        });
+      } finally {
+        this.loading = false;
       }
-
-      this.loading = false;
     },
     close() {
       this.updateDialog = false;
@@ -400,61 +417,100 @@ export default {
       this.itemsPerPage = number;
     },
     async save() {
-      this.loading = true;
-      const req = {
-        id: this.editedItem.id,
-        familyId: this.editedItem.familyId,
-        description: this.editedItem.description,
-        notes: this.editedItem.notes,
-        closedDateTime: `${this.editedItem.closedDateTime} 23:59`,
-        options: this.editedItem.options.map((option) => ({ id: option.id, value: option.value })),
-        respondents: this.editedItem.respondents.map((respondent) => ({ id: respondent })),
-      };
-      const res = await api.updatePoll(req);
-      if (res.status === 200) {
-        this.fetchPolls();
-        this.close();
-      } else {
-        this.error = true;
-        this.errorMsg = 'We ran into an issue updating the poll. Please try again in a few minutes.';
-      }
-      this.loading = false;
-    },
-    fetchPolls() {
-      const pollReq = {
-        closed: false,
-        unVoted: false,
-        start: null,
-        end: null,
-        filters: {},
-        limitToCreated: true,
-      };
-      api
-        .searchPolls(pollReq)
-        .then((res) => {
-          if (res.status === 200) {
-            this.polls = res.data.polls;
-          } else {
-            this.polls = [];
-          }
-        })
-        .catch((err) => {
-          console.log(err);
-          this.error = true;
-          this.errorMsg = 'We ran into an issue locating the poll. Please try again in a few minutes.';
-          this.polls = [];
+      try {
+        this.loading = true;
+        const req = {
+          id: this.editedItem.id,
+          familyId: this.editedItem.familyId,
+          description: this.editedItem.description,
+          notes: this.editedItem.notes,
+          closedDateTime: `${this.editedItem.closedDateTime} 23:59`,
+          options: this.editedItem.options.map((option) => ({ id: option.id || null, value: option.value || option })),
+          respondents: this.editedItem.respondents.map((respondent) => ({ id: respondent })),
+        };
+        const res = await api.updatePoll(req);
+        if (res.status === 200) {
+          this.showSnackbar({
+            type: 'success',
+            message: res.data,
+            timeout: 3000,
+          });
+          this.fetchPolls();
+          this.close();
+        } else {
+          this.showSnackbar({
+            type: 'error',
+            message: 'We ran into an issue updating the poll. Please try again in a few minutes.',
+            timeout: 3000,
+          });
+        }
+      } catch (err) {
+        this.showSnackbar({
+          type: 'error',
+          message: 'We ran into an issue updating the poll. Please try again in a few minutes.',
+          timeout: 3000,
         });
+      } finally {
+        this.loading = false;
+      }
+    },
+    async fetchPolls() {
+      try {
+        this.loading = true;
+        const pollReq = {
+          closed: false,
+          unVoted: false,
+          start: null,
+          end: null,
+          filters: {},
+          limitToCreated: true,
+        };
+        const res = await api.searchPolls(pollReq);
+        if (res.status === 200) {
+          this.polls = res.data.polls;
+        } else {
+          this.polls = [];
+        }
+      } catch (err) {
+        this.showSnackbar({
+          type: 'error',
+          message: 'We ran into an issue fetching polls. Please try again in a few minutes.',
+          timeout: 3000,
+        });
+        this.polls = [];
+      } finally {
+        this.loading = false;
+      }
     },
     async getMembers() {
-      if (this.editedItem.familyId !== null) {
-        const res = await api.getMembersForSelect(this.editedItem.familyId);
-        if (res.status === 200) {
-          this.members = res.data.map((member) => ({ id: member.id, name: `${member.firstName} ${member.lastName}` }));
+      try {
+        this.loading = true;
+        if (this.editedItem.familyId !== null) {
+          const res = await api.getMembersForSelect(this.editedItem.familyId);
+          if (res.status === 200) {
+            this.members = res.data.map((member) => ({
+              id: member.id,
+              name: `${member.firstName} ${member.lastName}`,
+            }));
+          } else {
+            this.showSnackbar({
+              type: 'error',
+              message: 'We ran into an issue fetching family members. Please try again in a few minutes.',
+              timeout: 3000,
+            });
+            this.members = [];
+          }
         } else {
           this.members = [];
         }
-      } else {
-        this.members = [];
+      } catch (err) {
+        this.showSnackbar({
+          type: 'error',
+          message: 'We ran into an issue fetching family members. Please try again in a few minutes.',
+          timeout: 3000,
+        });
+      } finally {
+        this.loading = false;
       }
     },
   },

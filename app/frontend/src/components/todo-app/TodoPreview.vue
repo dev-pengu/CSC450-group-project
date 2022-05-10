@@ -68,7 +68,7 @@ export default {
     ...mapActions(['showSnackbar']),
     async fetchTodos() {
       const request = {
-        end: this.end,
+        end: `${this.end} 23:59`,
         completed: false,
         filters: this.searchFilters,
       };

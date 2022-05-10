@@ -154,7 +154,7 @@
                       v-model="eventData.startTime"
                       prepend-icon="mdi-clock-time-four-outline"
                       readonly
-                      :rules="endRules"
+                      :rules="required"
                       v-bind="attrs"
                       v-on="on"
                     ></v-text-field>
@@ -168,7 +168,7 @@
                 </v-menu>
               </v-col>
             </v-row>
-            <v-row v-if="!eventData.allDay" align="center" justify="center">
+            <v-row align="center" justify="center">
               <v-col cols="6">
                 <v-menu
                   ref="endMenu"
@@ -186,7 +186,7 @@
                       label="End"
                       prepend-icon="mdi-calendar"
                       readonly
-                      :rules="endRules"
+                      :rules="required"
                       v-bind="attrs"
                       v-on="on"
                     ></v-text-field>
@@ -198,7 +198,7 @@
                   </v-date-picker>
                 </v-menu>
               </v-col>
-              <v-col cols="6">
+              <v-col v-if="!eventData.allDay" cols="6">
                 <v-menu
                   ref="endTimeMenu"
                   v-model="endTimeMenu"
@@ -216,8 +216,8 @@
                       v-model="eventData.endTime"
                       prepend-icon="mdi-clock-time-four-outline"
                       readonly
+                      :rules="required"
                       v-bind="attrs"
-                      :rules="endRules"
                       v-on="on"
                     ></v-text-field>
                   </template>
@@ -370,7 +370,6 @@ export default {
     eventCoreUpdated: false,
     editSchedule: false,
     required: [(v) => !!v || 'This field is required'],
-    endRules: [(v) => (!!v && !this.eventData.allDay) || 'This field is required'],
   }),
   computed: {
     ...mapGetters({ getFamily: 'getFamily' }),
@@ -402,7 +401,7 @@ export default {
             ? `${this.eventData.startDate} 00:00`
             : `${this.eventData.startDate} ${this.eventData.startTime}`,
           endDate: this.eventData.allDay
-            ? `${this.eventData.startDate} 00:00`
+            ? `${this.eventData.endDate} 00:00`
             : `${this.eventData.endDate} ${this.eventData.endTime}`,
           description: this.eventData.description,
           notes: this.eventData.notes,
@@ -453,14 +452,16 @@ export default {
           ? `${this.eventData.startDate} 00:00`
           : `${this.eventData.startDate} ${this.eventData.startTime}`,
         endDate: this.eventData.allDay
-          ? `${this.eventData.startDate} 00:00`
+          ? `${this.eventData.endDate} 00:00`
           : `${this.eventData.endDate} ${this.eventData.endTime}`,
         description: this.eventData.description,
         notes: this.eventData.notes,
         calendarId: this.eventData.calendarId,
         recurringEvent: this.eventData.isRecurring,
         recurringId: this.eventData.isRecurring ? this.eventData.id : null,
-        assignees: this.eventData.familyEvent ? [] : this.eventData.assignees.map((assignee) => ({ userId: assignee })),
+        assignees: this.eventData.familyEvent
+          ? []
+          : this.eventData.assignees.map((assignee) => ({ userId: assignee.id || assignee })),
       };
       try {
         this.loading = true;
