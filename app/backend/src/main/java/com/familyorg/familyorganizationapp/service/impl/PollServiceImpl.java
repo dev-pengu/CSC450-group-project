@@ -177,7 +177,7 @@ public class PollServiceImpl implements PollService {
           ApiExceptionCode.USER_PRIVILEGES_TOO_LOW,
           "User is not authorized to perform this action.");
     }
-    String responseMessage = "Success.";
+    String responseMessage = "Poll updated successfully.";
     Poll poll = pollOpt.get();
 
     // if there are any votes recorded we don't want to allow the user to change the poll description or options
@@ -185,7 +185,7 @@ public class PollServiceImpl implements PollService {
     boolean hasVotes = poll.getOptions().stream().anyMatch(option -> !option.getVotes().isEmpty());
     if (hasVotes) {
       responseMessage = "Poll respondents added and notes updated if applicable, but all other changes ignored." +
-      "Cannot change a poll after respondents have began voting.";
+      "Cannot change a poll after votes have been cast.";
     }
     if (poll.getCloseDateTime().compareTo(Date.from(Instant.now())) < 0) {
       throw new BadRequestException(
@@ -194,57 +194,47 @@ public class PollServiceImpl implements PollService {
 
     if (!hasVotes) {
       // update options
-      Map<Long, PollOptionDto> reqOptionsById =
-          request.getOptions().stream().collect(Collectors.toMap(PollOptionDto::getId, o -> o));
-      poll.setDescription(request.getDescription());
-      poll.setNotes(request.getNotes());
+      List<PollOption> reqOptions = request.getOptions().stream().map(option -> {
+        PollOption opt = new PollOption();
+        opt.setValue(option.getValue());
+        opt.setId(option.getId());
+        opt.setPoll(poll);
+        return opt;
+      }).collect(Collectors.toList());
 
-      ListIterator<PollOption> iter = poll.getOptions().listIterator();
-      while (iter.hasNext()) {
-        PollOption curItem = iter.next();
-        PollOptionDto requestOption = reqOptionsById.get(curItem.getId());
-        if (requestOption != null) {
-          curItem.setValue(requestOption.getValue());
-        } else {
-          iter.remove();
+      for (PollOption opt : reqOptions) {
+        if (opt.getId() == null) {
+          poll.addOption(opt);
         }
       }
+
+      poll.getOptions().removeIf(opt -> !reqOptions.stream().map(PollOption::getId).toList().contains(opt.getId()));
+      poll.setDescription(request.getDescription());
     }
+
     // update respondents on the poll
     if (request.getRespondents() != null && !request.getRespondents().isEmpty()) {
-      List<Long> respondentIds =
-          poll.getRespondents().stream()
-              .map(respondent -> respondent.getUser().getId())
-              .collect(Collectors.toList());
-      request
-          .getRespondents()
-          .forEach(
-              respondent -> {
-                if (respondentIds.contains(respondent.getId())) {
-                  respondentIds.remove(respondent.getId());
-                } else {
-                  // add a new respondent to the poll
-                  User user = userService.getUserById(respondent.getId());
-                  if (user != null) {
-                    if (poll.getFamily().isMember(user)) {
+      List<VoteId> removed = poll.getRespondents().stream()
+        .filter(resp ->
+          !request.getRespondents().stream().map(UserDto::getId).toList().contains(resp.getUser().getId()))
+        .map(PollVote::getId)
+        .toList();
+      voteRepository.deleteAllById(removed);
 
-                      PollVote vote = new PollVote();
-                      vote.setPoll(poll);
-                      vote.setUser(user);
-                      vote.setVote(null);
-                      voteRepository.save(vote);
-                      poll.getRespondents().add(vote);
-                    }
-                  }
-                }
-              });
-      if (!hasVotes) {
-        // remove respondents that are missing from the request
-        voteRepository.deleteAllById(
-          poll.getRespondents().stream()
-            .filter(p -> respondentIds.contains(p.getUser().getId()))
-            .map(PollVote::getId)
-            .collect(Collectors.toList()));
+      for (UserDto resp : request.getRespondents()) {
+        if (!poll.getRespondents().stream().map(r -> r.getUser().getId()).toList().contains(resp.getId())) {
+          User user = userService.getUserById(resp.getId());
+          if (user != null) {
+            if (poll.getFamily().isMember(user)) {
+              PollVote vote = new PollVote();
+              vote.setPoll(poll);
+              vote.setUser(user);
+              vote.setVote(null);
+              voteRepository.save(vote);
+              poll.getRespondents().add(vote);
+            }
+          }
+        }
       }
     }
     // update any of the other fields

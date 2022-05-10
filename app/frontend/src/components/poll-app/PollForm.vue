@@ -78,6 +78,7 @@
 </template>
 
 <script>
+import { mapActions } from 'vuex';
 import api from '../../api';
 
 export default {
@@ -141,18 +142,38 @@ export default {
     }
   },
   methods: {
+    ...mapActions(['showSnackbar']),
     async getMembers() {
-      if (this.formData.familyId !== null) {
-        const res = await api.getMembersForSelect(this.formData.familyId);
-        if (res.status === 200) {
-          this.members = res.data.map((member) => ({ id: member.id, name: `${member.firstName} ${member.lastName}` }));
+      try {
+        this.loading = true;
+        if (this.formData.familyId !== null) {
+          const res = await api.getMembersForSelect(this.formData.familyId);
+          if (res.status === 200) {
+            this.members = res.data.map((member) => ({
+              id: member.id,
+              name: `${member.firstName} ${member.lastName}`,
+            }));
+          } else {
+            this.showSnackbar({
+              type: 'error',
+              message: 'We ran into an issue fetching family members. Please try again in a few minutes.',
+              timeout: 3000,
+            });
+            this.members = [];
+            this.formData.respondents = [];
+          }
         } else {
           this.members = [];
           this.formData.respondents = [];
         }
-      } else {
-        this.members = [];
-        this.formData.respondents = [];
+      } catch (err) {
+        this.showSnackbar({
+          type: 'error',
+          message: 'We ran into an issue fetching family members. Please try again in a few minutes.',
+          timeout: 3000,
+        });
+      } finally {
+        this.loading = false;
       }
     },
     async submit() {
@@ -175,14 +196,27 @@ export default {
         const res = await api.createPoll(req);
 
         if (res.status === 201) {
-          // TODO: display success message
+          this.showSnackbar({
+            type: 'success',
+            message: 'Poll created successfully',
+            timeout: 3000,
+          });
           this.successCallback();
           this.reset();
         } else {
-          // TODO: add error handling
+          this.showSnackbar({
+            type: 'error',
+            message: 'We ran into an issue creating your poll. Please try again in a few minutes.',
+            timeout: 3000,
+          });
           this.failureCallback();
         }
       } catch (err) {
+        this.showSnackbar({
+          type: 'error',
+          message: 'We ran into an issue creating your poll. Please try again in a few minutes.',
+          timeout: 3000,
+        });
         this.failureCallback();
       } finally {
         this.loading = false;

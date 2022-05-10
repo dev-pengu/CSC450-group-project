@@ -2,6 +2,7 @@ package com.familyorg.familyorganizationapp.DTO;
 
 import com.familyorg.familyorganizationapp.domain.search.SearchFilter;
 import com.familyorg.familyorganizationapp.domain.search.ToDoField;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -11,7 +12,9 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class ToDoListSearchRequestDto {
+  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd hh:mm")
   private Date start;
+  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd hh:mm")
   private Date end;
   private Boolean completed;
   private Map<ToDoField, List<SearchFilter>> filters = new HashMap<>();

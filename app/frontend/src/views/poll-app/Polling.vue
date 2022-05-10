@@ -220,6 +220,7 @@
 </template>
 
 <script>
+import { mapActions } from 'vuex';
 import api from '../../api';
 import PollCard from '../../components/poll-app/PollCard.vue';
 import PollNav from '../../components/poll-app/PollNav.vue';
@@ -285,6 +286,7 @@ export default {
   },
 
   methods: {
+    ...mapActions(['showSnackbar']),
     saveBegin(date) {
       this.$refs.beginMenu.save(date);
       if (this.autoSearch) {
@@ -335,22 +337,37 @@ export default {
       this.itemsPerPage = number;
     },
     async search() {
-      const request = {
-        closed: this.closed,
-        unVoted: this.unvoted,
-        start: this.startDate,
-        end: this.endDate,
-        filters: this.activeFilters,
-      };
-      const res = await api.searchPolls(request);
-      if (res.status === 200) {
-        this.polls = res.data.polls;
-        this.searchFilters = res.data.searchFilters;
-        this.activeFilters = res.data.activeSearchFilters;
-      } else {
+      try {
+        this.loading = true;
+        const request = {
+          closed: this.closed,
+          unVoted: this.unvoted,
+          start: this.startDate,
+          end: this.endDate,
+          filters: this.activeFilters,
+        };
+        const res = await api.searchPolls(request);
+        if (res.status === 200) {
+          this.polls = res.data.polls;
+          this.searchFilters = res.data.searchFilters;
+          this.activeFilters = res.data.activeSearchFilters;
+        } else {
+          this.showSnackbar({
+            type: 'error',
+            message: 'We ran into an issue fetching polls. Please try again in a few minutes.',
+            timeout: 3000,
+          });
+          this.polls = [];
+        }
+      } catch (err) {
+        this.showSnackbar({
+          type: 'error',
+          message: 'We ran into an issue fetching polls. Please try again in a few minutes.',
+          timeout: 3000,
+        });
         this.polls = [];
-        this.error = true;
-        this.errorMsg = 'We ran into an error retrieving the poll.';
+      } finally {
+        this.loading = false;
       }
     },
   },

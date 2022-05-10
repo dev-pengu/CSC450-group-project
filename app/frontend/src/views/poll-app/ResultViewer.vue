@@ -8,6 +8,12 @@
           <v-btn class="mr-0" color="error" icon @click="hideResultsDialog"><v-icon>mdi-close</v-icon></v-btn>
         </v-card-title>
         <v-card-text>
+          <h5 class="text-h6">{{ poll.description }}</h5>
+          <div v-if="poll.votes && poll.totalVotes > 0">
+            <div class="text-caption">Total Votes Received: {{ poll.totalVotes }}</div>
+            <div class="text-caption">Most Votes: {{ poll.options[poll.winner] }}</div>
+          </div>
+          <span v-else class="text-caption"> No votes received </span>
           <ResultChart
             v-if="showChart"
             class="mt-5"
@@ -56,14 +62,17 @@
           </template>
           <template #default="props">
             <v-list>
-              <v-list-item v-for="p in props.items" :key="p.id">
+              <v-list-item v-for="p in props.items" :key="p.id" three-line>
                 <v-list-item-content>
                   <v-list-item-title v-text="p.description"> </v-list-item-title>
-                  <v-list-item-subtitle class="text-caption"
+                  <v-list-item-subtitle v-if="p.createdBy" class="text-caption"
                     >Created by: {{ `${p.createdBy.firstName} ${p.createdBy.lastName}` }}</v-list-item-subtitle
                   >
-                  <v-list-item-subtitle class="text-caption">
+                  <v-list-item-subtitle v-if="p.familyId" class="text-caption">
                     Family: {{ getFamily(p.familyId).name }}
+                  </v-list-item-subtitle>
+                  <v-list-item-subtitle v-if="p.closedDateTime" class="text-caption">
+                    Closed: {{ p.closedDateTime }}
                   </v-list-item-subtitle>
                 </v-list-item-content>
                 <v-list-item-action>
@@ -111,7 +120,7 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex';
+import { mapActions, mapGetters } from 'vuex';
 import api from '../../api';
 import PollNav from '../../components/poll-app/PollNav.vue';
 import ResultChart from '../../components/poll-app/ResultChart.vue';
@@ -126,7 +135,6 @@ export default {
   },
   data: () => ({
     polls: [{ id: 1, description: 'Test description', family: 'Lippelman', completedDateTime: '2022-04-09' }],
-    selected: [],
     poll: {},
     headers: [
       {
@@ -161,52 +169,11 @@ export default {
       return this.$vuetify.theme.dark ? 'foa_button' : 'foa_button_dark';
     },
   },
-  watch: {
-    selected(val) {
-      if (val !== null && val.length > 0) {
-        const { id } = val[0];
-        api
-          .getPollResults(id)
-          .then((res) => {
-            if (res.status === 200) {
-              const options = [];
-              const votes = [];
-              res.data.options.forEach((option) => {
-                options.push(option.value);
-                votes.push(option.votes);
-              });
-
-              this.poll = {
-                description: res.data.description,
-                options,
-                votes,
-              };
-              this.showChart = true;
-            } else {
-              this.error = true;
-              this.errorMsg = 'We ran into an issue retrieving the result. Please try again in a few minutes.';
-              this.poll = {};
-              this.showChart = false;
-              this.selected = [];
-            }
-          })
-          .catch((err) => {
-            this.error = true;
-            this.errorMsg = 'We ran into an issue regarding the poll. ';
-            console.log(err);
-            this.poll = {};
-            this.selected = [];
-            this.showChart = false;
-          });
-      } else {
-        this.showChart = false;
-      }
-    },
-  },
   created() {
     this.fetchPolls();
   },
   methods: {
+    ...mapActions(['showSnackbar']),
     nextPage() {
       if (this.page + 1 <= this.numberOfPages) this.page += 1;
     },
@@ -217,30 +184,45 @@ export default {
       this.itemsPerPage = number;
     },
     async fetchPolls() {
-      this.polls = [];
-      this.loading = true;
-      const pollReq = {
-        closed: true,
-        unVoted: false,
-        start: null,
-        end: null,
-        filters: {},
-      };
-      const res = await api.searchPolls(pollReq);
-      if (res.status === 200) {
-        this.polls = res.data.polls;
-      } else {
-        this.error = true;
-        this.errorMsg = 'There was an error processing your request. Please try again in a few minutes.';
-        this.polls = [];
-      }
-      this.loading = false;
-    },
-    showResultsDialog(selected) {
-      api.getPollResults(selected.id).then((res) => {
+      try {
+        this.loading = true;
+        const pollReq = {
+          closed: true,
+          unVoted: false,
+          start: null,
+          end: null,
+          filters: {},
+        };
+        const res = await api.searchPolls(pollReq);
         if (res.status === 200) {
-          const options = [];
-          const votes = [];
+          this.polls = res.data.polls;
+          this.polls.sort((a, b) => new Date(b.closedDateTime) - new Date(a.closedDateTime));
+        } else {
+          this.showSnackbar({
+            type: 'error',
+            message: 'We ran into an issue fetching polls. Please try again in a few minutes.',
+            timeout: 3000,
+          });
+          this.polls = [];
+        }
+      } catch (err) {
+        this.showSnackbar({
+          type: 'error',
+          message: 'We ran into an issue fetching polls. Please try again in a few minutes.',
+          timeout: 3000,
+        });
+        this.polls = [];
+      } finally {
+        this.loading = false;
+      }
+    },
+    async showResultsDialog(selected) {
+      try {
+        this.loading = true;
+        const options = [];
+        const votes = [];
+        const res = await api.getPollResults(selected.id);
+        if (res.status === 200) {
           res.data.options.forEach((option) => {
             options.push(option.value);
             votes.push(option.votes);
@@ -250,10 +232,26 @@ export default {
             description: res.data.description,
             options,
             votes,
+            totalVotes: votes.reduce((a, b) => a + b),
+            winner: votes.reduce((iMax, x, i, arr) => (x > arr[iMax] ? i : iMax), 0),
           };
           this.showChart = true;
+        } else {
+          this.showSnackbar({
+            type: 'error',
+            message: 'We ran into an issue fetching the results. Please try again in a few minutes.',
+            timeout: 3000,
+          });
         }
-      });
+      } catch (err) {
+        this.showSnackbar({
+          type: 'error',
+          message: 'We ran into an issue fetching the results. Please try again in a few minutes.',
+          timeout: 3000,
+        });
+      } finally {
+        this.loading = false;
+      }
     },
     hideResultsDialog() {
       this.poll = {};
