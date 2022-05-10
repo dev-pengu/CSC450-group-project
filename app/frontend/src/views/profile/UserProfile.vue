@@ -88,6 +88,7 @@
 <script>
 import { mapActions } from 'vuex';
 import api from '../../api';
+import store from '../../store';
 import ProfileNav from '../../components/profile/ProfileNav.vue';
 
 export default {
@@ -123,6 +124,7 @@ export default {
         if (res.status === 200) {
           this.showSnackbar({ type: 'success', message: 'Your preferences were saved successfully!', timeout: 3000 });
           this.fetchSettings();
+          store.commit('UPDATE_USER', res.data);
           this.$vuetify.theme.dark = this.settings.useDarkMode;
           localStorage.setItem('darkMode', this.$vuetify.theme.dark.toString());
         } else {
