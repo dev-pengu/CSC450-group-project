@@ -72,8 +72,7 @@ export default {
       responsive: true,
       plugins: {
         title: {
-          display: true,
-          text: instance.pollDescription,
+          display: false,
         },
         legend: {
           display: false,

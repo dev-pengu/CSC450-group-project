@@ -2,7 +2,7 @@
   <div class="todopreview">
     <v-toolbar class="mb-3">
       <span class="text-h5 foa_text_header--text">My To-Do List</span>
-      <ToDoDialog type="create" :successCallback="fetchTodos"></ToDoDialog>
+      <ToDoDialog type="create" :success-callback="fetchTodos"></ToDoDialog>
       <v-spacer></v-spacer>
       <v-btn icon :disabled="loading" :loading="loading" @click="fetchTodos"><v-icon>mdi-cached</v-icon> </v-btn>
       <v-btn icon :disabled="loading" to="/todo/view"><v-icon>mdi-share</v-icon></v-btn>
@@ -67,7 +67,7 @@ export default {
     ...mapActions(['showSnackbar']),
     async fetchTodos() {
       const request = {
-        end: this.end,
+        end: `${this.end} 23:59`,
         completed: false,
         filters: this.searchFilters,
       };

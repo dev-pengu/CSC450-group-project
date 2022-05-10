@@ -59,7 +59,7 @@ public class Poll implements Serializable {
   @JoinColumn(name = "poll_id")
   private List<PollOption> options;
 
-  @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+  @OneToMany(fetch = FetchType.LAZY)
   @JoinColumn(name = "poll_id")
   private Set<PollVote> respondents;
 
