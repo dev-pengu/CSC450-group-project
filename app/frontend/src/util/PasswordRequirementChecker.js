@@ -4,7 +4,7 @@ export default (password) => {
   const numberMatch = password.match(/[0-9]/);
   const specialMatch = password.match(/[!@#$%^&*()\-+?]/);
   return {
-    length: password.length > 12,
+    length: password.length >= 12,
     lowerCase: lowerCaseMatch !== null,
     upperCase: upperCaseMatch !== null,
     number: numberMatch !== null,
