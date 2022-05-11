@@ -60,7 +60,7 @@
 
 <script>
 import { mapGetters } from 'vuex';
-import { isAdmin } from '../util/RoleUtil';
+import { isAdmin, isAdult } from '../util/RoleUtil';
 
 export default {
   name: 'NewResourceModal',
@@ -97,6 +97,10 @@ export default {
       default: true,
       type: Boolean,
     },
+    limitToAdult: {
+      default: false,
+      type: Boolean,
+    },
   },
   data: () => ({
     addEditDialogState: false,
@@ -114,13 +118,21 @@ export default {
       return this.$vuetify.theme.dark ? 'foa_button' : 'foa_button_dark';
     },
     availableFamilies() {
-      return this.families.filter((family) => !this.limitToAdmin || isAdmin(family.memberData.role));
+      if (this.limitToAdmin) {
+        return this.families.filter((family) => isAdmin(family.memberData.role));
+      }
+      if (this.limitToAdult) {
+        return this.families.filter((family) => isAdult(family.memberData.role));
+      }
+      return this.families;
     },
   },
   methods: {
     close() {
       this.addEditDialogState = false;
-      this.$refs.form.reset();
+      if (this.$refs.form) {
+        this.$refs.form.reset();
+      }
       this.$nextTick(() => {
         this.item = {};
       });

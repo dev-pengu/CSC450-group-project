@@ -7,7 +7,7 @@ import java.util.Objects;
 public class ShoppingListItemDto {
   private final Long id;
   private final String description;
-  private final Integer amount;
+  private final Double amount;
   private final String unit;
   private final String notes;
   private final UserDto addedBy;
@@ -18,7 +18,7 @@ public class ShoppingListItemDto {
   public ShoppingListItemDto(
       Long id,
       String description,
-      Integer amount,
+      Double amount,
       String unit,
       String notes,
       Long listId,
@@ -40,7 +40,7 @@ public class ShoppingListItemDto {
     return description;
   }
 
-  public Integer getAmount() {
+  public Double getAmount() {
     return amount;
   }
 

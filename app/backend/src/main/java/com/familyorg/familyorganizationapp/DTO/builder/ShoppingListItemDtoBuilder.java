@@ -7,7 +7,7 @@ import com.familyorg.familyorganizationapp.domain.User;
 public class ShoppingListItemDtoBuilder implements DtoBuilder<ShoppingListItemDto> {
   private Long id;
   private String description;
-  private Integer amount;
+  private Double amount;
   private String unit;
   private String notes;
   private UserDto addedBy;
@@ -23,7 +23,7 @@ public class ShoppingListItemDtoBuilder implements DtoBuilder<ShoppingListItemDt
     return this;
   }
 
-  public ShoppingListItemDtoBuilder withAmount(Integer amount) {
+  public ShoppingListItemDtoBuilder withAmount(Double amount) {
     this.amount = amount;
     return this;
   }

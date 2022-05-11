@@ -8,13 +8,16 @@
         <v-sheet max-width="600" color="#00000000">
           <h4 class="text-h5 foa_text_header--text mb-5">
             Calendars
-            <new-resource-callback
+            <NewResourceModal
+              v-if="availableFamilies.length > 0"
+              :limit-to-adult="true"
+              :limit-to-admin="false"
               form-title="Add a Calendar"
               :api-callback="createCalendar"
               :on-failure-callback="createFailure"
               :on-success-callback="createSuccess"
               :success-code="201"
-            ></new-resource-callback>
+            ></NewResourceModal>
           </h4>
           <div v-for="(calendar, i) in calendars" :key="calendar.id" class="my-7">
             <v-sheet elevation="12">
@@ -31,13 +34,9 @@
                   ></v-text-field>
                 </v-col>
                 <v-col cols="3" class="text-caption"> Family: {{ getFamily(calendar.familyId).name }} </v-col>
-                <v-col
-                  v-if="!calendar.default && isAdmin(getFamily(calendar.familyId).memberData.role)"
-                  cols="3"
-                  class="d-flex justify-end"
-                >
+                <v-col v-if="isAdmin(getFamily(calendar.familyId).memberData.role)" cols="3" class="d-flex justify-end">
                   <div v-if="expandedCalendar.id !== calendar.id">
-                    <v-btn icon color="error" class="mr-2" @click="deleteCal(calendar.id)">
+                    <v-btn v-if="!calendar.default" icon color="error" class="mr-2" @click="deleteCal(calendar.id)">
                       <v-icon>mdi-delete</v-icon>
                     </v-btn>
                     <v-btn icon @click="toggleEdit(i)">
@@ -68,15 +67,15 @@
 <script>
 import { mapGetters, mapActions } from 'vuex';
 import api from '../../api';
-import { isAdmin } from '../../util/RoleUtil';
+import { isAdmin, isAdult } from '../../util/RoleUtil';
 import ProfileNav from '../../components/profile/ProfileNav.vue';
-import NewResourceCallback from '../../components/NewResourceModal.vue';
+import NewResourceModal from '../../components/NewResourceModal.vue';
 
 export default {
   name: 'CalendarManager',
   components: {
     ProfileNav,
-    NewResourceCallback,
+    NewResourceModal,
   },
   data: () => ({
     calendars: [],
@@ -88,6 +87,9 @@ export default {
     ...mapGetters({ families: 'getFamilies', getFamily: 'getFamily', user: 'getUser' }),
     btnColor() {
       return this.$vuetify.theme.dark ? 'foa_button' : 'foa_button_dark';
+    },
+    availableFamilies() {
+      return this.families.filter((family) => isAdult(family.memberData.role));
     },
   },
   created() {
