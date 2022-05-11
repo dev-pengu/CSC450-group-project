@@ -113,7 +113,13 @@ export default {
           this.expandedCalendar = {};
           this.getCalendars();
         } else {
-          // TODO handle api exceptions
+          this.showSnackbar({
+            type: 'error',
+            message: 'There was an error updating your calendar. Please try again in a few minutes.',
+            timeout: 3000,
+          });
+          this.expandedCalendar = {};
+          this.getCalendars();
         }
       } catch (err) {
         this.showSnackbar({
@@ -172,7 +178,11 @@ export default {
           });
           this.getCalendars();
         } else {
-          // TODO handle api exceptions
+          this.showSnackbar({
+            type: 'error',
+            message: 'There was an error deleting your calendar. Please try again in a few minutes.',
+            timeout: 3000,
+          });
         }
       } catch (err) {
         this.showSnackbar({
