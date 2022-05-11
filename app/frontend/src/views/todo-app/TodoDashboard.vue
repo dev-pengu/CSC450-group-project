@@ -15,7 +15,7 @@
           <span v-if="$route.query.name">{{ $route.query.name }} Todo Lists</span>
           <span v-else>Todo Lists</span>
           <v-dialog v-model="addEditDialogState" max-width="500px">
-            <template #activator="{ on, attrs }">
+            <template v-if="availableFamilies.length > 0" #activator="{ on, attrs }">
               <v-btn x-large icon :color="btnColor" v-bind="attrs" v-on="on">
                 <v-icon>mdi-plus-box</v-icon>
               </v-btn>
@@ -31,7 +31,7 @@
                       <v-select
                         v-model="editedItem.familyId"
                         :disabled="editedIndex > -1"
-                        :items="families"
+                        :items="availableFamilies"
                         outlined
                         color="foa_button"
                         item-color="foa_button"
@@ -212,7 +212,7 @@
 <script>
 import { mapActions, mapGetters } from 'vuex';
 import api from '../../api';
-import { isAdmin } from '../../util/RoleUtil';
+import { isAdmin, isAdult } from '../../util/RoleUtil';
 
 export default {
   name: 'TodoDashboard',
@@ -253,6 +253,9 @@ export default {
     },
     btnColor() {
       return this.$vuetify.theme.dark ? 'foa_button' : 'foa_button_dark';
+    },
+    availableFamilies() {
+      return this.families.filter((family) => isAdult(family.memberData.role));
     },
   },
   watch: {

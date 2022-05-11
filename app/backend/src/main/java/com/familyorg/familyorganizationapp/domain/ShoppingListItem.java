@@ -25,8 +25,8 @@ public class ShoppingListItem implements Serializable {
   @Column(name = "description", columnDefinition = "VARCHAR(50)", nullable = false)
   private String description;
 
-  @Column(name = "amount", columnDefinition = "INTEGER")
-  private Integer amount;
+  @Column(name = "amount", columnDefinition = "NUMERIC")
+  private Double amount;
 
   @Column(name = "unit", columnDefinition = "VARCHAR(10)")
   private String unit;
@@ -63,11 +63,11 @@ public class ShoppingListItem implements Serializable {
     this.description = description.trim();
   }
 
-  public Integer getAmount() {
+  public Double getAmount() {
     return amount;
   }
 
-  public void setAmount(Integer amount) {
+  public void setAmount(Double amount) {
     this.amount = amount;
   }
 

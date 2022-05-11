@@ -1,13 +1,16 @@
 <template>
   <div class="todolist">
-    <div class="d-flex align-center text-h4 foa_text_header--text">
+    <div v-if="$vuetify.breakpoint.smAndDown" class="d-flex justify-end">
+      <v-btn small color="foa_button_dark" class="foa_button_text--text" to="/todo/view">Go Back</v-btn>
+    </div>
+    <div class="d-flex align-center text-h5 foa_text_header--text">
       {{ list.description }}:&nbsp;
       <v-fade-transition leave-absolute>
-        <span :key="`tasks-${todos.length}`">{{ todos.length }}</span>
+        <span :key="`tasks-${todos.length}`">{{ todos.length }} Tasks</span>
       </v-fade-transition>
       <v-dialog v-model="addEditDialogState" max-width="500px">
         <template #activator="{ on, attrs }">
-          <v-btn x-large icon class="ml-1" :color="btnColor" v-bind="attrs" v-on="on">
+          <v-btn large icon class="ml-1" :color="btnColor" v-bind="attrs" v-on="on">
             <v-icon>mdi-plus-box</v-icon>
           </v-btn>
         </template>
@@ -66,7 +69,9 @@
         </v-card>
       </v-dialog>
       <v-spacer></v-spacer>
-      <v-btn color="foa_button_dark" class="foa_button_text--text" to="/todo/view">Go Back</v-btn>
+      <v-btn v-if="$vuetify.breakpoint.mdAndUp" color="foa_button_dark" class="foa_button_text--text" to="/todo/view"
+        >Go Back</v-btn
+      >
     </div>
     <v-divider class="mt-4"></v-divider>
     <v-row class="my-1" align="center">
@@ -245,7 +250,7 @@ export default {
         if (res.status === 200) {
           this.list = res.data;
           this.todos = res.data.tasks;
-          this.todos = this.todos.map(t => {
+          this.todos = this.todos.map((t) => {
             let dueDate = null;
             if (t.dueDate) {
               const dateParts = t.dueDate.split('-');
@@ -254,7 +259,7 @@ export default {
               dueDate.setMonth(dateParts[1] - 1);
               dueDate.setDate(dateParts[2]);
             }
-            return {...t, dueDateObj: dueDate};
+            return { ...t, dueDateObj: dueDate };
           });
           this.todos.sort((a, b) => a.completed - b.completed || a.dueDateObj - b.dueDateObj);
           this.defaultItem.listId = res.data.id;
