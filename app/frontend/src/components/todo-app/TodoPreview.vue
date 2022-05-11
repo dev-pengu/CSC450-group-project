@@ -7,7 +7,7 @@
       <v-btn icon :disabled="loading" :loading="loading" @click="fetchTodos"><v-icon>mdi-cached</v-icon> </v-btn>
       <v-btn icon :disabled="loading" to="/todo/view"><v-icon>mdi-share</v-icon></v-btn>
     </v-toolbar>
-    <div v-if="!todos.length" class="text-caption">
+    <div v-if="!todos.length" class="text-caption text-center">
       You have no upcoming todos!&nbsp;<router-link to="/todo/view" class="foa_nav_link--text">Click here</router-link
       >&nbsp;to see all todos.
     </div>
@@ -16,6 +16,7 @@
         <div class="d-flex align-center justify-space-between">
           <v-checkbox
             v-model="item.completed"
+            class="mt-0"
             color="foa_button"
             :label="item.description"
             hide-details
@@ -26,7 +27,7 @@
               <v-sheet height="24" width="8" :color="item.color"></v-sheet>
             </template>
           </v-checkbox>
-          <span class="text-caption mt-5">Due: {{ item.dueDate || 'No Due Date' }}</span>
+          <span v-if="item.dueDate" class="text-caption">Due {{ item.dueDate.substring(5, 10) }}</span>
         </div>
       </template>
     </v-virtual-scroll>

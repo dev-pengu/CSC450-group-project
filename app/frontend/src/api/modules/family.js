@@ -1,4 +1,6 @@
-import { http } from "./clients";
+import { http } from './clients';
+
+const qs = require('qs');
 
 export default {
   joinFamily(formData) {
@@ -111,4 +113,16 @@ export default {
       },
     });
   },
-}
+  removeMembers(req) {
+    return http.delete('/family/admin/removeMembers', {
+      params: {
+        familyId: req.familyId,
+        userIds: req.userIds,
+      },
+      paramsSerializer: (params) => qs.stringify(params, { indices: false }),
+      validateStatus(status) {
+        return status < 500;
+      },
+    });
+  },
+};
