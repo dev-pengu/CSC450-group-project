@@ -41,6 +41,8 @@ public class ToDoTaskRepositoryImpl extends QuerydslRepositorySupport
       query.where(taskTable.completedDatetime.isNull());
     }
 
+    query.orderBy(taskTable.dueDate.asc().nullsLast(), taskTable.createdDatetime.asc());
+
     List<ToDoTask> tasks = query.fetch();
 
     for (ToDoTask task : tasks) {

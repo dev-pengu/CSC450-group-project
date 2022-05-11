@@ -83,7 +83,18 @@ export default {
               temp.push({ ...todo, color: familyColor });
             });
           });
-          this.todos = temp;
+          this.todos = temp.sort((a, b) => {
+            if (a.dueDate && b.dueDate) {
+              return new Date(a.dueDate) - new Date(b.dueDate);
+            }
+            if (!a.dueDate && !b.dueDate) {
+              return new Date(a.createdDatetime) - new Date(b.createdDatetime);
+            }
+            if (!a.dueDate) {
+              return 1;
+            }
+            return -1;
+          });
         } else {
           this.showSnackbar({
             type: 'error',
