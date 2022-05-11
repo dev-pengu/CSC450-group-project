@@ -14,7 +14,7 @@
         <div else class="foa_text_header--text text-h4 mb-3 d-inline-flex align-center">
           <span v-if="$route.query.name">{{ $route.query.name }} Shopping Lists</span>
           <span v-else>Shopping Lists</span>
-          <v-dialog v-model="addEditDialogState" max-width="500px">
+          <v-dialog v-model="addEditDialogState" max-width="500px" @click:outside="closeAddEdit">
             <template #activator="{ on, attrs }">
               <v-btn x-large icon :color="btnColor" v-bind="attrs" v-on="on">
                 <v-icon>mdi-plus-box</v-icon>
@@ -52,6 +52,7 @@
                     </v-col>
                   </v-row>
                 </v-form>
+                <v-alert v-if="addError" :type="addErrorType" text class="mb-0">{{ addErrorMsg }}</v-alert>
               </v-card-text>
               <v-card-actions>
                 <v-spacer></v-spacer>
@@ -193,7 +194,7 @@
         </v-row>
       </template>
     </v-data-iterator>
-    <v-dialog v-model="deleteDialogState" persistent max-width="550px">
+    <v-dialog v-model="deleteDialogState" persistent max-width="550px" @click:outside="closeDelete">
       <v-card>
         <v-card-title class="justify-center foa_text_header--text">
           Are you sure you want to delete this shopping list?
@@ -239,6 +240,9 @@ export default {
     familyRules: [(v) => !!v || 'Family is required'],
     descriptionRules: [(v) => !!v || 'Description is required'],
     valid: false,
+    addError: false,
+    addErrorType: 'error',
+    addErrorMsg: '',
   }),
   computed: {
     ...mapGetters({ families: 'getFamilies', getFamily: 'getFamily', user: 'getUser' }),
@@ -261,12 +265,6 @@ export default {
         this.searchFilters.FAMILY.push({ id: +this.$route.query.familyId, display: this.$route.query.name });
       }
       this.fetchShoppingLists();
-    },
-    addEditDialogState(val) {
-      if (!val) this.closeAddEdit();
-    },
-    deleteDialogState(val) {
-      if (!val) this.closeDelete();
     },
   },
   async created() {
@@ -301,6 +299,7 @@ export default {
       this.$nextTick(() => {
         this.editedItem = {};
         this.editedIndex = -1;
+        this.addError = false;
       });
     },
     deleteItem(item) {
@@ -336,12 +335,14 @@ export default {
           this.showSnackbar({
             type: 'success',
             message: 'Shopping list has been deleted successfully!',
+            timeout: 3000,
           });
         } else {
           this.closeDelete();
           this.showSnackbar({
             type: 'error',
             message: `There was a problem deleting the list ${this.editedItem.description}`,
+            timeout: 3000,
           });
         }
       } catch (err) {
@@ -349,6 +350,7 @@ export default {
         this.showSnackbar({
           type: 'error',
           message: `There was a problem deleting the list ${this.editedItem.description}`,
+          timeout: 3000,
         });
       }
     },
@@ -364,12 +366,14 @@ export default {
           this.showSnackbar({
             type: 'error',
             message: 'There was a problem fetching your shopping lists.',
+            timeout: 3000,
           });
         }
       } catch (err) {
         this.showSnackbar({
           type: 'error',
           message: 'There was a problem fetching your shopping lists.',
+          timeout: 3000,
         });
       } finally {
         this.searchFilters.FAMILY = [];
@@ -387,12 +391,14 @@ export default {
           this.showSnackbar({
             type: 'success',
             message: `You have successfully updated ${listDescription}!`,
+            timeout: 3000,
           });
         } else {
           this.closeAddEdit();
           this.showSnackbar({
             type: 'error',
             message: `There was a problem updating ${listDescription}, please try again.`,
+            timeout: 3000,
           });
         }
       } catch (err) {
@@ -400,6 +406,7 @@ export default {
         this.showSnackbar({
           type: 'error',
           message: 'There was a problem updating this shopping list, please try again.',
+          timeout: 3000,
         });
       }
     },
@@ -413,20 +420,21 @@ export default {
           this.showSnackbar({
             type: 'success',
             message: 'You have successfully created a shopping list!',
+            timeout: 3000,
           });
+        } else if (res.data.errorCode === 1007) {
+          this.addErrorType = 'warning';
+          this.addErrorMsg = 'You are not authorized to create shopping lists for this family.';
+          this.addError = true;
         } else {
-          this.closeAddEdit();
-          this.showSnackbar({
-            type: 'error',
-            message: 'There was a problem creating this shopping list, please try again.',
-          });
+          this.addErrorType = 'error';
+          this.addErrorMsg = 'There was a problem creating this shopping list, please try again.';
+          this.addError = true;
         }
       } catch (err) {
-        this.closeAddEdit();
-        this.showSnackbar({
-          type: 'error',
-          message: 'There was a problem creating this shopping list, please try again.',
-        });
+        this.addErrorType = 'error';
+        this.addErrorMsg = 'There was a problem creating this shopping list, please try again.';
+        this.addError = true;
       }
     },
   },
