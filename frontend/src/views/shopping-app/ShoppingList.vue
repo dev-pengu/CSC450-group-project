@@ -125,7 +125,7 @@
               >
                 <v-list-item-content v-if="editedItem.id !== item.id">
                   <v-list-item-title v-text="item.description"></v-list-item-title>
-                  <v-list-item-subtitle v-text="`${item.amount} ${item.unit}`"></v-list-item-subtitle>
+                  <v-list-item-subtitle v-text="`${item.amount || ''} ${item.unit || ''}`"></v-list-item-subtitle>
                   <v-list-item-subtitle
                     class="text-caption"
                     v-text="`Added by: ${item.addedBy.firstName} ${item.addedBy.lastName}`"
