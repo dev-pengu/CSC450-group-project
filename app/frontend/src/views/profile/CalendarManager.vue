@@ -179,6 +179,7 @@ export default {
           this.showSnackbar({
             type: 'error',
             message: 'There was an error deleting your calendar. Please try again in a few minutes.',
+            timeout: 3000,
           });
         }
       } catch (err) {
