@@ -27,7 +27,7 @@
               <v-sheet height="24" width="8" :color="item.color"></v-sheet>
             </template>
           </v-checkbox>
-          <span class="text-caption">Due {{ item.dueDate.substring(5, 10) }}</span>
+          <span v-if="item.dueDate" class="text-caption">Due {{ item.dueDate.substring(5, 10) }}</span>
         </div>
       </template>
     </v-virtual-scroll>
