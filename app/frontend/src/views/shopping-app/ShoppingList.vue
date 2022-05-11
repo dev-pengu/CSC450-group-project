@@ -316,12 +316,14 @@ export default {
           this.showSnackbar({
             type: 'error',
             message: 'There was a problem fetching your shopping list',
+            timeout: 3000,
           });
         }
       } catch (err) {
         this.showSnackbar({
           type: 'error',
           message: 'There was a problem fetching your shopping list',
+          timeout: 3000,
         });
       }
     },
@@ -335,12 +337,14 @@ export default {
           this.showSnackbar({
             type: 'success',
             message: 'You have successfully added an item!',
+            timeout: 3000,
           });
         } else {
           this.closeAddEdit();
           this.showSnackbar({
             type: 'error',
             message: 'There was a problem adding this item, please try again.',
+            timeout: 3000,
           });
         }
       } catch (err) {
@@ -348,6 +352,7 @@ export default {
         this.showSnackbar({
           type: 'error',
           message: 'There was a problem adding this item, please try again.',
+          timeout: 3000,
         });
       }
     },
@@ -360,6 +365,7 @@ export default {
           this.showSnackbar({
             type: 'success',
             message: 'Item updated successfully!',
+            timeout: 3000,
           });
           this.editedItem = {};
         } else {
@@ -367,6 +373,7 @@ export default {
           this.showSnackbar({
             type: 'error',
             message: 'There was a problem updating this item, please try again.',
+            timeout: 3000,
           });
         }
       } catch (err) {
@@ -374,6 +381,7 @@ export default {
         this.showSnackbar({
           type: 'error',
           message: 'There was a problem updating this item, please try again.',
+          timeout: 3000,
         });
       }
     },
@@ -386,12 +394,14 @@ export default {
           this.showSnackbar({
             type: 'success',
             message: 'Item has been deleted successfully!',
+            timeout: 3000,
           });
         } else {
           this.closeDelete();
           this.showSnackbar({
             type: 'error',
             message: 'There was a problem deleting this item, please try again.',
+            timeout: 3000,
           });
         }
       } catch (err) {
@@ -399,6 +409,7 @@ export default {
         this.showSnackbar({
           type: 'error',
           message: 'There was a problem deleting this item, please try again.',
+          timeout: 3000,
         });
       }
     },
