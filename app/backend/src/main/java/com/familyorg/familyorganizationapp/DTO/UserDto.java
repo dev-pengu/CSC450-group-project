@@ -24,7 +24,7 @@ public class UserDto {
   @JsonInclude(Include.NON_NULL)
   private final Boolean useDarkMode;
 
-  @JsonInclude(Include.NON_EMPTY)
+  @JsonInclude(Include.NON_NULL)
   private final List<ColorDto> colorsByFamily;
 
   @JsonInclude(Include.NON_NULL)

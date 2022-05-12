@@ -4,6 +4,7 @@ import com.familyorg.familyorganizationapp.DTO.ShoppingListDto;
 import com.familyorg.familyorganizationapp.DTO.ShoppingListItemDto;
 import com.familyorg.familyorganizationapp.DTO.UserDto;
 import com.familyorg.familyorganizationapp.domain.User;
+import java.util.Collections;
 import java.util.List;
 
 public class ShoppingListDtoBuilder implements DtoBuilder<ShoppingListDto> {
@@ -52,7 +53,7 @@ public class ShoppingListDtoBuilder implements DtoBuilder<ShoppingListDto> {
   }
 
   public ShoppingListDtoBuilder setItems(List<ShoppingListItemDto> items) {
-    this.items = items;
+    this.items = items != null ? items : Collections.emptyList();
     return this;
   }
 

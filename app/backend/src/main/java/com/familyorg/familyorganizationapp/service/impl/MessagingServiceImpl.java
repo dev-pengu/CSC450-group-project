@@ -1,11 +1,7 @@
 package com.familyorg.familyorganizationapp.service.impl;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Paths;
 import java.util.Objects;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
@@ -14,8 +10,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.mail.MailParseException;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -35,12 +29,11 @@ public class MessagingServiceImpl implements MessagingService {
 
   private JavaMailSender mailSender;
   private TaskExecutor taskExecutor;
-  private static ResourceLoader resourceLoader;
 
 
   @Autowired
   public MessagingServiceImpl(
-      Environment env, JavaMailSender mailSender, TaskExecutor taskExecutor, ResourceLoader loader) {
+      Environment env, JavaMailSender mailSender, TaskExecutor taskExecutor) {
     this.env = env;
     domain =
         env.getProperty("server.domain") != null
@@ -48,7 +41,6 @@ public class MessagingServiceImpl implements MessagingService {
             : (env.getProperty("server.host") + ":" + env.getProperty("server.port"));
     this.mailSender = mailSender;
     this.taskExecutor = taskExecutor;
-    resourceLoader = loader;
   }
 
   private static String inviteTemplateContents;

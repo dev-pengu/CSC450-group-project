@@ -5,6 +5,7 @@ import com.familyorg.familyorganizationapp.DTO.ToDoTaskDto;
 import com.familyorg.familyorganizationapp.DTO.UserDto;
 import com.familyorg.familyorganizationapp.domain.User;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class ToDoListDtoBuilder implements DtoBuilder<ToDoListDto> {
@@ -38,7 +39,7 @@ public class ToDoListDtoBuilder implements DtoBuilder<ToDoListDto> {
   }
 
   public ToDoListDtoBuilder setTasks(List<ToDoTaskDto> tasks) {
-    this.tasks = tasks;
+    this.tasks = tasks != null ? tasks : Collections.emptyList();
     return this;
   }
 

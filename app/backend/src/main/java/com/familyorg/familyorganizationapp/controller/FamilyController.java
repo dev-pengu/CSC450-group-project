@@ -12,8 +12,6 @@ import com.familyorg.familyorganizationapp.domain.MemberInvite;
 import com.familyorg.familyorganizationapp.service.FamilyService;
 import com.familyorg.familyorganizationapp.service.InviteService;
 import com.familyorg.familyorganizationapp.service.MessagingService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,7 +31,6 @@ import java.util.Optional;
 @RequestMapping("/api/v1/family")
 public class FamilyController {
 
-  private static final Logger logger = LoggerFactory.getLogger(FamilyController.class);
 
   private final FamilyService familyService;
   private final InviteService inviteService;
@@ -139,8 +136,7 @@ public class FamilyController {
   @PostMapping("/admin/invites/generate")
   public ResponseEntity<?> generateInvite(@RequestBody MemberInviteDto memberInvite) {
     if (memberInvite.isPersistent()) {
-      FamilyDto familyWithInviteCode =
-          inviteService.generatePersistentMemberInvite(memberInvite.getFamilyId());
+      inviteService.generatePersistentMemberInvite(memberInvite.getFamilyId());
       return new ResponseEntity<String>("Invite code created successfully", HttpStatus.OK);
     } else {
       // Generate the Invite

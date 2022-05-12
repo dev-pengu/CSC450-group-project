@@ -20,7 +20,7 @@ public class PollDto {
 
   private final List<PollOptionDto> options;
 
-  @JsonInclude(Include.NON_EMPTY)
+  @JsonInclude(Include.NON_NULL)
   private final List<UserDto> respondents;
 
   @JsonInclude(Include.NON_NULL)

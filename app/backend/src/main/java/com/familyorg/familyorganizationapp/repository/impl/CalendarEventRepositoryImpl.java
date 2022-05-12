@@ -6,9 +6,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.hibernate.Session;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.data.jpa.repository.support.QuerydslRepositorySupport;
 import org.springframework.stereotype.Repository;
 import com.familyorg.familyorganizationapp.domain.CalendarEvent;
@@ -21,7 +18,6 @@ import com.querydsl.jpa.JPQLQuery;
 public class CalendarEventRepositoryImpl extends QuerydslRepositorySupport
     implements CalendarEventRepositoryCustom {
 
-  private final Logger logger = LoggerFactory.getLogger(CalendarEventRepositoryImpl.class);
 
   private QCalendarEvent eventTable = QCalendarEvent.calendarEvent;
   private QUser userTable = QUser.user;

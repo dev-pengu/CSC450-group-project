@@ -1,7 +1,5 @@
 package com.familyorg.familyorganizationapp.configuration;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.TaskExecutor;
@@ -9,7 +7,6 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 @Configuration
 public class TaskExecutorConfiguration {
-  private Logger logger = LoggerFactory.getLogger(TaskExecutorConfiguration.class);
 
   @Bean
   public TaskExecutor taskExecutor() {

@@ -10,12 +10,15 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import com.familyorg.familyorganizationapp.domain.search.PollField;
 import com.familyorg.familyorganizationapp.domain.search.SearchFilter;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 public class PollSearchRequestDto {
   private Boolean closed;
   private Boolean unVoted;
   private Boolean limitToCreated;
+  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd hh:mm")
   private Date start;
+  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd hh:mm")
   private Date end;
   private Map<PollField, List<SearchFilter>> filters;
 

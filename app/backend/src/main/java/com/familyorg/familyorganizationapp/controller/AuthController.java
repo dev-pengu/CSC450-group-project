@@ -6,15 +6,11 @@ import com.familyorg.familyorganizationapp.Exception.BadRequestException;
 import com.familyorg.familyorganizationapp.Exception.UserNotFoundException;
 import com.familyorg.familyorganizationapp.service.AuthService;
 import com.familyorg.familyorganizationapp.service.MessagingService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -34,8 +30,6 @@ public class AuthController {
   @Autowired private SecurityService securityService;
   @Autowired private AuthService authService;
   @Autowired private MessagingService messagingService;
-
-  private static final Logger LOG = LoggerFactory.getLogger(AuthController.class);
 
   @GetMapping("/csrf")
   public void getCsrf() {}
