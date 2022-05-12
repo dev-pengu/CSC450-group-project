@@ -2,12 +2,10 @@ package com.familyorg.familyorganizationapp.service.impl;
 
 import com.familyorg.familyorganizationapp.DTO.ColorDto;
 import com.familyorg.familyorganizationapp.DTO.EventRepetitionDto;
-import com.familyorg.familyorganizationapp.Exception.ApiException;
 import com.familyorg.familyorganizationapp.domain.FamilyMembers;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -21,8 +19,6 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.stream.Collectors;
 import org.springframework.transaction.annotation.Transactional;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.familyorg.familyorganizationapp.DTO.CalendarDto;
@@ -62,7 +58,6 @@ import com.familyorg.familyorganizationapp.util.DateUtil;
 @Service
 public class CalendarServiceImpl implements CalendarService {
 
-  private Logger logger = LoggerFactory.getLogger(CalendarServiceImpl.class);
   CalendarRepository calendarRepository;
   CalendarEventRepository eventRepository;
   EventRepetitionRepository scheduleRepository;
@@ -783,74 +778,6 @@ public class CalendarServiceImpl implements CalendarService {
     return recurringEvents;
   }
 
-  private List<RecurringCalendarEvent> updateFutureEvents(CalendarEvent parentEvent) {
-    EventRepetitionSchedule schedule = parentEvent.getEventRepetitionSchedule();
-    List<RecurringCalendarEvent> returnEvents = new ArrayList<>();
-    List<RecurringCalendarEvent> events =
-        recurringEventRepository.getOrderedEventsByOriginatingId(parentEvent.getId());
-    Date runningStartDate = java.sql.Date.from(parentEvent.getStartDatetime().toInstant());
-    Date runningEndDate =
-        parentEvent.getEndDatetime() != null
-            ? java.sql.Date.from(parentEvent.getEndDatetime().toInstant())
-            : null;
-    java.util.Calendar cal = java.util.Calendar.getInstance();
-    int field = java.util.Calendar.DAY_OF_YEAR;
-    switch (schedule.getFrequency()) {
-      case WEEKLY:
-        field = java.util.Calendar.WEEK_OF_YEAR;
-        break;
-      case MONTHLY:
-        field = java.util.Calendar.MONTH;
-        break;
-      case YEARLY:
-        field = java.util.Calendar.YEAR;
-        break;
-      default:
-        break;
-    }
-    // we start at 1 to account for the originating event being the first occurrence
-    for (int i = 1; i < schedule.getCount(); i++) {
-      cal.setTime(runningStartDate);
-      cal.add(field, schedule.getInterval());
-      runningStartDate = cal.getTime();
-      if (runningEndDate != null) {
-        cal.setTime(runningEndDate);
-        cal.add(field, schedule.getInterval());
-        runningEndDate = cal.getTime();
-      }
-      // if the request was to only add events during the week and this date falls on a weekend, we
-      // will decrement
-      // the counter to act like this loop execution didn't happen after updating the dates.
-      if (schedule.getFrequency().equals(CalendarRepetitionFrequency.WEEK_DAY)
-          && (cal.get(java.util.Calendar.DAY_OF_WEEK) == java.util.Calendar.SATURDAY
-              || cal.get(java.util.Calendar.DAY_OF_WEEK) == java.util.Calendar.SUNDAY)) {
-        i = i - 1;
-        continue;
-      }
-      if (runningStartDate.before(parentEvent.getEventRepetitionSchedule().getStartDate())) {
-        continue;
-      }
-      if (i >= events.size()) {
-
-        RecurringCalendarEvent recurringEvent = new RecurringCalendarEvent();
-        recurringEvent.setOriginatingEvent(parentEvent);
-        recurringEvent.setStartDatetime(new Timestamp(runningStartDate.getTime()));
-        recurringEvent.setEndDatetime(new Timestamp(runningEndDate.getTime()));
-        returnEvents.add(recurringEventRepository.save(recurringEvent));
-      } else {
-        if (events.get(i).getStartDatetime().compareTo(Date.from(Instant.now())) == 1) {
-          RecurringCalendarEvent event = events.get(i);
-          event.setStartDatetime(new Timestamp(runningStartDate.getTime()));
-          event.setEndDatetime(new Timestamp(runningEndDate.getTime()));
-          returnEvents.add(recurringEventRepository.save(event));
-        } else {
-          returnEvents.add(events.get(i));
-        }
-      }
-    }
-    return returnEvents;
-  }
-
   private CalendarEvent breakRecurringEvent(
       RecurringCalendarEvent recurringEvent, CalendarEventDto request) {
     recurringEventRepository.deleteById(recurringEvent.getId());
@@ -886,18 +813,6 @@ public class CalendarServiceImpl implements CalendarService {
       }
     }
     return eventRepository.save(event);
-  }
-
-  private String getEventColor(CalendarEvent event, Family family, User user) {
-    String color =
-        event.isFamilyEvent()
-            ? family.getEventColor()
-            : family.getMembers().stream()
-                .filter(member -> member.getUser().getUsername().equals(user.getUsername()))
-                .findFirst()
-                .get()
-                .getEventColor();
-    return color;
   }
 
   private Map<CalendarField, List<SearchFilter>> getSearchFilters(List<Calendar> calendars) {

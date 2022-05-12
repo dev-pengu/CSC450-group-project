@@ -1,6 +1,5 @@
 package com.familyorg.familyorganizationapp.DTO;
 
-import com.familyorg.familyorganizationapp.domain.search.CalendarField;
 import com.familyorg.familyorganizationapp.domain.search.SearchFilter;
 import com.familyorg.familyorganizationapp.domain.search.ShoppingListField;
 import java.util.ArrayList;

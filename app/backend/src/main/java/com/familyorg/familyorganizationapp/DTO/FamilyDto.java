@@ -104,8 +104,6 @@ public class FamilyDto {
                 .collect(Collectors.toSet()))
         .withName(family.getName())
         .withTimezone(family.getTimezone())
-        // TODO: remove requesting user, they can get that data from the memberData.user
-        .withRequestingUser(UserDto.fromUserObj(requestingUser))
         .withInviteCode(family.getInviteCodeObj().getInviteCodeString())
         .withMemberData(
             FamilyMemberDto.fromFamilyMemberObj(

@@ -196,7 +196,6 @@ public class FamilyServiceImplTest {
         .withEventColor(FAMILY_1.getEventColor())
         .withName(FAMILY_1.getName())
         .withTimezone(FAMILY_1.getTimezone())
-        .withRequestingUser(UserDto.fromUserObj(TEST_USER_1))
         .withOwner(FamilyMemberDto.fromFamilyMemberObj(familyOneMembers.get(0)))
         .withMembers(familyOneMembers.stream()
             .map(familyMember -> FamilyMemberDto.fromFamilyMemberObj(familyMember))
@@ -233,7 +232,6 @@ public class FamilyServiceImplTest {
         .withEventColor(FAMILY_1.getEventColor())
         .withName(FAMILY_1.getName())
         .withTimezone(FAMILY_1.getTimezone())
-        .withRequestingUser(UserDto.fromUserObj(TEST_USER_1))
         .withOwner(FamilyMemberDto.fromFamilyMemberObj(familyOneMembers.get(0)))
         .withMembers(familyOneMembers.stream()
             .map(familyMember -> FamilyMemberDto.fromFamilyMemberObj(familyMember))
@@ -244,7 +242,6 @@ public class FamilyServiceImplTest {
         .withEventColor(FAMILY_3.getEventColor())
         .withName(FAMILY_3.getName())
         .withTimezone(FAMILY_3.getTimezone())
-        .withRequestingUser(UserDto.fromUserObj(TEST_USER_1))
         .withOwner(FamilyMemberDto.fromFamilyMemberObj(familyThreeMembers.get(0)))
         .withMembers(familyThreeMembers.stream()
             .map(familyMember -> FamilyMemberDto.fromFamilyMemberObj(familyMember))
@@ -291,7 +288,6 @@ public class FamilyServiceImplTest {
         .withTimezone("America/Chicago")
         .withMembers(new HashSet<>(Collections.singleton(expectedFamilyMemberObj)))
         .withOwner(expectedFamilyMemberObj)
-        .withRequestingUser(UserDto.fromUserObj(TEST_USER_1))
         .build();
 
     /* When */

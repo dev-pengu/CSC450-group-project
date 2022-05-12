@@ -346,7 +346,6 @@ public class CalendarServiceImplTest {
         DateUtil.parseDateTime(request.getEndDate()).compareTo(event.getEndDatetime()) == 0);
   }
 
-  // TODO work on this mock. something is weird
   @Order(6)
   @Test
   @Disabled

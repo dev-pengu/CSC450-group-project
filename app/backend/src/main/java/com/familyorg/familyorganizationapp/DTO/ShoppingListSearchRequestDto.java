@@ -1,6 +1,5 @@
 package com.familyorg.familyorganizationapp.DTO;
 
-import com.familyorg.familyorganizationapp.domain.search.CalendarField;
 import com.familyorg.familyorganizationapp.domain.search.SearchFilter;
 import com.familyorg.familyorganizationapp.domain.search.ShoppingListField;
 import java.util.ArrayList;
@@ -8,7 +7,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class ShoppingListSearchRequestDto {

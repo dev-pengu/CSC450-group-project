@@ -4,8 +4,6 @@ import com.familyorg.familyorganizationapp.DTO.ShoppingListDto;
 import com.familyorg.familyorganizationapp.DTO.ShoppingListItemDto;
 import com.familyorg.familyorganizationapp.DTO.ShoppingListSearchRequestDto;
 import com.familyorg.familyorganizationapp.DTO.ShoppingListSearchResponseDto;
-import com.familyorg.familyorganizationapp.domain.Family;
-import com.familyorg.familyorganizationapp.domain.ShoppingList;
 
 public interface ShoppingListService {
   void createShoppingList(ShoppingListDto request);

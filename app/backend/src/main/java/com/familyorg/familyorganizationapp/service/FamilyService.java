@@ -1,6 +1,5 @@
 package com.familyorg.familyorganizationapp.service;
 
-import com.familyorg.familyorganizationapp.DTO.FamilyMemberDto;
 import com.familyorg.familyorganizationapp.DTO.UserDto;
 import java.util.List;
 import java.util.Optional;

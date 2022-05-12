@@ -13,7 +13,7 @@ public class CalendarDtoBuilder implements DtoBuilder<CalendarDto> {
   private Boolean isDefault = false;
   private Long familyId;
   private List<CalendarEventDto> events;
-  String color;
+  private String color;
 
   public CalendarDtoBuilder withId(Long id) {
     this.id = id;

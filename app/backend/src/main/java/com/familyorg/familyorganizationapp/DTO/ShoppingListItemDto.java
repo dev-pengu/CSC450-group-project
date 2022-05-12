@@ -27,7 +27,7 @@ public class ShoppingListItemDto {
     this.description = description == null ? null : description.trim();
     this.amount = amount;
     this.unit = unit == null ? null : unit.trim();
-    this.notes = notes == notes ? null : notes.trim();
+    this.notes = notes == null ? null : notes.trim();
     this.listId = listId;
     this.addedBy = addedBy;
   }

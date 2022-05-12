@@ -1,5 +1,6 @@
 package com.familyorg.familyorganizationapp.DTO.builder;
 
+import java.util.Collections;
 import java.util.List;
 import com.familyorg.familyorganizationapp.DTO.ColorDto;
 import com.familyorg.familyorganizationapp.DTO.UserDto;
@@ -51,7 +52,7 @@ public class UserDtoBuilder implements DtoBuilder<UserDto> {
   }
 
   public UserDtoBuilder withColorsByFamily(List<ColorDto> colors) {
-    this.colorsByFamily = colors;
+    this.colorsByFamily = colors != null ? colors : Collections.emptyList();
     return this;
   }
 

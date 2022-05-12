@@ -11,7 +11,7 @@ public class CalendarDto {
   private final Boolean defaultCal;
   private final Long familyId;
 
-  @JsonInclude(Include.NON_EMPTY)
+  @JsonInclude(Include.NON_NULL)
   private final List<CalendarEventDto> events;
 
   @JsonInclude(Include.NON_NULL)

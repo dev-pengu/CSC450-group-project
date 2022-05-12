@@ -1,8 +1,6 @@
 package com.familyorg.familyorganizationapp.configuration;
 
 import com.familyorg.familyorganizationapp.Exception.ApiExceptionCode;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -98,11 +96,6 @@ public class CustomControllerAdvice {
   @ExceptionHandler(Exception.class)
   public ResponseEntity<ErrorDto> handleExceptions(Exception e) {
     logger.error(e.getMessage(), e);
-
-    StringWriter stringWriter = new StringWriter();
-    PrintWriter printWriter = new PrintWriter(stringWriter);
-    e.printStackTrace(printWriter);
-    String stackTrace = stringWriter.toString();
 
     ErrorDto errorResponse =
         new ErrorDtoBuilder().withErrorCode(HttpStatus.INTERNAL_SERVER_ERROR.value())

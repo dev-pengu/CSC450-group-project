@@ -2,7 +2,6 @@ package com.familyorg.familyorganizationapp.repository.impl;
 
 import com.familyorg.familyorganizationapp.domain.QShoppingList;
 import com.familyorg.familyorganizationapp.domain.ShoppingList;
-import com.familyorg.familyorganizationapp.repository.ShoppingListItemRepository;
 import com.familyorg.familyorganizationapp.repository.custom.ShoppingListRepositoryCustom;
 import com.querydsl.jpa.JPQLQuery;
 import java.util.List;
