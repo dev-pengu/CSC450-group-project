@@ -47,7 +47,10 @@
               <span class="foa_link--text text-decoration-underline" @click="sendReset">Forgot your password?</span>
             </div>
             <div class="text-center">
-              Don't have an account? <router-link :to="{ path: '/signup', query: { code: $route.query.code } }" class="foa_link--text">Sign up now!</router-link>
+              Don't have an account?
+              <router-link :to="{ path: '/signup', query: { code: $route.query.code } }" class="foa_link--text"
+                >Sign up now!</router-link
+              >
             </div>
           </v-card-text>
         </v-card>
@@ -101,13 +104,20 @@ export default {
           this.$vuetify.theme.dark = res.data.useDarkMode;
           localStorage.setItem('darkMode', this.$vuetify.theme.dark.toString());
           if (this.$route.query.code !== undefined && this.$route.query.code !== '') {
-            this.$router.push(`/profile/families?code=${this.$route.query.code.trim()}`)
+            this.$router.push(`/profile/families?code=${this.$route.query.code.trim()}`);
           } else {
             this.$router.push('/');
           }
-        } else {
+        } else if (res.status === 401 && res.data.errorCode === 1010) {
+          this.error = true;
+          this.errorMsg =
+            'You have been locked out of your account after too many failed attempts. Please reset your password to regain access.';
+        } else if (res.status === 403) {
           this.error = true;
           this.errorMsg = 'Your username or password was incorrect.';
+        } else {
+          this.error = true;
+          this.errorMsg = 'We ran into an error while validating your credentials. Please try again in a few minutes.';
         }
       } catch (err) {
         this.error = true;

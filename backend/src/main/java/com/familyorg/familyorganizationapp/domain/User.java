@@ -53,6 +53,14 @@ public class User implements Serializable {
   private Timestamp lastLoggedIn;
 
   @JsonIgnore
+  @Column(name = "is_locked", columnDefinition = "BOOLEAN DEFAULT FALSE")
+  private Boolean locked;
+
+  @JsonIgnore
+  @Column(name = "login_attempts", columnDefinition = "INTEGER DEFAULT 0")
+  private Integer loginAttempts;
+
+  @JsonIgnore
   @OneToMany(
       mappedBy = "user",
       fetch = FetchType.LAZY,
@@ -67,7 +75,8 @@ public class User implements Serializable {
   @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, orphanRemoval = true)
   Set<PasswordResetCode> resetCodes;
 
-  public User() {}
+  public User() {
+  }
 
   public User(
       Long id,
@@ -103,6 +112,8 @@ public class User implements Serializable {
     this.families = families;
     this.timezone = timezone == null ? null : timezone.trim();
     this.darkMode = false;
+    this.loginAttempts = 0;
+    this.locked = false;
   }
 
   public User(
@@ -136,6 +147,8 @@ public class User implements Serializable {
     this.families = families;
     this.timezone = timezone == null ? null : timezone.trim();
     this.darkMode = false;
+    this.loginAttempts = 0;
+    this.locked = false;
   }
 
   public Long getId() {
@@ -243,6 +256,26 @@ public class User implements Serializable {
     this.resetCodes = resetCodes;
   }
 
+  public Boolean isLocked() {
+    return locked;
+  }
+
+  public void setLocked(Boolean locked) {
+    this.locked = locked;
+  }
+
+  public Integer getLoginAttempts() {
+    return loginAttempts;
+  }
+
+  public void setLoginAttempts(Integer attempts) {
+    this.loginAttempts = attempts;
+  }
+
+  public void addLoginAttempt() {
+    this.loginAttempts += 1;
+  }
+
   @Override
   public String toString() {
     return "User [id="
@@ -257,6 +290,10 @@ public class User implements Serializable {
         + email
         + ", timezone="
         + timezone
+        + ", isLocked="
+        + locked
+        + ", loginAttempts="
+        + loginAttempts
         + "]";
   }
 
@@ -267,9 +304,15 @@ public class User implements Serializable {
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj) return true;
-    if (obj == null) return false;
-    if (getClass() != obj.getClass()) return false;
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null) {
+      return false;
+    }
+    if (getClass() != obj.getClass()) {
+      return false;
+    }
     User other = (User) obj;
     return Objects.equals(email, other.email)
         && Objects.equals(firstName, other.firstName)

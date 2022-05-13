@@ -23,6 +23,7 @@ public class UserRepositoryImpl extends QuerydslRepositorySupport implements Use
     new JPAUpdateClause(getEntityManager(), userTable)
         .where(userTable.username.equalsIgnoreCase(username))
         .set(userTable.lastLoggedIn, Timestamp.from(Instant.now()))
+        .set(userTable.loginAttempts, 0)
         .execute();
   }
 }

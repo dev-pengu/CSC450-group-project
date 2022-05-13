@@ -81,6 +81,8 @@ public class UserServiceImpl implements UserService {
       throw new ExistingUserException(ApiExceptionCode.EMAIL_IN_USE, "Email already in use.");
     }
     user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
+    user.setLocked(false);
+    user.setLoginAttempts(0);
     User savedUser = userRepository.save(user);
     return UserDto.fromUserObj(savedUser);
   }
@@ -124,6 +126,10 @@ public class UserServiceImpl implements UserService {
           ApiExceptionCode.REQUIRED_PARAM_MISSING, "New Password cannot be null.");
     }
     user.setPassword(bCryptPasswordEncoder.encode(newPassword));
+    if (user.isLocked()) {
+      user.setLocked(false);
+      user.setLoginAttempts(0);
+    }
     userRepository.save(user);
   }
 
