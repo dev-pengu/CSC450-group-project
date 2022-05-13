@@ -2,7 +2,7 @@
 module.exports = {
   projects: [
     {
-      root: "./app/frontend",
+      root: "./frontend",
       package: "./package.json",
       jsconfig: "./jsconfig.json",
     },
