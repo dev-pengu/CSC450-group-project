@@ -1,7 +1,12 @@
 package com.familyorg.familyorganizationapp.service.impl;
 
+import com.familyorg.familyorganizationapp.Exception.ApiException;
 import com.familyorg.familyorganizationapp.Exception.ApiExceptionCode;
+import com.familyorg.familyorganizationapp.Exception.AuthorizationException;
 import com.familyorg.familyorganizationapp.Exception.BadRequestException;
+import com.familyorg.familyorganizationapp.domain.User;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,15 +24,22 @@ import com.familyorg.familyorganizationapp.service.SecurityService;
 
 @Service
 public class SecurityServiceImpl implements SecurityService {
-  @Autowired private AuthenticationManager authenticationManager;
 
-  @Autowired private UserDetailsService userDetailsService;
-  @Autowired private UserRepository userRepository;
+  @Autowired
+  private AuthenticationManager authenticationManager;
 
-  private Logger logger = LoggerFactory.getLogger(SecurityServiceImpl.class);
+  @Autowired
+  private UserDetailsService userDetailsService;
+  @Autowired
+  private UserRepository userRepository;
+
+  @Value("${auth.login.attempts.max:3}")
+  private int maxLoginAttempts;
+
+  private final Logger logger = LoggerFactory.getLogger(SecurityServiceImpl.class);
 
   @Override
-  @Transactional
+  @Transactional(noRollbackFor = {BadCredentialsException.class, ApiException.class})
   public void autologin(String username, String password) {
     if (username == null || username.isBlank()) {
       throw new BadRequestException(
@@ -36,6 +48,21 @@ public class SecurityServiceImpl implements SecurityService {
     if (password == null || password.isBlank()) {
       throw new BadRequestException(
           ApiExceptionCode.REQUIRED_PARAM_MISSING, "Password cannot be null.");
+    }
+    User user = userRepository.findByUsernameIgnoreCase(username);
+    if (user != null) {
+      if (user.getLoginAttempts() == maxLoginAttempts) {
+        user.setLocked(true);
+        userRepository.save(user);
+        throw new AuthorizationException(ApiExceptionCode.ACCOUNT_LOCKED,
+            "Your account has been locked as a result of too many failed attempts.");
+      } else if (user.isLocked()) {
+        throw new AuthorizationException(ApiExceptionCode.ACCOUNT_LOCKED,
+            "Your account has been locked as a result of too many failed attempts.");
+      } else {
+        user.setLoginAttempts(user.getLoginAttempts() + 1);
+        userRepository.save(user);
+      }
     }
     UserDetails userDetails = userDetailsService.loadUserByUsername(username);
     UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken =

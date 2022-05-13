@@ -12,6 +12,7 @@ public enum ApiExceptionCode {
   USER_PRIVILEGES_TOO_LOW(1007),
   ACTION_NOT_PERMITTED(1008),
   BAD_CREDENTIALS(1009),
+  ACCOUNT_LOCKED(1010),
 
   // Request format related exceptions
   REQUIRED_PARAM_MISSING(2000),

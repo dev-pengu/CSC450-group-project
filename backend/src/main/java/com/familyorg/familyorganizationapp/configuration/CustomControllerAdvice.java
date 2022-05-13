@@ -71,7 +71,6 @@ public class CustomControllerAdvice {
 
   @ExceptionHandler(BadCredentialsException.class)
   public ResponseEntity<ErrorDto> handleBadCredentials(Exception e) {
-    logger.warn(e.getMessage(), e);
     ErrorDto errorResponse = new ErrorDtoBuilder().withErrorCode(ApiExceptionCode.BAD_CREDENTIALS.getCode())
         .withMessage(e.getMessage())
         .build();
