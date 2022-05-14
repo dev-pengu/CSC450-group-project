@@ -89,13 +89,18 @@ export default {
       try {
         await api.sendInviteCode(this.formData);
         this.dialogState = false;
-        this.showSnackbar({ type: 'success', message: `You've sent an invite to ${this.formData.recipientEmail}!` });
+        this.showSnackbar({
+          type: 'success',
+          message: `You've sent an invite to ${this.formData.recipientEmail}!`,
+          timeout: 3000,
+        });
         this.$refs.form.reset();
       } catch (err) {
         this.dialogState = false;
         this.showSnackbar({
           type: 'error',
           message: 'We ran into an issue sending the invite, please try again later.',
+          timeout: 3000,
         });
         this.$refs.form.reset();
       }

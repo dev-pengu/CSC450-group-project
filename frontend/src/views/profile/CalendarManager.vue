@@ -124,6 +124,7 @@ export default {
         this.showSnackbar({
           type: 'error',
           message: 'There was an error updating your calendar. Please try again in a few minutes.',
+          timeout: 3000,
         });
       } finally {
         this.loading = false;
@@ -134,6 +135,7 @@ export default {
       this.showSnackbar({
         type: 'error',
         message: 'There was an issue creating your calendar. Please try again in a few minutes.',
+        timeout: 3000,
       });
     },
     createSuccess() {
@@ -154,12 +156,14 @@ export default {
           this.showSnackbar({
             type: 'error',
             message: 'There was an error fetching your calendars. Please try again in a few minutes.',
+            timeout: 3000,
           });
         }
       } catch (err) {
         this.showSnackbar({
           type: 'error',
           message: 'There was an error fetching your calendars. Please try again in a few minutes.',
+          timeout: 3000,
         });
       } finally {
         this.loading = false;
@@ -187,6 +191,7 @@ export default {
         this.showSnackbar({
           type: 'error',
           message: 'There was an error deleting your calendar. Please try again in a few minutes.',
+          timeout: 3000,
         });
       } finally {
         this.loading = false;

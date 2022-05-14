@@ -157,7 +157,7 @@ export default {
         if (res.status === 200) {
           this.closeDialog();
           this.fetchFamilies();
-          this.showSnackbar({ type: 'success', message: 'You have successfully joined a family!' });
+          this.showSnackbar({ type: 'success', message: 'You have successfully joined a family!', timeout: 3000 });
         } else if (res.data.errorCode === 3001) {
           this.joinError = true;
           this.joinErrorMsg = 'This invite code does not exist. Make sure the invite code is correct and try again.';
@@ -180,7 +180,7 @@ export default {
         if (res.status === 201) {
           this.closeDialog();
           this.fetchFamilies();
-          this.showSnackbar({ type: 'success', message: 'You have successfully created a family!' });
+          this.showSnackbar({ type: 'success', message: 'You have successfully created a family!', timeout: 3000 });
         } else {
           this.createError = true;
           this.createErrorMsg = 'There was a problem creating your family, please try again.';
