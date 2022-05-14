@@ -307,12 +307,14 @@ export default {
           this.showSnackbar({
             type: 'error',
             message: 'There was a problem getting your events, if the issue persists please contact support.',
+            timeout: 3000,
           });
         }
       } catch (err) {
         this.showSnackbar({
           type: 'error',
           message: 'There was a problem getting your events, if the issue persists please contact support.',
+          timeout: 3000,
         });
       } finally {
         this.loading = false;

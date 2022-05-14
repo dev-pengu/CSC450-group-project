@@ -431,6 +431,7 @@ export default {
           this.showSnackbar({
             type: 'error',
             message: 'There was an issue creating your event. Please try again in a few minutes.',
+            timeout: 3000,
           });
         } finally {
           this.loading = false;
@@ -481,6 +482,7 @@ export default {
         this.showSnackbar({
           type: 'error',
           message: 'There was an issue updating your event. Please try again in a few minutes.',
+          timeout: 3000,
         });
       } finally {
         this.loading = false;
@@ -514,6 +516,7 @@ export default {
         this.showSnackbar({
           type: 'error',
           message: 'There was an issue deleting the event. Please try again in a few minutes.',
+          timeout: 3000,
         });
       } finally {
         this.loading = false;
@@ -535,6 +538,7 @@ export default {
         this.showSnackbar({
           type: 'error',
           message: 'There was an issue fetching data from the server, if the issue persists please contact support.',
+          timeout: 3000,
         });
       } finally {
         this.loading = false;
@@ -557,6 +561,7 @@ export default {
         this.showSnackbar({
           type: 'error',
           message: 'There was an issue fetching data from the server, if the issue persists please contact support.',
+          timeout: 3000,
         });
       } finally {
         this.loading = false;

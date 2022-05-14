@@ -167,12 +167,14 @@ export default {
           this.showSnackbar({
             type: 'error',
             message: 'There was a problem generating an invite code for this family, please try again.',
+            timeout: 3000,
           });
         }
       } catch (err) {
         this.showSnackbar({
           type: 'error',
           message: 'There was a problem generating an invite code for this family, please try again.',
+          timeout: 3000,
         });
       }
     },

@@ -363,7 +363,7 @@ export default {
         if (res.status === 200) {
           this.fetchFamilies();
           this.$refs.joinForm.reset();
-          this.showSnackbar({ type: 'success', message: 'You have successfully joined a family!' });
+          this.showSnackbar({ type: 'success', message: 'You have successfully joined a family!', timeout: 3000 });
         } else if (res.data.errorCode === 3001) {
           this.joinError = true;
           this.joinErrorMsg = 'This invite code does not exist. Make sure the invite code is correct and try again.';

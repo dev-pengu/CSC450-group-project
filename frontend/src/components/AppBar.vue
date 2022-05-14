@@ -59,6 +59,7 @@ export default {
         type: 'info',
         message:
           'Updating dark mode with the toggle will only save your preference to this browser. Visit your profile page to update your preferences across all devices.',
+        timeout: 3000,
       });
     },
     async logout() {
