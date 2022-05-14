@@ -1,7 +1,7 @@
 package com.familyorg.familyorganizationapp.domain;
 
 import com.familyorg.familyorganizationapp.domain.id.MemberInviteId;
-import com.familyorg.familyorganizationapp.util.HibernateUtil;
+import com.familyorg.familyorganizationapp.utility.HibernateUtil;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.query.Query;

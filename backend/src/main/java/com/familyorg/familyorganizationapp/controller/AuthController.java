@@ -26,13 +26,26 @@ import com.familyorg.familyorganizationapp.service.UserService;
 @RestController
 @RequestMapping("/api/services/auth")
 public class AuthController {
-  @Autowired private UserService userService;
-  @Autowired private SecurityService securityService;
-  @Autowired private AuthService authService;
-  @Autowired private MessagingService messagingService;
+
+  private UserService userService;
+  private SecurityService securityService;
+  private AuthService authService;
+  private MessagingService messagingService;
+
+  @Autowired
+  public AuthController(UserService userService,
+      SecurityService securityService,
+      AuthService authService,
+      MessagingService messagingService) {
+    this.userService = userService;
+    this.securityService = securityService;
+    this.authService = authService;
+    this.messagingService = messagingService;
+  }
 
   @GetMapping("/csrf")
-  public void getCsrf() {}
+  public void getCsrf() {
+  }
 
   /**
    * Create a new user. If username or email is already in use, will return HttpStatus 409 and
@@ -73,7 +86,8 @@ public class AuthController {
       userObj = userService.getUserByUsername(user.getUsername());
     }
     if (userObj == null) {
-      throw new UserNotFoundException(ApiExceptionCode.USER_DOESNT_EXIST, "User is not registered.");
+      throw new UserNotFoundException(ApiExceptionCode.USER_DOESNT_EXIST,
+          "User is not registered.");
     }
     securityService.autologin(userObj.getUsername(), user.getPassword());
     return new ResponseEntity<>(UserDto.fromUserObj(userObj), HttpStatus.OK);
@@ -164,31 +178,31 @@ public class AuthController {
   private void validateReauthenticatedResetRequest(UserDto request) {
     if (request.getNewPassword() == null || request.getNewPassword().isBlank()) {
       throw new BadRequestException(
-        ApiExceptionCode.REQUIRED_PARAM_MISSING,
-        "A new password is required to change password.");
+          ApiExceptionCode.REQUIRED_PARAM_MISSING,
+          "A new password is required to change password.");
     }
     if (request.getOldPassword() == null || request.getOldPassword().isBlank()) {
       throw new BadRequestException(
-        ApiExceptionCode.REQUIRED_PARAM_MISSING,
-        "Old password is required to change password.");
+          ApiExceptionCode.REQUIRED_PARAM_MISSING,
+          "Old password is required to change password.");
     }
     if (!authService.verifyPasswordRequirements(request.getNewPassword())) {
       throw new BadRequestException(
-        ApiExceptionCode.PASSWORD_MINIMUM_REQUIREMENTS_NOT_MET,
-        "Password does not meet minimum requirements");
+          ApiExceptionCode.PASSWORD_MINIMUM_REQUIREMENTS_NOT_MET,
+          "Password does not meet minimum requirements");
     }
   }
 
   private void validateCodeResetRequest(UserDto request) {
     if (request.getNewPassword() == null || request.getNewPassword().isBlank()) {
       throw new BadRequestException(
-        ApiExceptionCode.REQUIRED_PARAM_MISSING,
-        "A new password is required to change password.");
+          ApiExceptionCode.REQUIRED_PARAM_MISSING,
+          "A new password is required to change password.");
     }
     if (!authService.verifyPasswordRequirements(request.getNewPassword())) {
       throw new BadRequestException(
-        ApiExceptionCode.PASSWORD_MINIMUM_REQUIREMENTS_NOT_MET,
-        "Password does not meet minimum requirements");
+          ApiExceptionCode.PASSWORD_MINIMUM_REQUIREMENTS_NOT_MET,
+          "Password does not meet minimum requirements");
     }
   }
 }

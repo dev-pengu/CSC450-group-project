@@ -2,8 +2,12 @@ package com.familyorg.familyorganizationapp.domain;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import com.familyorg.familyorganizationapp.domain.id.VoteId;
+import com.familyorg.familyorganizationapp.utility.HibernateUtil;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
@@ -18,12 +22,14 @@ import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
-import com.familyorg.familyorganizationapp.utility.HibernateUtil;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class CalendarEventTest {
+public class PollVoteTest {
   private static SessionFactory sessionFactory;
   private Session session;
+
+  private static User user;
+  private static Poll poll;
 
   @BeforeAll
   public static void setup() {
@@ -42,83 +48,85 @@ public class CalendarEventTest {
   @Test
   @Order(1)
   public void testCreate() {
-    System.out.println("Running [CalendarEventTest] testCreate...");
+    System.out.println("Running [PollVoteTest] testCreate...");
     /* Given */
     session.beginTransaction();
-    User user = new User("Test", "User", "testuser", "password", "testuser@test.com", null);
-    Family family = new Family("Test Name", "000000", "America/Chicago", null, null);
-    Calendar calendar = new Calendar(family, "Test Description");
+    poll = new Poll();
+    poll.setDescription("Test description");
+    poll.setCloseDateTime(Timestamp.from(Instant.now()));
+    poll.setCreatedDatetime(Timestamp.from(Instant.now()));
+    poll.setTimezone("America/Chicago");
+    Long pollId = (Long) session.save(poll);
+    assertTrue(pollId > 0);
+    user = new User("Test", "User", "testuser", "password", "testuser@test.com", null);
     Long userId = (Long) session.save(user);
-    Long familId = (Long) session.save(family);
     assertTrue(userId > 0);
-    assertTrue(familId > 0);
-    Long calendarId = (Long) session.save(calendar);
-    assertTrue(calendarId > 0);
+    PollOption option = new PollOption();
+    option.setValue("test value");
+    Long optionId = (Long) session.save(option);
+    assertTrue(optionId > 0);
 
-    CalendarEvent calendarEvent = new CalendarEvent();
-    calendarEvent.setAllDay(false);
-    calendarEvent.setFamilyEvent(true);
-    calendarEvent.setStartDatetime(Timestamp.from(Instant.now()));
-    calendarEvent.setEndDatetime(Timestamp.from(Instant.now()));
-    calendarEvent.setDescription("Test description");
-    calendarEvent.setNotes("Test notes");
-    calendarEvent.setCreatedBy(user);
-    calendarEvent.setCalendar(calendar);
-    calendarEvent.setCreatedDatetime(Timestamp.from(Instant.now()));
-    calendarEvent.setTimezone("America/Chicago");
+    PollVote vote = new PollVote();
+    vote.setPoll(poll);
+    vote.setUser(user);
 
     /* When */
-    Long id = (Long) session.save(calendarEvent);
+    VoteId id = (VoteId) session.save(vote);
     session.getTransaction().commit();
 
     /* Then */
-    assertTrue(id > 0);
+    assertNotNull(id);
+    assertEquals(pollId, id.getPollId());
+    assertEquals(userId, id.getUserId());
   }
 
   @Test
   @Order(2)
   public void testGet() {
-    System.out.println("Running [CalendarEventTest] testGet...");
+    System.out.println("Running [PollVoteTest] testGet...");
     /* Given */
-    Long id = 1l;
+    VoteId id = new VoteId(poll.getId(), user.getId());
 
     /* When */
-    CalendarEvent event = session.find(CalendarEvent.class, id);
+    PollVote vote = session.find(PollVote.class, id);
 
     /* Then */
-    assertEquals("Test description", event.getDescription());
+    assertNull(vote.getVote());
+    assertEquals(user.getId(), vote.getUser().getId());
+    assertEquals(poll.getId(), vote.getPoll().getId());
   }
 
   @Test
   @Order(3)
   public void testUpdate() {
-    System.out.println("Running [CalendarEventTest] testUpdate...");
+    System.out.println("Running [PollVoteTest] testUpdate...");
     /* Given */
-    Long id = 1l;
-    CalendarEvent calendarEvent = session.find(CalendarEvent.class, id);
-    calendarEvent.setAllDay(true);
+
+    VoteId id = new VoteId(poll.getId(), user.getId());
+    PollVote vote = session.find(PollVote.class, id);
+    vote.setVote(session.find(PollOption.class, 1L));
 
     /* When */
     session.beginTransaction();
-    session.update(calendarEvent);
+    session.update(vote);
     session.getTransaction().commit();
 
-    CalendarEvent updatedEvent = session.find(CalendarEvent.class, id);
+    PollVote updatedVote = session.find(PollVote.class, id);
 
     /* Then */
-    assertTrue(updatedEvent.isAllDay());
+    assertNotNull(updatedVote.getVote());
   }
 
   @Test
   @Order(4)
   public void testList() {
-    System.out.println("Running [CalendarEventTest] testList...");
+    System.out.println("Running [PollVoteTest] testList...");
     /* Given */
-    String queryString = "from CalendarEvent";
+    String queryString = "from PollVote";
 
     /* When */
-    Query<CalendarEvent> query = session.createQuery(queryString, CalendarEvent.class);
-    List<CalendarEvent> resultList = query.getResultList();
+    Query<PollVote> query = session.createQuery(queryString, PollVote.class);
+    List<PollVote> resultList = query.getResultList();
 
     /* Then */
     assertFalse(resultList.isEmpty());
@@ -127,19 +135,19 @@ public class CalendarEventTest {
   @Test
   @Order(5)
   public void testDelete() {
-    System.out.println("Running [CalendarEventTest] testDelete...");
+    System.out.println("Running [PollVoteTest] testDelete...");
     /* Given */
-    Long id = 1l;
-    CalendarEvent event = session.find(CalendarEvent.class, id);
+    VoteId id = new VoteId(poll.getId(), user.getId());
+    PollVote vote = session.find(PollVote.class, id);
 
     /* When */
     session.beginTransaction();
-    session.delete(event);
+    session.delete(vote);
     session.getTransaction().commit();
-    CalendarEvent deletedEvent = session.find(CalendarEvent.class, id);
+    PollVote deletedVote = session.find(PollVote.class, id);
 
     /* Then */
-    assertNull(deletedEvent);
+    assertNull(deletedVote);
   }
 
   @BeforeEach

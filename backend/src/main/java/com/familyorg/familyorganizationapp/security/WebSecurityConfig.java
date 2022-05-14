@@ -23,9 +23,12 @@ import org.springframework.web.filter.CorsFilter;
 @EnableWebSecurity
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
-  @Autowired private UserDetailsService userDetailsService;
-  @Autowired private BCryptPasswordEncoder bCryptPasswordEncoder;
-  @Autowired private CustomLogoutSuccessHandler customLogoutSuccessHandler;
+  @Autowired
+  private UserDetailsService userDetailsService;
+  @Autowired
+  private BCryptPasswordEncoder bCryptPasswordEncoder;
+  @Autowired
+  private CustomLogoutSuccessHandler customLogoutSuccessHandler;
 
   @Override
   protected void configure(HttpSecurity http) throws Exception {
@@ -35,17 +38,12 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         .authorizeRequests()
         .antMatchers(HttpMethod.POST, "/api/services/auth/**")
         .permitAll()
-        .antMatchers("/api/services/auth/usernameCheck")
-        .permitAll()
-        .antMatchers("/api/services/auth/emailCheck")
-        .permitAll()
-        .antMatchers("/login")
-        .permitAll()
-        .antMatchers("/signup")
-        .permitAll()
-        .antMatchers("/api/v1/utility/timezones")
-        .permitAll()
-        .antMatchers("/api/services/auth/csrf")
+        .antMatchers("/api/services/auth/usernameCheck",
+            "/api/services/auth/emailCheck",
+            "/login",
+            "/signup",
+            "/api/v1/utility/timezones",
+            "/api/services/auth/csrf")
         .permitAll()
         .antMatchers("/api/**")
         .authenticated()
@@ -54,6 +52,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         .logoutRequestMatcher(new AntPathRequestMatcher("/api/services/auth/logout"))
         .logoutSuccessHandler(customLogoutSuccessHandler)
         .and()
+        .formLogin().disable()
         .exceptionHandling()
         .and()
         .csrf()

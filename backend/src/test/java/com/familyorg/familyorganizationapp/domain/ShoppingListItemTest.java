@@ -4,7 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import java.sql.Date;
+
+import com.familyorg.familyorganizationapp.utility.HibernateUtil;
 import java.util.List;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -17,10 +18,9 @@ import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
-import com.familyorg.familyorganizationapp.utility.HibernateUtil;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class EventRepetitionScheduleTest {
+public class ShoppingListItemTest {
   private static SessionFactory sessionFactory;
   private Session session;
 
@@ -41,18 +41,17 @@ public class EventRepetitionScheduleTest {
   @Test
   @Order(1)
   public void testCreate() {
-    System.out.println("Running [EventRepetitionScheduleTest] testCreate...");
+    System.out.println("Running [ShoppingListItemTest] testCreate...");
     /* Given */
     session.beginTransaction();
-
-    EventRepetitionSchedule schedule = new EventRepetitionSchedule();
-    schedule.setFrequency(CalendarRepetitionFrequency.DAILY);
-    schedule.setInterval(7);
-    schedule.setCount(10);
-    schedule.setStartDate(Date.valueOf("2022-04-01"));
+    ShoppingListItem item = new ShoppingListItem();
+    item.setDescription("Test description");
+    item.setNotes("notes");
+    item.setUnit("ea");
+    item.setAmount(4D);
 
     /* When */
-    Long id = (Long) session.save(schedule);
+    Long id = (Long) session.save(item);
     session.getTransaction().commit();
 
     /* Then */
@@ -62,52 +61,50 @@ public class EventRepetitionScheduleTest {
   @Test
   @Order(2)
   public void testGet() {
-    System.out.println("Running [EventRepetitionScheduleTest] testGet...");
+    System.out.println("Running [ShoppingListItemTest] testGet...");
     /* Given */
-    Long id = 1l;
+    Long id = 1L;
 
     /* When */
-    EventRepetitionSchedule schedule = session.find(EventRepetitionSchedule.class, id);
+    ShoppingListItem item = session.find(ShoppingListItem.class, id);
 
     /* Then */
-    assertEquals(CalendarRepetitionFrequency.DAILY, schedule.getFrequency());
+    assertEquals("Test description", item.getDescription());
+    assertEquals("notes", item.getNotes());
+    assertEquals("ea", item.getUnit());
+    assertEquals(4D, item.getAmount());
   }
 
   @Test
   @Order(3)
   public void testUpdate() {
-    System.out.println("Running [EventRepetitionScheduleTest] testUpdate...");
+    System.out.println("Running [ShoppingListItemTest] testUpdate...");
     /* Given */
-    Long id = 1l;
-    EventRepetitionSchedule schedule = new EventRepetitionSchedule();
-    schedule.setFrequency(CalendarRepetitionFrequency.WEEKLY);
-    schedule.setInterval(7);
-    schedule.setCount(10);
-    schedule.setStartDate(Date.valueOf("2022-04-01"));
-    schedule.setId(id);
+    Long id = 1L;
+    ShoppingListItem item = session.find(ShoppingListItem.class, id);
+    item.setAmount(6D);
 
     /* When */
     session.beginTransaction();
-    session.update(schedule);
+    session.update(item);
     session.getTransaction().commit();
 
-    EventRepetitionSchedule updatedSchedule = session.find(EventRepetitionSchedule.class, id);
+    ShoppingListItem updatedItem = session.find(ShoppingListItem.class, id);
 
     /* Then */
-    assertEquals(CalendarRepetitionFrequency.WEEKLY, updatedSchedule.getFrequency());
+    assertEquals(6D, updatedItem.getAmount());
   }
 
   @Test
   @Order(4)
   public void testList() {
-    System.out.println("Running [EventRepetitionScheduleTest] testList...");
+    System.out.println("Running [ShoppingListItemTest] testList...");
     /* Given */
-    String queryString = "from EventRepetitionSchedule";
+    String queryString = "from ShoppingListItem";
 
     /* When */
-    Query<EventRepetitionSchedule> query =
-        session.createQuery(queryString, EventRepetitionSchedule.class);
-    List<EventRepetitionSchedule> resultList = query.getResultList();
+    Query<ShoppingListItem> query = session.createQuery(queryString, ShoppingListItem.class);
+    List<ShoppingListItem> resultList = query.getResultList();
 
     /* Then */
     assertFalse(resultList.isEmpty());
@@ -116,19 +113,19 @@ public class EventRepetitionScheduleTest {
   @Test
   @Order(5)
   public void testDelete() {
-    System.out.println("Running [EventRepetitionScheduleTest] testDelete...");
+    System.out.println("Running [ShoppingListItemTest] testDelete...");
     /* Given */
-    Long id = 1l;
-    EventRepetitionSchedule schedule = session.find(EventRepetitionSchedule.class, id);
+    Long id = 1L;
+    ShoppingListItem item = session.find(ShoppingListItem.class, id);
 
     /* When */
     session.beginTransaction();
-    session.delete(schedule);
+    session.delete(item);
     session.getTransaction().commit();
-    EventRepetitionSchedule deletedSchedule = session.find(EventRepetitionSchedule.class, id);
+    ShoppingListItem deletedItem = session.find(ShoppingListItem.class, id);
 
     /* Then */
-    assertNull(deletedSchedule);
+    assertNull(deletedItem);
   }
 
   @BeforeEach

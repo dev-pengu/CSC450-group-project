@@ -6,6 +6,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.IdClass;
+import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import com.familyorg.familyorganizationapp.domain.id.FamilyMemberId;
@@ -19,10 +20,12 @@ public class FamilyMembers implements Serializable {
 
   @Id
   @ManyToOne
+  @JoinColumn(name="user_id", referencedColumnName = "user_id")
   private User user;
 
   @Id
   @ManyToOne
+  @JoinColumn(name="family_id", referencedColumnName = "family_id")
   private Family family;
 
   @Column(name = "role", columnDefinition = "INT", nullable = false)

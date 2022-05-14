@@ -15,6 +15,9 @@ public class UserDtoBuilder implements DtoBuilder<UserDto> {
   private String timezone;
   private Boolean darkMode;
   private List<ColorDto> colorsByFamily;
+  private String oldPassword;
+  private String newPassword;
+  private String resetCode;
 
   public UserDtoBuilder withId(Long id) {
     this.id = id;
@@ -56,6 +59,21 @@ public class UserDtoBuilder implements DtoBuilder<UserDto> {
     return this;
   }
 
+  public UserDtoBuilder setOldPassword(String password) {
+    this.oldPassword = password;
+    return this;
+  }
+
+  public UserDtoBuilder setNewPassword(String password) {
+    this.newPassword = password;
+    return this;
+  }
+
+  public UserDtoBuilder setRestCode(String resetCode) {
+    this.resetCode = resetCode;
+    return this;
+  }
+
   public UserDtoBuilder fromUserObj(User user) {
     this.username = user.getUsername();
     this.id = user.getId();
@@ -69,7 +87,7 @@ public class UserDtoBuilder implements DtoBuilder<UserDto> {
 
   @Override
   public UserDto build() {
-    return new UserDto(this.id, this.firstName, this.lastName, this.email, this.username, null,
-        null, timezone, darkMode, this.colorsByFamily, null);
+    return new UserDto(this.id, this.firstName, this.lastName, this.email, this.username, oldPassword,
+        newPassword, timezone, darkMode, this.colorsByFamily, resetCode);
   }
 }

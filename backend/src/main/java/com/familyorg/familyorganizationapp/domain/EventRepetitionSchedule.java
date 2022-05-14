@@ -29,7 +29,7 @@ public class EventRepetitionSchedule implements Serializable {
   @Column(name = "frequency", columnDefinition = "VARCHAR(7)")
   private CalendarRepetitionFrequency frequency;
 
-  @Column(name = "interval", columnDefinition = "INT")
+  @Column(name = "_interval", columnDefinition = "INT")
   private Integer interval;
 
   @Column(name = "count", columnDefinition = "INT")

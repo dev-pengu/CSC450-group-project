@@ -4,7 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import java.sql.Date;
+
+import com.familyorg.familyorganizationapp.utility.HibernateUtil;
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.List;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -17,10 +20,9 @@ import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
-import com.familyorg.familyorganizationapp.utility.HibernateUtil;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class EventRepetitionScheduleTest {
+public class PollTest {
   private static SessionFactory sessionFactory;
   private Session session;
 
@@ -41,18 +43,17 @@ public class EventRepetitionScheduleTest {
   @Test
   @Order(1)
   public void testCreate() {
-    System.out.println("Running [EventRepetitionScheduleTest] testCreate...");
+    System.out.println("Running [CalendarTest] testCreate...");
     /* Given */
     session.beginTransaction();
-
-    EventRepetitionSchedule schedule = new EventRepetitionSchedule();
-    schedule.setFrequency(CalendarRepetitionFrequency.DAILY);
-    schedule.setInterval(7);
-    schedule.setCount(10);
-    schedule.setStartDate(Date.valueOf("2022-04-01"));
+    Poll poll = new Poll();
+    poll.setDescription("Test description");
+    poll.setCloseDateTime(Timestamp.from(Instant.now()));
+    poll.setCreatedDatetime(Timestamp.from(Instant.now()));
+    poll.setTimezone("America/Chicago");
 
     /* When */
-    Long id = (Long) session.save(schedule);
+    Long id = (Long) session.save(poll);
     session.getTransaction().commit();
 
     /* Then */
@@ -62,52 +63,47 @@ public class EventRepetitionScheduleTest {
   @Test
   @Order(2)
   public void testGet() {
-    System.out.println("Running [EventRepetitionScheduleTest] testGet...");
+    System.out.println("Running [CalendarTest] testGet...");
     /* Given */
-    Long id = 1l;
+    Long id = 1L;
 
     /* When */
-    EventRepetitionSchedule schedule = session.find(EventRepetitionSchedule.class, id);
+    Poll poll = session.find(Poll.class, id);
 
     /* Then */
-    assertEquals(CalendarRepetitionFrequency.DAILY, schedule.getFrequency());
+    assertEquals("Test description", poll.getDescription());
   }
 
   @Test
   @Order(3)
   public void testUpdate() {
-    System.out.println("Running [EventRepetitionScheduleTest] testUpdate...");
+    System.out.println("Running [CalendarTest] testUpdate...");
     /* Given */
-    Long id = 1l;
-    EventRepetitionSchedule schedule = new EventRepetitionSchedule();
-    schedule.setFrequency(CalendarRepetitionFrequency.WEEKLY);
-    schedule.setInterval(7);
-    schedule.setCount(10);
-    schedule.setStartDate(Date.valueOf("2022-04-01"));
-    schedule.setId(id);
+    Long id = 1L;
+    Poll poll = session.find(Poll.class, id);
+    poll.setDescription("Updated Description");
 
     /* When */
     session.beginTransaction();
-    session.update(schedule);
+    session.update(poll);
     session.getTransaction().commit();
 
-    EventRepetitionSchedule updatedSchedule = session.find(EventRepetitionSchedule.class, id);
+    Poll updatedPoll = session.find(Poll.class, id);
 
     /* Then */
-    assertEquals(CalendarRepetitionFrequency.WEEKLY, updatedSchedule.getFrequency());
+    assertEquals("Updated Description", updatedPoll.getDescription());
   }
 
   @Test
   @Order(4)
   public void testList() {
-    System.out.println("Running [EventRepetitionScheduleTest] testList...");
+    System.out.println("Running [CalendarTest] testList...");
     /* Given */
-    String queryString = "from EventRepetitionSchedule";
+    String queryString = "from Poll";
 
     /* When */
-    Query<EventRepetitionSchedule> query =
-        session.createQuery(queryString, EventRepetitionSchedule.class);
-    List<EventRepetitionSchedule> resultList = query.getResultList();
+    Query<Poll> query = session.createQuery(queryString, Poll.class);
+    List<Poll> resultList = query.getResultList();
 
     /* Then */
     assertFalse(resultList.isEmpty());
@@ -116,19 +112,19 @@ public class EventRepetitionScheduleTest {
   @Test
   @Order(5)
   public void testDelete() {
-    System.out.println("Running [EventRepetitionScheduleTest] testDelete...");
+    System.out.println("Running [CalendarTest] testDelete...");
     /* Given */
-    Long id = 1l;
-    EventRepetitionSchedule schedule = session.find(EventRepetitionSchedule.class, id);
+    Long id = 1L;
+    Poll poll = session.find(Poll.class, id);
 
     /* When */
     session.beginTransaction();
-    session.delete(schedule);
+    session.delete(poll);
     session.getTransaction().commit();
-    EventRepetitionSchedule deletedSchedule = session.find(EventRepetitionSchedule.class, id);
+    Poll deletedPoll = session.find(Poll.class, id);
 
     /* Then */
-    assertNull(deletedSchedule);
+    assertNull(deletedPoll);
   }
 
   @BeforeEach

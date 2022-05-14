@@ -1,10 +1,16 @@
 package com.familyorg.familyorganizationapp.domain;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import com.familyorg.familyorganizationapp.utility.HibernateUtil;
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.query.Query;
@@ -16,14 +22,11 @@ import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
-import com.familyorg.familyorganizationapp.utility.HibernateUtil;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class CalendarTest {
+public class PasswordResetCodeTest {
   private static SessionFactory sessionFactory;
   private Session session;
-
-
 
   @BeforeAll
   public static void setup() {
@@ -42,16 +45,20 @@ public class CalendarTest {
   @Test
   @Order(1)
   public void testCreate() {
-    System.out.println("Running [CalendarTest] testCreate...");
+    System.out.println("Running [PasswordResetCodeTest] testCreate...");
     /* Given */
     session.beginTransaction();
-    Family family = new Family("Test Name", "000000", "America/Chicago", null, null);
-    Long familId = (Long) session.save(family);
-    assertTrue(familId > 0);
-    Calendar calendar = new Calendar(family, "Test Description");
+    User user = new User("Test", "User", "testuser", "password", "testuser@test.com", null);
+    Long userId = (Long) session.save(user);
+    assertTrue(userId > 0);
+
+    PasswordResetCode code = new PasswordResetCode();
+    code.setResetCode(UUID.randomUUID().toString());
+    code.setCreated(Timestamp.from(Instant.now()));
+    code.setUser(user);
 
     /* When */
-    Long id = (Long) session.save(calendar);
+    Long id = (Long) session.save(code);
     session.getTransaction().commit();
 
     /* Then */
@@ -61,68 +68,52 @@ public class CalendarTest {
   @Test
   @Order(2)
   public void testGet() {
-    System.out.println("Running [CalendarTest] testGet...");
+    System.out.println("Running [PasswordResetCodeTest] testGet...");
     /* Given */
-    Long id = 1l;
+    Long id = 1L;
 
     /* When */
-    Calendar calendar = session.find(Calendar.class, id);
+    PasswordResetCode code = session.find(PasswordResetCode.class, id);
 
     /* Then */
-    assertEquals("Test Description", calendar.getDescription());
+    assertNotNull(code.getResetCode());
+    assertDoesNotThrow(
+        () -> {
+          UUID.fromString(code.getResetCode());
+        });
   }
 
   @Test
   @Order(3)
-  public void testUpdate() {
-    System.out.println("Running [CalendarTest] testUpdate...");
-    /* Given */
-    Long id = 1l;
-    Calendar calendar = new Calendar(session.find(Family.class, 1l), "Updated Description");
-    calendar.setId(id);
-
-    /* When */
-    session.beginTransaction();
-    session.update(calendar);
-    session.getTransaction().commit();
-
-    Calendar updatedCalendar = session.find(Calendar.class, 1l);
-
-    /* Then */
-    assertEquals("Updated Description", updatedCalendar.getDescription());
-  }
-
-  @Test
-  @Order(4)
   public void testList() {
-    System.out.println("Running [CalendarTest] testList...");
+    System.out.println("Running [PasswordResetCodeTest] testList...");
     /* Given */
-    String queryString = "from Calendar";
+    String queryString = "from PasswordResetCode";
 
     /* When */
-    Query<Calendar> query = session.createQuery(queryString, Calendar.class);
-    List<Calendar> resultList = query.getResultList();
+    Query<PasswordResetCode> query = session.createQuery(queryString, PasswordResetCode.class);
+    List<PasswordResetCode> resultList = query.getResultList();
 
     /* Then */
     assertFalse(resultList.isEmpty());
   }
 
   @Test
-  @Order(5)
+  @Order(4)
   public void testDelete() {
-    System.out.println("Running [CalendarTest] testDelete...");
+    System.out.println("Running [PasswordResetCodeTest] testDelete...");
     /* Given */
-    Long id = 1l;
-    Calendar calendar = session.find(Calendar.class, id);
+    Long id = 1L;
+    PasswordResetCode code = session.find(PasswordResetCode.class, id);
 
     /* When */
     session.beginTransaction();
-    session.delete(calendar);
+    session.delete(code);
     session.getTransaction().commit();
-    Calendar deletedCalendar = session.find(Calendar.class, id);
+    PasswordResetCode deletedCode = session.find(PasswordResetCode.class, id);
 
     /* Then */
-    assertNull(deletedCalendar);
+    assertNull(deletedCode);
   }
 
   @BeforeEach
