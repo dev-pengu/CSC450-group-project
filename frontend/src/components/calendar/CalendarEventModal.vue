@@ -424,10 +424,23 @@ export default {
               timeout: 3000,
             });
             this.onEventsChange();
+          } else if (res.data.errorCode === 1007) {
+            this.closeDialog();
+            this.showSnackbar({
+              type: 'warn',
+              message: 'You are not authorized to perform this action.',
+              timeout: 3000,
+            });
           } else {
-            // TODO: handle api exceptions
+            this.closeDialog();
+            this.showSnackbar({
+              type: 'error',
+              message: 'There was an issue creating your event. Please try again in a few minutes.',
+              timeout: 3000,
+            });
           }
         } catch (err) {
+          this.closeDialog();
           this.showSnackbar({
             type: 'error',
             message: 'There was an issue creating your event. Please try again in a few minutes.',
@@ -509,10 +522,23 @@ export default {
             timeout: 3000,
           });
           this.onEventsChange();
+        } else if (res.data.errorCode === 1007) {
+          this.closeDialog();
+          this.showSnackbar({
+            type: 'warn',
+            message: 'You are not authorized to perform this action.',
+            timeout: 3000,
+          });
         } else {
-          // TODO: handle api exception codes
+          this.closeDialog();
+          this.showSnackbar({
+            type: 'error',
+            message: 'There was an issue deleting the event. Please try again in a few minutes.',
+            timeout: 3000,
+          });
         }
       } catch (err) {
+        this.closeDialog();
         this.showSnackbar({
           type: 'error',
           message: 'There was an issue deleting the event. Please try again in a few minutes.',
