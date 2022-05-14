@@ -52,6 +52,7 @@ public class CalendarEvent implements Serializable {
   private String notes;
 
   @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "created_by", referencedColumnName = "user_id", columnDefinition = "BIGINT")
   private User createdBy;
 
   @Column(name = "created_datetime", columnDefinition = "TIMESTAMP", nullable = false)
@@ -81,8 +82,10 @@ public class CalendarEvent implements Serializable {
   @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.PERSIST)
   @JoinTable(
       name = "event_assignees",
-      joinColumns = {@JoinColumn(name = "calendar_event_id")},
-      inverseJoinColumns = {@JoinColumn(name = "user_id")})
+      joinColumns = {
+          @JoinColumn(name = "calendar_event_id", referencedColumnName = "calendar_event_id", columnDefinition = "BIGINT")},
+      inverseJoinColumns = {
+          @JoinColumn(name = "user_id", referencedColumnName = "user_id", columnDefinition = "BIGINT")})
   private Set<User> assignees = new HashSet<User>();
 
   public CalendarEvent() {
@@ -269,9 +272,15 @@ public class CalendarEvent implements Serializable {
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj) return true;
-    if (obj == null) return false;
-    if (getClass() != obj.getClass()) return false;
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null) {
+      return false;
+    }
+    if (getClass() != obj.getClass()) {
+      return false;
+    }
     CalendarEvent other = (CalendarEvent) obj;
     return Objects.equals(allDay, other.allDay)
         && Objects.equals(createdBy, other.createdBy)

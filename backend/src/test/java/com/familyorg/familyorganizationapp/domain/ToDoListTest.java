@@ -4,7 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import java.sql.Date;
+
+import com.familyorg.familyorganizationapp.utility.HibernateUtil;
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.List;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -17,10 +20,9 @@ import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
-import com.familyorg.familyorganizationapp.utility.HibernateUtil;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class EventRepetitionScheduleTest {
+public class ToDoListTest {
   private static SessionFactory sessionFactory;
   private Session session;
 
@@ -41,18 +43,16 @@ public class EventRepetitionScheduleTest {
   @Test
   @Order(1)
   public void testCreate() {
-    System.out.println("Running [EventRepetitionScheduleTest] testCreate...");
+    System.out.println("Running [ToDoListTest] testCreate...");
     /* Given */
     session.beginTransaction();
-
-    EventRepetitionSchedule schedule = new EventRepetitionSchedule();
-    schedule.setFrequency(CalendarRepetitionFrequency.DAILY);
-    schedule.setInterval(7);
-    schedule.setCount(10);
-    schedule.setStartDate(Date.valueOf("2022-04-01"));
+    ToDoList list = new ToDoList();
+    list.setDescription("Test description");
+    list.setCreatedDatetime(Timestamp.from(Instant.now()));
+    list.setDefaultList(false);
 
     /* When */
-    Long id = (Long) session.save(schedule);
+    Long id = (Long) session.save(list);
     session.getTransaction().commit();
 
     /* Then */
@@ -62,52 +62,48 @@ public class EventRepetitionScheduleTest {
   @Test
   @Order(2)
   public void testGet() {
-    System.out.println("Running [EventRepetitionScheduleTest] testGet...");
+    System.out.println("Running [ToDoListTest] testGet...");
     /* Given */
-    Long id = 1l;
+    Long id = 1L;
 
     /* When */
-    EventRepetitionSchedule schedule = session.find(EventRepetitionSchedule.class, id);
+    ToDoList list = session.find(ToDoList.class, id);
 
     /* Then */
-    assertEquals(CalendarRepetitionFrequency.DAILY, schedule.getFrequency());
+    assertEquals("Test description", list.getDescription());
+    assertEquals(false, list.isDefault());
   }
 
   @Test
   @Order(3)
   public void testUpdate() {
-    System.out.println("Running [EventRepetitionScheduleTest] testUpdate...");
+    System.out.println("Running [ToDoListTest] testUpdate...");
     /* Given */
-    Long id = 1l;
-    EventRepetitionSchedule schedule = new EventRepetitionSchedule();
-    schedule.setFrequency(CalendarRepetitionFrequency.WEEKLY);
-    schedule.setInterval(7);
-    schedule.setCount(10);
-    schedule.setStartDate(Date.valueOf("2022-04-01"));
-    schedule.setId(id);
+    Long id = 1L;
+    ToDoList list = session.find(ToDoList.class, id);
+    list.setDescription("Updated Description");
 
     /* When */
     session.beginTransaction();
-    session.update(schedule);
+    session.update(list);
     session.getTransaction().commit();
 
-    EventRepetitionSchedule updatedSchedule = session.find(EventRepetitionSchedule.class, id);
+    ToDoList updatedList = session.find(ToDoList.class, id);
 
     /* Then */
-    assertEquals(CalendarRepetitionFrequency.WEEKLY, updatedSchedule.getFrequency());
+    assertEquals("Updated Description", updatedList.getDescription());
   }
 
   @Test
   @Order(4)
   public void testList() {
-    System.out.println("Running [EventRepetitionScheduleTest] testList...");
+    System.out.println("Running [ToDoListTest] testList...");
     /* Given */
-    String queryString = "from EventRepetitionSchedule";
+    String queryString = "from ToDoList";
 
     /* When */
-    Query<EventRepetitionSchedule> query =
-        session.createQuery(queryString, EventRepetitionSchedule.class);
-    List<EventRepetitionSchedule> resultList = query.getResultList();
+    Query<ToDoList> query = session.createQuery(queryString, ToDoList.class);
+    List<ToDoList> resultList = query.getResultList();
 
     /* Then */
     assertFalse(resultList.isEmpty());
@@ -116,19 +112,19 @@ public class EventRepetitionScheduleTest {
   @Test
   @Order(5)
   public void testDelete() {
-    System.out.println("Running [EventRepetitionScheduleTest] testDelete...");
+    System.out.println("Running [ToDoListTest] testDelete...");
     /* Given */
-    Long id = 1l;
-    EventRepetitionSchedule schedule = session.find(EventRepetitionSchedule.class, id);
+    Long id = 1L;
+    ToDoList list = session.find(ToDoList.class, id);
 
     /* When */
     session.beginTransaction();
-    session.delete(schedule);
+    session.delete(list);
     session.getTransaction().commit();
-    EventRepetitionSchedule deletedSchedule = session.find(EventRepetitionSchedule.class, id);
+    ToDoList deletedList = session.find(ToDoList.class, id);
 
     /* Then */
-    assertNull(deletedSchedule);
+    assertNull(deletedList);
   }
 
   @BeforeEach

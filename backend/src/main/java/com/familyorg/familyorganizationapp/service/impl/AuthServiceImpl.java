@@ -111,7 +111,7 @@ public class AuthServiceImpl implements AuthService {
           ApiExceptionCode.REQUIRED_PARAM_MISSING, "User cannot be null.");
     }
     PasswordResetCode code = codeRepository.findByResetCode(resetCode);
-    if (code == null) {
+    if (code == null || code.getExpired()) {
       return false;
     }
     Calendar cal = Calendar.getInstance();

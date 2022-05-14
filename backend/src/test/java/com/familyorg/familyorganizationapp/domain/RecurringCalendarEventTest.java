@@ -19,7 +19,7 @@ import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
-import com.familyorg.familyorganizationapp.util.HibernateUtil;
+import com.familyorg.familyorganizationapp.utility.HibernateUtil;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class RecurringCalendarEventTest {
@@ -67,8 +67,8 @@ public class RecurringCalendarEventTest {
     calendarEvent.setDescription("Test description");
     calendarEvent.setNotes("Test notes");
     calendarEvent.setCreatedBy(user);
-    calendarEvent.setCreatedDatetime(Timestamp.from(Instant.now()));
     calendarEvent.setCalendar(calendar);
+    calendarEvent.setCreatedDatetime(Timestamp.from(Instant.now()));
     calendarEvent.setTimezone("America/Chicago");
     Long eventId = (Long) session.save(calendarEvent);
     assertTrue(eventId > 0);
@@ -79,6 +79,7 @@ public class RecurringCalendarEventTest {
     recurringEvent.setStartDatetime(originalStartDatetime);
     recurringEvent.setEndDatetime(originalEndDatetime);
     recurringEvent.setOriginatingEvent(calendarEvent);
+
 
     /* When */
     Long id = (Long) session.save(recurringEvent);
@@ -107,7 +108,7 @@ public class RecurringCalendarEventTest {
   public void testUpdate() {
     System.out.println("Running [RecurringCalendarEventTest] testUpdate...");
     /* Given */
-    Long id = 1L;
+    Long id = 1l;
     RecurringCalendarEvent recurringEvent = session.find(RecurringCalendarEvent.class, id);
     recurringEvent.setStartDatetime(Timestamp.from(Instant.now()));
     recurringEvent.setEndDatetime(Timestamp.from(Instant.now()));

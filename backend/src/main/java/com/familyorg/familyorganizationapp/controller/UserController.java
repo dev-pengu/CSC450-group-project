@@ -17,9 +17,12 @@ import com.familyorg.familyorganizationapp.service.UserService;
 @RequestMapping("/api/v1/user")
 public class UserController {
 
+  private UserService userService;
 
   @Autowired
-  private UserService userService;
+  public UserController(UserService userService) {
+    this.userService = userService;
+  }
 
   /**
    * Deletes the user with the supplied username.

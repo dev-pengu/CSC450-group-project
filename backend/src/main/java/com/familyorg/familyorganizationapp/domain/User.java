@@ -164,8 +164,7 @@ public class User implements Serializable {
   }
 
   public void setFirstName(String firstName) {
-    Objects.requireNonNull(firstName);
-    this.firstName = firstName.trim();
+    this.firstName = firstName == null ? null : firstName.trim();
   }
 
   public String getLastName() {
@@ -173,8 +172,7 @@ public class User implements Serializable {
   }
 
   public void setLastName(String lastName) {
-    Objects.requireNonNull(lastName);
-    this.lastName = lastName.trim();
+    this.lastName = lastName == null ? null : lastName.trim();
   }
 
   public String getUsername() {
@@ -182,8 +180,7 @@ public class User implements Serializable {
   }
 
   public void setUsername(String username) {
-    Objects.requireNonNull(username);
-    this.username = username.trim().toLowerCase();
+    this.username = username == null ? null : username.trim().toLowerCase();
   }
 
   public String getPassword() {
@@ -191,8 +188,7 @@ public class User implements Serializable {
   }
 
   public void setPassword(String password) {
-    Objects.requireNonNull(password);
-    this.password = password.trim();
+    this.password = password == null ? null : password.trim();
   }
 
   public String getEmail() {
@@ -200,8 +196,7 @@ public class User implements Serializable {
   }
 
   public void setEmail(String email) {
-    Objects.requireNonNull(email);
-    this.email = email.trim().toLowerCase();
+    this.email = email == null ? null : email.trim().toLowerCase();
   }
 
   public Set<FamilyMembers> getFamilies() {
