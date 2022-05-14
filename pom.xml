@@ -20,30 +20,4 @@
     <module>frontend</module>
     <module>backend</module>
   </modules>
-  <build>
-    <plugins>
-      <plugin>
-				<!-- Format files for VCS -->
-        <groupId>org.ec4j.maven</groupId>
-        <artifactId>editorconfig-maven-plugin</artifactId>
-        <version>0.1.1</version>
-        <executions>
-          <execution>
-            <id>format</id>
-            <phase>clean</phase>
-            <goals>
-              <goal>format</goal>
-            </goals>
-          </execution>
-        </executions>
-        <configuration>
-          <excludes>
-            <exclude>**/node_modules/**</exclude>
-            <exclude>**/target/**</exclude>
-            <exclude>**/node/**</exclude>
-          </excludes>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
 </project>

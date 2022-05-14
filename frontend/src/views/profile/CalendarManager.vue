@@ -119,7 +119,6 @@ export default {
             timeout: 3000,
           });
           this.expandedCalendar = {};
-          this.getCalendars();
         }
       } catch (err) {
         this.showSnackbar({

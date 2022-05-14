@@ -117,6 +117,27 @@
   <build>
     <plugins>
       <plugin>
+				<!-- Format files for VCS -->
+        <groupId>org.ec4j.maven</groupId>
+        <artifactId>editorconfig-maven-plugin</artifactId>
+        <version>0.1.1</version>
+        <executions>
+          <execution>
+            <id>format</id>
+            <phase>clean</phase>
+            <goals>
+              <goal>format</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <excludes>
+            <exclude>**/target/**</exclude>
+            <exclude>**/src/main/resources/public/**</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
+      <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
       </plugin>

@@ -14,7 +14,7 @@
         <v-card-title class="py-0 justify-center foa_text_header--text">Invite a Family Member to</v-card-title>
         <v-card-title class="pt-0 mb-2 justify-center foa_text_header--text">{{ familyName }}</v-card-title>
         <v-card-text>
-          <v-form v-model="valid">
+          <v-form ref="form" v-model="valid">
             <v-row justify="center">
               <v-col cols="12" sm="6" class="pb-0">
                 <v-text-field
@@ -90,10 +90,14 @@ export default {
         await api.sendInviteCode(this.formData);
         this.dialogState = false;
         this.showSnackbar({ type: 'success', message: `You've sent an invite to ${this.formData.recipientEmail}!` });
+        this.$refs.form.reset();
       } catch (err) {
-        // TODO: need better way to handle timeout error
         this.dialogState = false;
-        this.showSnackbar({ type: 'success', message: `You've sent an invite to ${this.formData.recipientEmail}!` });
+        this.showSnackbar({
+          type: 'error',
+          message: 'We ran into an issue sending the invite, please try again later.',
+        });
+        this.$refs.form.reset();
       }
     },
   },
