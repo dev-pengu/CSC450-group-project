@@ -292,7 +292,7 @@
           <v-btn class="d-inline-block" color="foa_button" text :disabled="loading" @click="closeDialog">Cancel</v-btn>
           <v-btn
             v-if="eventData.canEdit"
-            class="foa_button_text--text d-inline-block"
+            class="d-inline-block"
             color="foa_button"
             text
             :disabled="!valid || loading"
