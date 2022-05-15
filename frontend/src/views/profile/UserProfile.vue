@@ -7,18 +7,25 @@
       <v-col cols="12" sm="7" md="8" lg="9">
         <v-sheet max-width="600" color="#00000000">
           <h4 class="text-h5 foa_text_header--text mb-5">My Profile</h4>
-          <v-form ref="form" class="ml-5">
+          <v-form ref="form" v-model="valid" class="ml-5">
             <v-row>
               <v-col cols="12" sm="6">
                 <v-text-field
                   v-model="settings.firstName"
                   label="First Name"
                   color="foa_button"
-                  required
+                  :rules="[required, max]"
+                  counter="50"
                 ></v-text-field>
               </v-col>
               <v-col cols="12" sm="6">
-                <v-text-field v-model="settings.lastName" label="Last Name" color="foa_button" required></v-text-field>
+                <v-text-field
+                  v-model="settings.lastName"
+                  label="Last Name"
+                  color="foa_button"
+                  :rules="[required, max]"
+                  counter="50"
+                ></v-text-field>
               </v-col>
             </v-row>
             <v-row>
@@ -101,6 +108,8 @@ export default {
     valid: true,
     timezones: [],
     settings: {},
+    required: (v) => !!v || 'First name and last name are required',
+    max: (v) => (v && v.length <= 50) || 'Max 50 characters',
   }),
   async created() {
     const res = await api.getTimezones();

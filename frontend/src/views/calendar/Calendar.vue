@@ -7,8 +7,8 @@
           <v-col cols="12">
             <div class="d-flex justify-space-between align-center">
               <h3 class="text-uppercase foa_text_header--text">Active Filters</h3>
-              <v-btn :loading="loading" class="ma-1" color="error" plain @click="resetFilters">Clear</v-btn>
-              <v-btn color="error" icon small @click="filterBarOpen = !filterBarOpen"><v-icon>mdi-close</v-icon></v-btn>
+              <v-btn :loading="loading" class="ma-1" color="red" plain @click="resetFilters">Clear</v-btn>
+              <v-btn color="red" icon small @click="filterBarOpen = !filterBarOpen"><v-icon>mdi-close</v-icon></v-btn>
             </div>
             <v-divider class="mb-2" />
             <v-row v-for="filterSet in Object.keys(activeFilters)" :key="filterSet" align="center" justify="start">
@@ -83,7 +83,7 @@
                 </template>
               </v-list>
             </div>
-            <v-switch v-model="autoSearch" label="Auto search on change?" inset></v-switch>
+            <v-switch v-model="autoSearch" label="Auto search on change?" inset color="foa_button"></v-switch>
             <v-btn v-if="!autoSearch" @click="getCalendarData">Search</v-btn>
           </v-col>
         </v-row>

@@ -9,7 +9,7 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn small text color="error" @click="confirmBreakRecurring = false"> Cancel </v-btn>
+          <v-btn small text color="red" @click="confirmBreakRecurring = false"> Cancel </v-btn>
           <v-btn small text color="success" @click="updateEvent"> OK </v-btn>
         </v-card-actions>
       </v-card>
@@ -23,10 +23,10 @@
       <v-card>
         <div class="d-flex justify-space-between align-center">
           <v-card-title v-text="getDialogTitle()"></v-card-title>
-          <v-btn class="mr-5" color="error" icon @click="closeDialog"><v-icon>mdi-close</v-icon></v-btn>
+          <v-btn class="mr-5" color="red" icon @click="closeDialog"><v-icon>mdi-close</v-icon></v-btn>
         </div>
         <v-card-text>
-          <v-form v-model="valid" :readonly="!eventData.canEdit">
+          <v-form ref="form" v-model="valid" :readonly="!eventData.canEdit">
             <div v-if="eventData.id !== 0" class="text-caption mb-2">Created by: {{ eventData.creator }}</div>
             <v-select
               v-if="eventData.id === 0"
@@ -34,11 +34,20 @@
               outlined
               label="Calendar"
               :items="calendars"
-              :rules="required"
+              :rules="[required]"
               item-value="id"
               item-text="display"
+              color="foa_button"
+              item-color="foa_button"
             ></v-select>
-            <v-text-field v-model="eventData.description" label="Title" outlined :rules="required"></v-text-field>
+            <v-text-field
+              v-model="eventData.description"
+              label="Title"
+              outlined
+              :rules="[required, max]"
+              counter="256"
+              color="foa_button"
+            ></v-text-field>
             <div class="d-flex justify-space-around align-center">
               <v-switch v-model="eventData.allDay" inset color="foa_button" label="All Day"></v-switch>
               <v-switch v-model="eventData.isRepeating" inset color="foa_button" label="Repeating"></v-switch>
@@ -62,6 +71,7 @@
                     persistent-hint
                     :readonly="!editSchedule && eventData.id !== 0"
                     :disabled="!editSchedule && eventData.id !== 0"
+                    color="foa_button"
                   ></v-text-field>
                 </v-col>
                 <v-col cols="6" sm="3">
@@ -75,6 +85,8 @@
                     persistent-hint
                     :readonly="!editSchedule && eventData.id !== 0"
                     :disabled="!editSchedule && eventData.id !== 0"
+                    color="foa_button"
+                    item-color="foa_button"
                   ></v-select>
                 </v-col>
                 <v-col cols="2" sm="1"> for </v-col>
@@ -88,6 +100,7 @@
                     persistent-hint
                     :readonly="!editSchedule && eventData.id !== 0"
                     :disabled="!editSchedule && eventData.id !== 0"
+                    color="foa_button"
                   ></v-text-field>
                 </v-col>
                 <v-col cols="5" sm="2"> occurrences</v-col>
@@ -102,7 +115,7 @@
                   <v-btn :color="btnColor" icon small @click="updateRepetitionSchedule"
                     ><v-icon>mdi-content-save-outline</v-icon></v-btn
                   >
-                  <v-btn color="error" icon small @click="editSchedule = false"><v-icon>mdi-cancel</v-icon></v-btn>
+                  <v-btn color="red" icon small @click="editSchedule = false"><v-icon>mdi-cancel</v-icon></v-btn>
                 </div>
               </div>
             </v-sheet>
@@ -124,15 +137,16 @@
                       label="Start"
                       prepend-icon="mdi-calendar"
                       readonly
-                      :rules="required"
+                      :rules="[required]"
                       v-bind="attrs"
+                      color="foa_button"
                       v-on="on"
                     ></v-text-field>
                   </template>
-                  <v-date-picker v-model="eventData.startDate" no-title scrollable>
+                  <v-date-picker v-model="eventData.startDate" no-title scrollable color="foa_button">
                     <v-spacer></v-spacer>
-                    <v-btn text color="primary" @click="startMenu = false"> Cancel </v-btn>
-                    <v-btn text color="primary" @click="$refs.startMenu.save(eventData.startDate)"> OK </v-btn>
+                    <v-btn text color="foa_button" @click="startMenu = false">Cancel</v-btn>
+                    <v-btn text color="foa_button" @click="$refs.startMenu.save(eventData.startDate)">OK</v-btn>
                   </v-date-picker>
                 </v-menu>
               </v-col>
@@ -154,8 +168,9 @@
                       v-model="eventData.startTime"
                       prepend-icon="mdi-clock-time-four-outline"
                       readonly
-                      :rules="required"
+                      :rules="[required]"
                       v-bind="attrs"
+                      color="foa_button"
                       v-on="on"
                     ></v-text-field>
                   </template>
@@ -163,6 +178,7 @@
                     v-if="startTimeMenu"
                     v-model="eventData.startTime"
                     full-width
+                    color="foa_button"
                     @click:minute="$refs.startTimeMenu.save(eventData.startTime)"
                   ></v-time-picker>
                 </v-menu>
@@ -186,15 +202,16 @@
                       label="End"
                       prepend-icon="mdi-calendar"
                       readonly
-                      :rules="required"
+                      :rules="[required]"
                       v-bind="attrs"
+                      color="foa_button"
                       v-on="on"
                     ></v-text-field>
                   </template>
-                  <v-date-picker v-model="eventData.endDate" no-title scrollable>
+                  <v-date-picker v-model="eventData.endDate" no-title scrollable color="foa_button">
                     <v-spacer></v-spacer>
-                    <v-btn text color="primary" @click="endMenu = false"> Cancel </v-btn>
-                    <v-btn text color="primary" @click="$refs.endMenu.save(eventData.endDate)"> OK </v-btn>
+                    <v-btn text color="foa_button" @click="endMenu = false"> Cancel </v-btn>
+                    <v-btn text color="foa_button" @click="$refs.endMenu.save(eventData.endDate)"> OK </v-btn>
                   </v-date-picker>
                 </v-menu>
               </v-col>
@@ -216,8 +233,9 @@
                       v-model="eventData.endTime"
                       prepend-icon="mdi-clock-time-four-outline"
                       readonly
-                      :rules="required"
+                      :rules="[required]"
                       v-bind="attrs"
+                      color="foa_button"
                       v-on="on"
                     ></v-text-field>
                   </template>
@@ -225,6 +243,7 @@
                     v-if="endTimeMenu"
                     v-model="eventData.endTime"
                     full-width
+                    color="foa_button"
                     @click:minute="$refs.endTimeMenu.save(eventData.endTime)"
                   ></v-time-picker>
                 </v-menu>
@@ -247,8 +266,16 @@
               chips
               item-text="display"
               item-value="id"
+              color="foa_button"
+              item-color="foa_button"
             ></v-select>
-            <v-textarea v-model="eventData.notes" class="mt-2" outlined label="Additional Notes"></v-textarea>
+            <v-textarea
+              v-model="eventData.notes"
+              class="mt-2"
+              outlined
+              label="Additional Notes"
+              color="foa_button"
+            ></v-textarea>
           </v-form>
         </v-card-text>
         <v-card-actions>
@@ -257,7 +284,7 @@
             v-if="eventData.id !== 0 && eventData.canEdit"
             class="d-inline-block"
             text
-            color="error"
+            color="red"
             :disabled="loading"
             @click="deleteEvent"
             >Delete</v-btn
@@ -266,7 +293,7 @@
           <v-btn
             v-if="eventData.canEdit"
             class="foa_button_text--text d-inline-block"
-            :color="btnColor"
+            color="foa_button"
             text
             :disabled="!valid || loading"
             @click="submit"
@@ -369,7 +396,8 @@ export default {
     scheduleUpdated: false,
     eventCoreUpdated: false,
     editSchedule: false,
-    required: [(v) => !!v || 'This field is required'],
+    required: (v) => !!v || 'This field is required',
+    max: (v) => (v && v.length <= 256) || 'Max 256 characters',
   }),
   computed: {
     ...mapGetters({ getFamily: 'getFamily' }),
@@ -391,6 +419,7 @@ export default {
     closeDialog() {
       this.dialogOpen = false;
       this.eventData = { ...this.defaultEventData };
+      this.$refs.form.resetValidation();
     },
     async submit() {
       if (this.eventData.id === 0) {
@@ -489,7 +518,11 @@ export default {
           });
           this.onEventsChange();
         } else {
-          // TODO handle api exceptions
+          this.showSnackbar({
+            type: 'error',
+            message: 'There was an issue updating your event. Please try again in a few minutes.',
+            timeout: 3000,
+          });
         }
       } catch (err) {
         this.showSnackbar({

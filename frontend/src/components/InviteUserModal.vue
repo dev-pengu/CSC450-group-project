@@ -9,7 +9,7 @@
       <v-card>
         <v-card-actions class="pb-0">
           <v-spacer></v-spacer>
-          <v-btn class="pr-0" icon @click="dialogState = false"><v-icon>mdi-close</v-icon></v-btn>
+          <v-btn class="pr-0" icon color="red" @click="dialogState = false"><v-icon>mdi-close</v-icon></v-btn>
         </v-card-actions>
         <v-card-title class="py-0 justify-center foa_text_header--text">Invite a Family Member to</v-card-title>
         <v-card-title class="pt-0 mb-2 justify-center foa_text_header--text">{{ familyName }}</v-card-title>
@@ -26,6 +26,7 @@
                   type="email"
                   required
                   :rules="emailRules"
+                  counter="70"
                 ></v-text-field>
               </v-col>
             </v-row>
@@ -75,7 +76,11 @@ export default {
   data: (instance) => ({
     dialogState: false,
     valid: false,
-    emailRules: [(v) => !!v || 'Email is required', (v) => /.+@.+\..+/.test(v) || 'Email must be valid'],
+    emailRules: [
+      (v) => !!v || 'Email is required',
+      (v) => /.+@.+\..+/.test(v) || 'Email must be valid',
+      (v) => (v && v.length <= 70) || 'Max 70 characters',
+    ],
     roles: ['CHILD', 'ADULT', 'ADMIN'],
     formData: {
       family: instance.familyId,

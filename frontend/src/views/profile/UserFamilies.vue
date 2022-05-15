@@ -10,7 +10,7 @@
             <v-card-title class="pt-0 justify-center foa_text_header--text pt-4 pb-4">
               Member Roles
               <v-spacer></v-spacer>
-              <v-btn class="pr-0" icon @click="closeRoleManager"><v-icon>mdi-close</v-icon></v-btn>
+              <v-btn class="pr-0" icon color="red" @click="closeRoleManager"><v-icon>mdi-close</v-icon></v-btn>
             </v-card-title>
             <v-card-text>
               <v-row justify="center">
@@ -60,7 +60,7 @@
             <v-card-title class="justify-center foa_text_header--text pt-4 pb-4">
               Ownership Transfer
               <v-spacer></v-spacer>
-              <v-btn class="pr-0" icon @click="closeTransferDialog"><v-icon>mdi-close</v-icon></v-btn>
+              <v-btn class="pr-0" icon color="red" @click="closeTransferDialog"><v-icon>mdi-close</v-icon></v-btn>
             </v-card-title>
             <v-card-text>
               <v-form>
@@ -124,11 +124,12 @@
               <v-btn
                 v-if="(!showUpdateForm || updateIndex !== i) && isAdmin(family.memberData.role)"
                 icon
+                :color="btnColor"
                 @click="expand(i)"
               >
                 <v-icon>mdi-pencil</v-icon>
               </v-btn>
-              <v-btn v-else-if="showUpdateForm && updateIndex === i" icon @click="collapse">
+              <v-btn v-else-if="showUpdateForm && updateIndex === i" icon :color="btnColor" @click="collapse">
                 <v-icon>mdi-pencil-off</v-icon>
               </v-btn>
             </v-card-title>
@@ -146,7 +147,11 @@
                       color="foa_button"
                       label="Family Name"
                       required
-                      :rules="[(v) => !!v || 'Password is required']"
+                      :rules="[
+                        (v) => !!v || 'Family Name is required',
+                        (v) => (v && v.length <= 50) || 'Max 50 characters',
+                      ]"
+                      counter="50"
                     ></v-text-field>
                     <ColorPicker
                       :ref="`familyColor-${family.id}`"
@@ -172,7 +177,7 @@
               <v-btn
                 v-if="user.id === family.owner.user.id"
                 class="foa_button_text--text"
-                color="error"
+                color="red"
                 elevation="2"
                 :loading="loading"
                 :disabled="loading"
@@ -184,7 +189,7 @@
               <v-btn
                 v-else
                 class="foa_button_text--text"
-                color="error"
+                color="red"
                 elevation="2"
                 :loading="loading"
                 :disabled="loading"
@@ -211,7 +216,7 @@
               <v-btn
                 small
                 class="foa_button_text--text"
-                color="error"
+                color="red"
                 elevation="2"
                 :loading="loading"
                 :disabled="loading"
@@ -340,6 +345,9 @@ export default {
     ...mapGetters({ families: 'getFamilies', user: 'getUser', getFamily: 'getFamily' }),
     familyName() {
       return this.leaveDeleteId ? this.getFamily(this.leaveDeleteId).name : 'this family';
+    },
+    btnColor() {
+      return this.$vuetify.theme.dark ? 'foa_button' : 'foa_button_dark';
     },
   },
   async created() {

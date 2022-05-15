@@ -7,7 +7,7 @@
       <v-card>
         <v-card-actions class="pb-0">
           <v-spacer></v-spacer>
-          <v-btn class="pr-0" icon @click="closeDialog"><v-icon>mdi-close</v-icon></v-btn>
+          <v-btn class="pr-0" icon color="red" @click="closeDialog"><v-icon>mdi-close</v-icon></v-btn>
         </v-card-actions>
         <v-card-title class="pt-0 justify-center foa_text_header--text">Join a Family</v-card-title>
         <v-card-text>
@@ -37,7 +37,7 @@
             <v-row justify="center">
               <v-col cols="6" sm="4">
                 <v-btn
-                  :disabled="!joinValid"
+                  :disabled="!joinValid || loading"
                   block
                   color="foa_button"
                   class="foa_button_text--text"
@@ -60,6 +60,7 @@
                   label="Family Name"
                   required
                   :rules="nameRules"
+                  counter="50"
                 ></v-text-field>
               </v-col>
             </v-row>
@@ -95,7 +96,7 @@
             <v-row justify="center">
               <v-col cols="6" sm="4">
                 <v-btn
-                  :disabled="!createValid"
+                  :disabled="!createValid || loading"
                   block
                   color="foa_button"
                   class="foa_button_text--text"
@@ -126,7 +127,7 @@ export default {
     joinValid: false,
     createValid: false,
     codeRules: [(v) => !!v || 'Invite code is required'],
-    nameRules: [(v) => !!v || 'Family name is required'],
+    nameRules: [(v) => !!v || 'Family name is required', (v) => (v && v.length <= 50) || 'Max 50 characters'],
     timezones: [],
     joinFamilyData: {
       inviteCode: '',
@@ -142,6 +143,7 @@ export default {
     createError: false,
     joinErrorMsg: '',
     createErrorMsg: '',
+    loading: false,
   }),
   async created() {
     const res = await api.getTimezones();
@@ -152,6 +154,7 @@ export default {
     ...mapActions(['fetchFamilies', 'showSnackbar']),
     async submitJoinFamily() {
       try {
+        this.loading = true;
         this.joinFamilyData.personalEventColor = this.$refs.joinPersonalColorPicker.color;
         const res = await api.joinFamily(this.joinFamilyData);
         if (res.status === 200) {
@@ -170,10 +173,13 @@ export default {
         this.joinError = true;
         this.joinErrorMsg =
           'There was a problem joining this family. Make sure the invite code is correct and try again.';
+      } finally {
+        this.loading = false;
       }
     },
     async submitCreateFamily() {
       try {
+        this.loading = true;
         this.createFamilyData.familyEventColor = this.$refs.createFamilyColorPicker.color;
         this.createFamilyData.personalEventColor = this.$refs.createFamilyPersonalColorPicker.color;
         const res = await api.createFamily(this.createFamilyData);
@@ -188,6 +194,8 @@ export default {
       } catch (err) {
         this.createError = true;
         this.createErrorMsg = 'There was a problem creating your family, please try again.';
+      } finally {
+        this.loading = false;
       }
     },
     closeDialog() {

@@ -10,7 +10,7 @@
             <v-card-title>
               <span class="pt-0 justify-center foa_text_header--text">Update Poll Information</span>
               <v-spacer></v-spacer>
-              <v-btn class="mr-0" color="error" icon @click="updateDialog = false"><v-icon>mdi-close</v-icon></v-btn>
+              <v-btn class="mr-0" color="red" icon @click="updateDialog = false"><v-icon>mdi-close</v-icon></v-btn>
             </v-card-title>
             <v-card-text>
               <v-container>
@@ -21,11 +21,16 @@
                     color="foa_button"
                     :rules="descriptionRules"
                     label="Description"
-                    counter="70"
-                    max-length="70"
-                    required
+                    counter="256"
+                    max-length="256"
                   ></v-text-field>
-                  <v-textarea v-model="editedItem.notes" outlined :rules="notesRules" label="Notes"></v-textarea>
+                  <v-textarea
+                    v-model="editedItem.notes"
+                    outlined
+                    :rules="notesRules"
+                    label="Notes"
+                    color="foa_button"
+                  ></v-textarea>
                   <v-dialog
                     ref="dialog"
                     v-model="dateModal"
@@ -43,13 +48,14 @@
                         persistent-hint
                         :rules="closedDateRules"
                         v-bind="attrs"
+                        color="foa_button"
                         v-on="on"
                       ></v-text-field>
                     </template>
-                    <v-date-picker v-model="editedItem.closedDateTime" scrollable>
+                    <v-date-picker v-model="editedItem.closedDateTime" scrollable color="foa_button">
                       <v-spacer></v-spacer>
-                      <v-btn text color="primary" @click="dateModal = false"> Cancel </v-btn>
-                      <v-btn text color="primary" @click="$refs.dialog.save(editedItem.closedDateTime)"> OK </v-btn>
+                      <v-btn text color="foa_button" @click="dateModal = false"> Cancel </v-btn>
+                      <v-btn text color="foa_button" @click="$refs.dialog.save(editedItem.closedDateTime)"> OK </v-btn>
                     </v-date-picker>
                   </v-dialog>
                   <v-select
@@ -63,6 +69,8 @@
                     item-value="id"
                     :rules="respondentRules"
                     persistent-hint
+                    color="foa_button"
+                    item-color="foa_button"
                   ></v-select>
                   <v-combobox
                     v-model="editedItem.options"
@@ -76,6 +84,7 @@
                     small-chips
                     :rules="optionRules"
                     class="mb-5"
+                    color="foa_button"
                   >
                   </v-combobox>
                 </v-form>
@@ -85,7 +94,7 @@
               <v-spacer></v-spacer>
               <v-btn
                 class="foa_button_text--text mr-4"
-                color="error"
+                color="red"
                 elevation="2"
                 max-width="150px"
                 :disabled="loading"
@@ -98,7 +107,7 @@
                 elevation="2"
                 max-width="150px"
                 :loading="loading"
-                :disabled="loading"
+                :disabled="!valid || loading"
                 @click="save"
                 >Save</v-btn
               >
@@ -112,7 +121,7 @@
               <v-spacer></v-spacer>
               <v-btn
                 class="foa_button_text--text mr-4"
-                color="error"
+                color="red"
                 elevation="2"
                 max-width="150px"
                 :disabled="loading"
@@ -180,7 +189,7 @@
                     <v-btn small :color="btnColor" icon class="mr-2" @click="editItem(poll)">
                       <v-icon>mdi-pencil</v-icon>
                     </v-btn>
-                    <v-btn small color="error" icon @click="deleteItem(poll)">
+                    <v-btn small color="red" icon @click="deleteItem(poll)">
                       <v-icon>mdi-delete</v-icon>
                     </v-btn>
                   </div>
@@ -193,7 +202,7 @@
               <span class="grey--text text-caption">Items per page</span>
               <v-menu offset-y>
                 <template #activator="{ on, attrs }">
-                  <v-btn dark text color="primary" class="ml-2" v-bind="attrs" v-on="on">
+                  <v-btn dark text color="foa_button" class="ml-2" v-bind="attrs" v-on="on">
                     {{ itemsPerPage }}
                     <v-icon>mdi-chevron-down</v-icon>
                   </v-btn>
@@ -288,7 +297,7 @@ export default {
     members: [],
     descriptionRules: [
       (v) => !!v || 'Description is required',
-      (v) => (v && v.length <= 70) || 'Description must be less than 70 characters',
+      (v) => (v && v.length <= 256) || 'Description must be less than 256 characters',
     ],
     notesRules: [],
     closedDateRules: [(v) => !!v || 'Date for poll to close is required'],

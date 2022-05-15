@@ -138,7 +138,7 @@ export default {
       }
       try {
         api.sendResetCode(this.formData.usernameEmail.trim());
-        this.showSnackbar({ type: 'info', message: 'An email has been sent to your email on file.', timeout: 3000 });
+        this.showSnackbar({ type: 'info', message: 'An email has been sent to the address on file.', timeout: 3000 });
       } catch (err) {
         this.error = true;
         const error = { err };

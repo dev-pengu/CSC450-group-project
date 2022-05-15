@@ -8,7 +8,7 @@
     <v-card>
       <div class="d-flex justify-space-between align-center">
         <v-card-title class="text-h5 foa_text_header--text"> {{ formTitle }}</v-card-title>
-        <v-btn class="mr-5" color="error" icon @click="close"><v-icon>mdi-close</v-icon></v-btn>
+        <v-btn class="mr-5" color="red" icon @click="close"><v-icon>mdi-close</v-icon></v-btn>
       </div>
       <v-card-text v-if="availableFamilies && availableFamilies.length > 0">
         <v-form ref="form" v-model="valid">
@@ -34,6 +34,7 @@
                 color="foa_button"
                 outlined
                 label="Description"
+                counter="70"
               ></v-text-field>
             </v-col>
           </v-row>
@@ -44,7 +45,7 @@
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="error" text @click="close">Cancel</v-btn>
+        <v-btn color="red" text @click="close">Cancel</v-btn>
         <v-btn
           v-if="availableFamilies && availableFamilies.length > 0"
           color="foa_button"
@@ -110,7 +111,7 @@ export default {
       description: '',
     },
     familyRules: [(v) => !!v || 'Family is required'],
-    descriptionRules: [(v) => !!v || 'Description is required'],
+    descriptionRules: [(v) => !!v || 'Description is required', (v) => (v && v.length <= 70) || 'Max 70 characters'],
   }),
   computed: {
     ...mapGetters({ families: 'getFamilies' }),

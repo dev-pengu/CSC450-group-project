@@ -8,7 +8,7 @@
         <v-card-title class="pt-0 justify-center foa_text_header--text pt-4 pb-4">
           {{ type === 'update' ? 'Update To-Do' : 'Add a To-Do' }}
           <v-spacer></v-spacer>
-          <v-btn class="pr-0" color="error" icon @click="closeDialog"><v-icon>mdi-close</v-icon></v-btn>
+          <v-btn class="pr-0" color="red" icon @click="closeDialog"><v-icon>mdi-close</v-icon></v-btn>
         </v-card-title>
         <v-card-text>
           <v-form ref="form" v-model="valid">
@@ -20,7 +20,7 @@
                   outlined
                   color="foa_button"
                   item-color="foa_button"
-                  :rules="required"
+                  :rules="[rules.required]"
                   label="Family"
                   item-text="name"
                   item-value="id"
@@ -34,7 +34,7 @@
                   outlined
                   color="foa_button"
                   item-color="foa_button"
-                  :rules="required"
+                  :rules="[rules.required]"
                   label="Todo List"
                   item-text="description"
                   item-value="id"
@@ -45,7 +45,8 @@
                   v-model="internalTodo.description"
                   color="foa_button"
                   label="Description"
-                  :rules="required"
+                  :rules="[rules.required, rules.max]"
+                  counter="50"
                 ></v-text-field>
               </v-col>
               <v-col cols="12" sm="6" class="py-0">
@@ -121,7 +122,10 @@ export default {
   data: (instance) => ({
     loading: false,
     internalTodo: { ...instance.todo },
-    required: [(v) => !!v || 'This field is required'],
+    rules: {
+      required: (v) => !!v || 'This field is required',
+      max: (v) => (v && v.length <= 50) || 'Max 50 characters',
+    },
     valid: false,
     dialog: false,
     lists: [],

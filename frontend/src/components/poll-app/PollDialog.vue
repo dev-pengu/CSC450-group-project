@@ -11,7 +11,7 @@
         <v-card-title class="pt-0 justify-center foa_text_header--text pt-4 pb-4">
           {{ type === 'vote' ? 'Vote' : 'Create a Poll' }}
           <v-spacer></v-spacer>
-          <v-btn class="pr-0" color="error" icon @click="closeDialog"><v-icon>mdi-close</v-icon></v-btn>
+          <v-btn class="pr-0" color="red" icon @click="closeDialog"><v-icon>mdi-close</v-icon></v-btn>
         </v-card-title>
         <v-card-text>
           <PollCard
