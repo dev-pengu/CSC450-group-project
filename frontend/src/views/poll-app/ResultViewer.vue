@@ -5,7 +5,7 @@
         <v-card-title>
           <span class="pt-0 justify-center foa_text_header--text">Results</span>
           <v-spacer></v-spacer>
-          <v-btn class="mr-0" color="error" icon @click="hideResultsDialog"><v-icon>mdi-close</v-icon></v-btn>
+          <v-btn class="mr-0" color="red" icon @click="hideResultsDialog"><v-icon>mdi-close</v-icon></v-btn>
         </v-card-title>
         <v-card-text>
           <h5 class="text-h6">{{ poll.description }}</h5>
@@ -88,7 +88,7 @@
               <span class="grey--text text-caption">Items per page</span>
               <v-menu offset-y>
                 <template #activator="{ on, attrs }">
-                  <v-btn dark text color="primary" class="ml-2" v-bind="attrs" v-on="on">
+                  <v-btn dark text color="foa_button" class="ml-2" v-bind="attrs" v-on="on">
                     {{ itemsPerPage }}
                     <v-icon>mdi-chevron-down</v-icon>
                   </v-btn>
@@ -105,10 +105,10 @@
               </v-menu>
               <v-spacer></v-spacer>
               <span class="mr-4 grey--text text-caption">Page {{ page }} of {{ numberOfPages }}</span>
-              <v-btn fab dark x-small :color="btnColor" class="mr-1" @click="formerPage"
+              <v-btn fab dark x-small color="foa_button" class="mr-1" @click="formerPage"
                 ><v-icon>mdi-chevron-left</v-icon></v-btn
               >
-              <v-btn fab dark x-small :color="btnColor" class="ml-1" @click="nextPage"
+              <v-btn fab dark x-small color="foa_button" class="ml-1" @click="nextPage"
                 ><v-icon>mdi-chevron-right</v-icon></v-btn
               >
             </v-row>
@@ -164,9 +164,6 @@ export default {
     ...mapGetters({ getFamily: 'getFamily' }),
     numberOfPages() {
       return Math.ceil(this.polls.length / this.itemsPerPage);
-    },
-    btnColor() {
-      return this.$vuetify.theme.dark ? 'foa_button' : 'foa_button_dark';
     },
   },
   created() {

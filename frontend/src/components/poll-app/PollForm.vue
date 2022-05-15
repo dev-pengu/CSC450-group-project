@@ -19,11 +19,11 @@
         color="foa_button"
         :rules="descriptionRules"
         label="Description"
-        counter="70"
-        max-length="70"
+        counter="256"
+        max-length="256"
         required
       ></v-text-field>
-      <v-textarea v-model="formData.notes" outlined :rules="notesRules" label="Notes"></v-textarea>
+      <v-textarea v-model="formData.notes" outlined :rules="notesRules" label="Notes" color="foa_button"></v-textarea>
       <v-dialog ref="dialog" v-model="dateModal" :return-value.sync="formData.closedDate" persistent width="290px">
         <template #activator="{ on, attrs }">
           <v-text-field
@@ -35,13 +35,14 @@
             persistent-hint
             :rules="closedDateRules"
             v-bind="attrs"
+            color="foa_button"
             v-on="on"
           ></v-text-field>
         </template>
-        <v-date-picker v-model="formData.closedDate" scrollable>
+        <v-date-picker v-model="formData.closedDate" scrollable color="foa_button">
           <v-spacer></v-spacer>
-          <v-btn text color="primary" @click="dateModal = false"> Cancel </v-btn>
-          <v-btn text color="primary" @click="$refs.dialog.save(formData.closedDate)"> OK </v-btn>
+          <v-btn text color="foa_button" @click="dateModal = false"> Cancel </v-btn>
+          <v-btn text color="foa_button" @click="$refs.dialog.save(formData.closedDate)"> OK </v-btn>
         </v-date-picker>
       </v-dialog>
       <v-select
@@ -55,6 +56,8 @@
         item-value="id"
         :rules="respondentRules"
         persistent-hint
+        color="foa_button"
+        item-color="foa_button"
       ></v-select>
       <v-combobox
         v-model="formData.responseOptions"
@@ -67,10 +70,11 @@
         :items="defaultOptions"
         :rules="optionRules"
         class="mb-5"
+        color="foa_button"
       >
       </v-combobox>
       <div class="d-flex justify-end mt-4">
-        <v-btn class="mr-4" color="error" text :disabled="loading" @click="reset">Reset</v-btn>
+        <v-btn class="mr-4" color="red" text :disabled="loading" @click="reset">Reset</v-btn>
         <v-btn color="foa_button" text :loading="loading" :disabled="!valid || loading" @click="submit">Submit</v-btn>
       </div>
     </v-form>
@@ -103,7 +107,7 @@ export default {
     members: [],
     descriptionRules: [
       (v) => !!v || 'Description is required',
-      (v) => (v && v.length <= 70) || 'Description must be less than 70 characters',
+      (v) => (v && v.length <= 256) || 'Description must be less than 256 characters',
     ],
     familyRules: [(v) => !!v || 'Family is required'],
     notesRules: [],

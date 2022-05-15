@@ -26,28 +26,38 @@
                   <span v-if="expandedCalendar.id !== calendar.id" class="text-subtitle-1">{{
                     calendar.description
                   }}</span>
-                  <v-text-field
-                    v-else
-                    v-model="expandedCalendar.description"
-                    label="Description"
-                    color="foa_button"
-                  ></v-text-field>
+                  <v-form v-else v-model="valid">
+                    <v-text-field
+                      v-model="expandedCalendar.description"
+                      label="Description"
+                      color="foa_button"
+                      counter="70"
+                      :rules="descriptionRules"
+                    ></v-text-field>
+                  </v-form>
                 </v-col>
                 <v-col cols="3" class="text-caption"> Family: {{ getFamily(calendar.familyId).name }} </v-col>
                 <v-col v-if="isAdmin(getFamily(calendar.familyId).memberData.role)" cols="3" class="d-flex justify-end">
                   <div v-if="expandedCalendar.id !== calendar.id">
-                    <v-btn v-if="!calendar.default" icon color="error" class="mr-2" @click="deleteCal(calendar.id)">
+                    <v-btn v-if="!calendar.default" icon color="red" class="mr-2" @click="deleteCal(calendar.id)">
                       <v-icon>mdi-delete</v-icon>
                     </v-btn>
-                    <v-btn icon @click="toggleEdit(i)">
+                    <v-btn icon :color="btnColor" @click="toggleEdit(i)">
                       <v-icon>mdi-pencil</v-icon>
                     </v-btn>
                   </div>
                   <div v-else>
-                    <v-btn icon :color="btnColor" class="mr-2" :disabled="loading" :loading="loading" @click="save">
+                    <v-btn
+                      icon
+                      :color="btnColor"
+                      class="mr-2"
+                      :disabled="!valid || loading"
+                      :loading="loading"
+                      @click="save"
+                    >
                       <v-icon>mdi-content-save</v-icon>
                     </v-btn>
-                    <v-btn icon color="error" :disabled="loading" :loading="loading" @click="expandedCalendar = {}">
+                    <v-btn icon color="red" :disabled="loading" :loading="loading" @click="expandedCalendar = {}">
                       <v-icon>mdi-close</v-icon>
                     </v-btn>
                   </div>
@@ -82,6 +92,8 @@ export default {
     expandedCalendar: {},
     createForm: false,
     loading: false,
+    descriptionRules: [(v) => !!v || 'Description is required', (v) => (v && v.length <= 70) || 'Max 70 characters'],
+    valid: false,
   }),
   computed: {
     ...mapGetters({ families: 'getFamilies', getFamily: 'getFamily', user: 'getUser' }),

@@ -230,7 +230,7 @@ export default {
           const loginRes = await this.loginUser(this.formData);
           if (loginRes.status === 200) {
             if (this.$route.query.code !== undefined && this.$route.query.code !== '') {
-              this.$router.push(`/profile/families?code=${this.$route.query.code.trim()}`)
+              this.$router.push(`/profile/families?code=${this.$route.query.code.trim()}`);
             } else {
               this.$router.push('/');
             }

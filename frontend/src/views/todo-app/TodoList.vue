@@ -26,7 +26,8 @@
                     v-model="editedItem.description"
                     color="foa_button"
                     label="Description"
-                    :rules="required"
+                    :rules="[required, max]"
+                    counter="50"
                   ></v-text-field>
                 </v-col>
                 <v-col cols="12" sm="6">
@@ -64,7 +65,7 @@
           <v-card-actions>
             <v-spacer></v-spacer>
             <v-btn color="foa_button" text @click="closeAddEdit">Cancel</v-btn>
-            <v-btn color="foa_button" text :disabled="!valid" @click="submitAddEdit">{{ formAction }}</v-btn>
+            <v-btn color="foa_button" text :disabled="!valid || loading" @click="submitAddEdit">{{ formAction }}</v-btn>
           </v-card-actions>
         </v-card>
       </v-dialog>
@@ -123,11 +124,14 @@
               <v-icon
                 v-if="(adult || todo.addedBy.id === user.id) && !todo.completed"
                 class="mr-2"
+                :color="btnColor"
                 @click="editItem(todo)"
               >
                 mdi-pencil
               </v-icon>
-              <v-icon v-if="admin || todo.addedBy.id === user.id" @click="deleteItem(todo)">mdi-delete</v-icon>
+              <v-icon v-if="admin || todo.addedBy.id === user.id" color="red" @click="deleteItem(todo)"
+                >mdi-delete</v-icon
+              >
             </v-list-item>
           </template>
         </v-slide-y-transition>
@@ -168,7 +172,9 @@ export default {
     adult: false,
     admin: false,
     valid: false,
-    required: [(v) => !!v || 'This field is required'],
+    required: (v) => !!v || 'This field is required',
+    max: (v) => (v && v.length <= 50) || 'Max 50 characters',
+    loading: false,
   }),
   computed: {
     ...mapGetters({ families: 'getFamilies', getFamily: 'getFamily', user: 'getUser' }),
@@ -284,6 +290,7 @@ export default {
     async addTodo() {
       const request = this.editedItem;
       try {
+        this.loading = true;
         const res = await api.addTask(request);
         if (res.status === 201) {
           this.fetchList();
@@ -308,11 +315,14 @@ export default {
           message: 'There was a problem adding this todo, please try again.',
           timeout: 3000,
         });
+      } finally {
+        this.loading = false;
       }
     },
     async updateTodo() {
       const request = this.editedItem;
       try {
+        this.loading = true;
         const res = await api.updateTask(request);
         if (res.status === 200) {
           this.fetchList();
@@ -337,6 +347,8 @@ export default {
           message: 'There was a problem updating this todo, please try again.',
           timeout: 3000,
         });
+      } finally {
+        this.loading = false;
       }
     },
     async confirmDeleteTodo() {

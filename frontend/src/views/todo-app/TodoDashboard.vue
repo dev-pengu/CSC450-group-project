@@ -44,10 +44,11 @@
                     <v-col class="py-0" cols="12">
                       <v-text-field
                         v-model="editedItem.description"
-                        :rules="descriptionRules"
+                        :rules="[descriptionRules, max]"
                         color="foa_button"
                         outlined
                         label="Description"
+                        counter="50"
                       ></v-text-field>
                     </v-col>
                   </v-row>
@@ -56,7 +57,9 @@
               <v-card-actions>
                 <v-spacer></v-spacer>
                 <v-btn color="foa_button" text @click="closeAddEdit">Cancel</v-btn>
-                <v-btn color="foa_button" :disabled="!valid" text @click="submitAddEdit">{{ formAction }}</v-btn>
+                <v-btn color="foa_button" :disabled="!valid || loading" text @click="submitAddEdit">{{
+                  formAction
+                }}</v-btn>
               </v-card-actions>
             </v-card>
           </v-dialog>
@@ -150,10 +153,10 @@
                 </v-list>
                 <v-card-actions>
                   <v-spacer></v-spacer>
-                  <v-btn v-if="canDelete(list)" icon prevent @click.prevent="deleteItem(list)">
+                  <v-btn v-if="canDelete(list)" icon prevent color="red" @click.prevent="deleteItem(list)">
                     <v-icon>mdi-delete</v-icon>
                   </v-btn>
-                  <v-btn v-if="canEdit(list)" icon prevent @click.prevent="editItem(list)">
+                  <v-btn v-if="canEdit(list)" icon prevent :color="btnColor" @click.prevent="editItem(list)">
                     <v-icon>mdi-pencil</v-icon>
                   </v-btn>
                 </v-card-actions>
@@ -237,8 +240,10 @@ export default {
     deleteDialogState: false,
     addEditDialogState: false,
     familyRules: [(v) => !!v || 'Family is required'],
-    descriptionRules: [(v) => !!v || 'Description is required'],
+    descriptionRules: (v) => !!v || 'Description is required',
+    max: (v) => (v && v.length <= 50) || 'Max 50 characters',
     valid: false,
+    loading: false,
   }),
   computed: {
     ...mapGetters({ families: 'getFamilies', getFamily: 'getFamily', user: 'getUser' }),
@@ -390,6 +395,7 @@ export default {
     },
     async updateTodoList() {
       try {
+        this.loading = true;
         const request = this.editedItem;
         const listDescription = this.editedItem.description;
         const res = await api.updateTodoList(request);
@@ -416,10 +422,13 @@ export default {
           message: 'There was a problem updating this todo list, please try again.',
           timeout: 3000,
         });
+      } finally {
+        this.loading = false;
       }
     },
     async createTodoList() {
       try {
+        this.loading = true;
         const request = this.editedItem;
         const res = await api.createTodoList(request);
         if (res.status === 201) {
@@ -445,6 +454,8 @@ export default {
           message: 'There was a problem creating this todo list, please try again.',
           timeout: 3000,
         });
+      } finally {
+        this.loading = false;
       }
     },
   },

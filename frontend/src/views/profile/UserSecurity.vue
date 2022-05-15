@@ -10,7 +10,7 @@
             <v-card-title class="text-h5"
               >Confirm
               <v-spacer></v-spacer>
-              <v-btn class="pr-0" icon @click="closeDelete">
+              <v-btn class="pr-0" icon color="red" @click="closeDelete">
                 <v-icon>mdi-close</v-icon>
               </v-btn>
             </v-card-title>
@@ -39,7 +39,7 @@
               <v-spacer></v-spacer>
               <v-btn
                 class="foa_button_text--text mr-4"
-                color="error"
+                color="red"
                 elevation="2"
                 max-width="150px"
                 :disabled="loading"
@@ -129,7 +129,7 @@
           <h4 class="text-h5 foa_text_header--text mb-5">Delete Account</h4>
           <v-btn
             class="foa_button_text--text mr-4"
-            color="error"
+            color="red"
             elevation="2"
             max-width="150px"
             :disabled="loading"

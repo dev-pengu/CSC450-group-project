@@ -33,6 +33,7 @@
                         color="foa_button"
                         label="Description"
                         :rules="descriptionRules"
+                        counter="50"
                       ></v-text-field>
                     </v-col>
                     <v-col cols="12" sm="6">
@@ -53,6 +54,8 @@
                         label="Unit"
                         color="foa_button"
                         :items="defaultUnits"
+                        :rules="unitRules"
+                        counter="10"
                       ></v-combobox>
                     </v-col>
                     <v-col cols="12">
@@ -70,7 +73,9 @@
               <v-card-actions>
                 <v-spacer></v-spacer>
                 <v-btn color="foa_button" text @click="closeAddEdit">Cancel</v-btn>
-                <v-btn color="foa_button" text :disabled="!valid" @click="submitAddEdit">{{ formAction }}</v-btn>
+                <v-btn color="foa_button" text :disabled="!valid || loading" @click="submitAddEdit">{{
+                  formAction
+                }}</v-btn>
               </v-card-actions>
             </v-card>
           </v-dialog>
@@ -132,7 +137,7 @@
                   ></v-list-item-subtitle>
                 </v-list-item-content>
                 <v-list-item-content v-else>
-                  <v-form>
+                  <v-form v-model="editValid">
                     <v-row>
                       <v-col cols="6">
                         <v-text-field
@@ -141,6 +146,7 @@
                           color="foa_button"
                           label="Description"
                           :rules="descriptionRules"
+                          counter="50"
                         ></v-text-field>
                       </v-col>
                       <v-col cols="4" md="3">
@@ -160,6 +166,8 @@
                           label="Unit"
                           color="foa_button"
                           :items="defaultUnits"
+                          :rules="unitRules"
+                          counter="10"
                         ></v-combobox>
                       </v-col>
                     </v-row>
@@ -179,20 +187,25 @@
                 <v-list-item-action v-if="editedItem.id === item.id">
                   <v-btn icon @click.stop.prevent="editedItem = defaultItem"><v-icon>mdi-cancel</v-icon></v-btn>
                   <div class="d-flex">
-                    <v-btn icon :color="btnColor" :loading="loading" @click="updateItem(item)"
+                    <v-btn
+                      icon
+                      :color="btnColor"
+                      :loading="loading"
+                      :disabled="!editValid || loading"
+                      @click="updateItem(item)"
                       ><v-icon>mdi-check</v-icon></v-btn
                     >
-                    <v-btn icon color="error" :loading="loading" @click="deleteItem(item)"
+                    <v-btn icon color="red" :loading="loading" @click="deleteItem(item)"
                       ><v-icon>mdi-delete</v-icon></v-btn
                     >
                   </div>
                 </v-list-item-action>
               </v-list-item>
-              <v-sheet v-if="deleteIdx === i" color="error" width="50px" class="d-flex justify-center align-center">
+              <v-sheet v-if="deleteIdx === i" color="red" width="50px" class="d-flex justify-center align-center">
                 <v-btn icon :loading="loading" @click="deleteItem(item)"><v-icon>mdi-delete</v-icon></v-btn>
               </v-sheet>
             </div>
-            <v-divider v-if="i < items.length - 1" :key="i"></v-divider>
+            <v-divider v-if="i < items.length - 1" :key="`${i}-divider`"></v-divider>
           </template>
         </v-list>
       </template>
@@ -231,7 +244,9 @@ export default {
     },
     listId: null,
     valid: false,
-    descriptionRules: [(v) => !!v || 'Description is required'],
+    editValid: false,
+    descriptionRules: [(v) => !!v || 'Description is required', (v) => (v && v.length <= 50) || 'Max 50 characters'],
+    unitRules: [(v) => (v && v.length <= 10) || 'Max 10 characters'],
     defaultUnits: ['ea', 'package', 'gallon', 'liter', 'fl oz', 'mL', 'lb', 'oz', 'grams', 'kg'],
     search: '',
     loading: false,
@@ -329,6 +344,7 @@ export default {
     },
     async addItem() {
       try {
+        this.loading = true;
         const request = this.editedItem;
         const res = await api.createShoppingListItem(request);
         if (res.status === 201) {
@@ -354,10 +370,13 @@ export default {
           message: 'There was a problem adding this item, please try again.',
           timeout: 3000,
         });
+      } finally {
+        this.loading = false;
       }
     },
     async updateItem() {
       try {
+        this.loading = true;
         const request = this.editedItem;
         const res = await api.updateShoppingListItem(request);
         if (res.status === 200) {
@@ -383,6 +402,8 @@ export default {
           message: 'There was a problem updating this item, please try again.',
           timeout: 3000,
         });
+      } finally {
+        this.loading = false;
       }
     },
     async confirmDeleteItem() {
