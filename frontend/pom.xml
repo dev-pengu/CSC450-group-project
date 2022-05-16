@@ -37,6 +37,7 @@
             <exclude>**/node_modules/**</exclude>
             <exclude>**/target/**</exclude>
             <exclude>**/node/**</exclude>
+            <exclude>**/src/assets/**</exclude>
           </excludes>
         </configuration>
       </plugin>
