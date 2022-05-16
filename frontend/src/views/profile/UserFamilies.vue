@@ -214,6 +214,7 @@
             <v-card-actions v-else-if="updateIndex === i && showUpdateForm" class="pb-4">
               <v-spacer></v-spacer>
               <v-btn
+                v-if="user.id === family.owner.user.id"
                 small
                 class="foa_button_text--text"
                 color="red"
