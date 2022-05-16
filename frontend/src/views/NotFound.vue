@@ -1,38 +1,32 @@
 <template>
   <div class="notfound">
-    <v-row justify="center">
-      <v-col cols="8" sm="6">
-        <div class="text-h2 text-center font-weight-bold">404</div>
-        <div class="text-h5 text-center">Page not found</div>
-        <div class="text-center">
+    <v-row justify="center" align="center">
+      <v-col cols="12" sm="4">
+        <div class="text-h1 text-center font-weight-bold">404</div>
+        <div class="text-h4 text-center">Page not found</div>
+        <div class="text-center mt-2">
           Sorry, the page you are looking for does not exist. <br />
           Checkout this meme or go back to the homepage:
         </div>
+        <div class="text-center mt-3">
+          <v-btn to="/dashboard" color="foa_button" class="foa_button_text--text">Back to Home</v-btn>
+        </div>
       </v-col>
-    </v-row>
-    <v-row justify="center">
-      <v-btn to="/" color="foa_button" class="foa_button_fg--text">Back to Home</v-btn>
-    </v-row>
-    <v-row class="px-3">
-      <v-img class="mt-4" contain src="@/assets/meme.jpg" height="400"></v-img>
+      <v-col cols="12" sm="4">
+        <v-img contain :src="require(`../assets/meme-${memeNum}.jpeg`)" height="500"></v-img>
+      </v-col>
     </v-row>
   </div>
 </template>
 
 <script>
-// import axios from 'axios';
-
 export default {
   name: 'NotFound',
   data: () => ({
-    memeSrc: '',
-    memeLinks: [],
+    memeNum: 0,
   }),
-  // TODO: memes
-  // async created() {
-  //   const res = await axios.get('https://meme-api.herokuapp.com/gimme/wholesomememes');
-  //   this.memeLinks = res.data.preview;
-  //   this.memeSrc = this.memeLinks[this.memeLinks.length - 1];
-  // },
+  created() {
+    this.memeNum = Math.floor(Math.random() * 11);
+  },
 };
 </script>
