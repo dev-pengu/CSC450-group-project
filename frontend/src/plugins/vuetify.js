@@ -1,5 +1,6 @@
 import Vue from 'vue';
 import Vuetify from 'vuetify/lib/framework';
+import colors from 'vuetify/lib/util/colors';
 
 Vue.use(Vuetify);
 
@@ -18,6 +19,8 @@ export default new Vuetify({
         foa_button: '#00B5AA',
         foa_button_dark: '#004E49',
         foa_button_text: '#ffffff',
+        due_warning: colors.amber.darken3,
+        due_overdue: colors.red.darken2,
       },
       dark: {
         foa_content_bg: '#CCEFDA',
@@ -30,6 +33,8 @@ export default new Vuetify({
         foa_button: '#00B5AA',
         foa_button_dark: '#004E49',
         foa_button_text: '#ffffff',
+        due_warning: colors.amber.lighten1,
+        due_overdue: colors.red.lighten1,
       },
     },
   },

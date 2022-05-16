@@ -8,6 +8,7 @@ import com.familyorg.familyorganizationapp.DTO.builder.ToDoTaskDtoBuilder;
 import com.familyorg.familyorganizationapp.domain.search.SearchFilter;
 import com.familyorg.familyorganizationapp.domain.search.ToDoField;
 import com.familyorg.familyorganizationapp.util.DateUtil;
+import java.sql.Date;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -18,6 +19,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.TimeZone;
 import java.util.stream.Collectors;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeComparator;
+import org.joda.time.DurationFieldType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,7 +47,7 @@ import com.familyorg.familyorganizationapp.service.UserService;
 
 @Service
 public class ToDoListServiceImpl implements ToDoListService {
-  private Logger logger = LoggerFactory.getLogger(ToDoListServiceImpl.class);
+  private final Logger logger = LoggerFactory.getLogger(ToDoListServiceImpl.class);
 
   ToDoListRepository toDoListRepository;
   ToDoTaskRepository toDoTaskRepository;
@@ -222,6 +226,19 @@ public class ToDoListServiceImpl implements ToDoListService {
                             .setCompletedDateTime(item.getCompletedDatetime())
                             .setNotes(item.getNotes())
                             .setListId(item.getList().getId())
+                            .setOverdue(
+                                item.getDueDate() != null
+                                    && DateTimeComparator.getDateOnlyInstance()
+                                            .compare(item.getDueDate(), DateTime.now())
+                                        < 0)
+                            .setDueNextTwoDays(
+                                item.getDueDate() != null
+                                    && DateTimeComparator.getDateOnlyInstance()
+                                            .compare(
+                                                item.getDueDate(),
+                                                DateTime.now()
+                                                    .withFieldAdded(DurationFieldType.days(), 2))
+                                        < 0)
                             .build())
                 .collect(Collectors.toList()))
         .build();
@@ -265,6 +282,18 @@ public class ToDoListServiceImpl implements ToDoListService {
         .setCompletedDateTime(toDoTask.get().getCompletedDatetime())
         .setNotes(toDoTask.get().getNotes())
         .setListId(toDoTask.get().getList().getId())
+        .setOverdue(
+            toDoTask.get().getDueDate() != null
+                && DateTimeComparator.getDateOnlyInstance()
+                        .compare(toDoTask.get().getDueDate(), DateTime.now())
+                    < 0)
+        .setDueNextTwoDays(
+            toDoTask.get().getDueDate() != null
+                && DateTimeComparator.getDateOnlyInstance()
+                        .compare(
+                            toDoTask.get().getDueDate(),
+                            DateTime.now().withFieldAdded(DurationFieldType.days(), 2))
+                    < 0)
         .build();
   }
 
@@ -451,6 +480,21 @@ public class ToDoListServiceImpl implements ToDoListService {
                                           .setCompletedDateTime(item.getCompletedDatetime())
                                           .setNotes(item.getNotes())
                                           .setListId(item.getList().getId())
+                                          .setOverdue(
+                                              item.getDueDate() != null
+                                                  && DateTimeComparator.getDateOnlyInstance()
+                                                          .compare(
+                                                              item.getDueDate(), DateTime.now())
+                                                      < 0)
+                                          .setDueNextTwoDays(
+                                              item.getDueDate() != null
+                                                  && DateTimeComparator.getDateOnlyInstance()
+                                                          .compare(
+                                                              item.getDueDate(),
+                                                              DateTime.now()
+                                                                  .withFieldAdded(
+                                                                      DurationFieldType.days(), 2))
+                                                      < 0)
                                           .build())
                               .collect(Collectors.toList()))
                       .build();

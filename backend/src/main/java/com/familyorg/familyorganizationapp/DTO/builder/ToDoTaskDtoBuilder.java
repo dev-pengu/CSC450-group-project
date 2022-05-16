@@ -15,6 +15,8 @@ public class ToDoTaskDtoBuilder implements DtoBuilder<ToDoTaskDto> {
   private UserDto addedBy;
   private String created;
   private Long listId;
+  private Boolean overdue;
+  private Boolean dueNextTwoDays;
 
   public ToDoTaskDtoBuilder setId(Long id) {
     this.id = id;
@@ -66,9 +68,29 @@ public class ToDoTaskDtoBuilder implements DtoBuilder<ToDoTaskDto> {
     return this;
   }
 
+  public ToDoTaskDtoBuilder setOverdue(Boolean overdue) {
+    this.overdue = overdue;
+    return this;
+  }
+
+  public ToDoTaskDtoBuilder setDueNextTwoDays(Boolean due) {
+    this.dueNextTwoDays = due;
+    return this;
+  }
+
   @Override
   public ToDoTaskDto build() {
     return new ToDoTaskDto(
-        id, description, notes, completed, dueDate, completedDateTime, addedBy, created, listId);
+        id,
+        description,
+        notes,
+        completed,
+        dueDate,
+        completedDateTime,
+        addedBy,
+        created,
+        listId,
+        overdue,
+        dueNextTwoDays);
   }
 }
