@@ -27,7 +27,12 @@
               <v-sheet height="24" width="8" :color="item.color"></v-sheet>
             </template>
           </v-checkbox>
-          <span v-if="item.dueDate" class="text-caption">Due {{ item.dueDate.substring(5, 10) }}</span>
+          <span
+            v-if="item.dueDate"
+            class="text-caption font-weight-bold"
+            :class="{ 'due_overdue--text': item.overdue, 'due_warning--text': item.dueNextTwoDays && !item.overdue }"
+            >Due {{ item.dueDate.substring(5, 10) }}</span
+          >
         </div>
       </template>
     </v-virtual-scroll>

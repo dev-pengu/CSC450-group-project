@@ -104,8 +104,11 @@
                     ></div>
                     <div
                       v-if="!todo.completed && todo.dueDateObj"
-                      class="ml-4 text-caption"
-                      :class="{ 'red--text': todo.dueDateObj < new Date() }"
+                      class="ml-4 text-caption font-weight-bold"
+                      :class="{
+                        'due_overdue--text': todo.overdue,
+                        'due_warning--text': todo.dueNextTwoDays && !todo.overdue,
+                      }"
                     >
                       Due {{ todo.dueDateObj.toLocaleDateString('en-US') }}
                     </div>
