@@ -52,5 +52,3 @@ Run the app with `mvn --projects backend spring-boot:run` to run with the embedd
 If you wish to not use the embedded tomcat server, a deployable jar file is produced during the build that can be ran from anywhere.
 
 To test if the app is running, visit http://localhost:8080/ and you should be redirected to http://localhost:8080/login. If you don't already have a user created locally, you can create one and login to acces the app
-
-To visit the production instance of the application, you can visit https://happyhome-organization.herokuapp.com.
